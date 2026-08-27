@@ -18,17 +18,19 @@ Built with modular Docker Compose, Gluetun (VPN or Direct), Seerr, Jellyfin, Ser
 - **Bash CLI** for day-0 and day-2 operations (`bin/flixbox`)
 - **Linux first**, MIT licensed
 
-## Quick start (target)
+## Quick start (Direct mode — available now)
 
 ```bash
 git clone https://github.com/aleaz/flixbox.git
 cd flixbox
-./bin/flixbox init
-./bin/flixbox up
-./bin/flixbox status
+cp .env.example .env
+./scripts/bootstrap-dirs.sh
+docker compose --profile direct up -d
 ```
 
-Then complete the [first-run setup](docs/user/05-first-run.md). The CLI/Compose pieces land during implementation — see the [development guide](docs/06-development-guide.md).
+Open http://localhost:8080 (qBittorrent). See [Install](docs/user/04-install.md).
+
+> VPN mode, Servarr, and `bin/flixbox` land in later phases ([development guide](docs/06-development-guide.md)).
 
 ## Documentation
 

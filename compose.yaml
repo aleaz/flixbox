@@ -1,0 +1,13 @@
+# Root Compose project. Modules live under compose/.
+# Start Direct mode (default in .env.example):
+#   cp .env.example .env
+#   ./scripts/bootstrap-dirs.sh
+#   docker compose up -d
+#
+# Profiles: direct | vpn (vpn module lands in a follow-up phase)
+
+name: flixbox
+
+include:
+  - path: compose/network-base.yml
+  - path: compose/downloaders-direct.yml

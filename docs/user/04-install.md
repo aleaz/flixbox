@@ -1,69 +1,50 @@
 # Install
 
-> **Target experience.** The CLI and Compose modules are not in the repo yet. This is the intended flow once Phase 0–5 land.
+> **Implementation status:** Direct-mode Compose (qBittorrent) is available. The Bash CLI (`bin/flixbox`) arrives in Phase 5. VPN mode is next.
 
-## 1. Clone
+## Current bootstrap (Direct mode)
 
 ```bash
 git clone https://github.com/aleaz/flixbox.git
 cd flixbox
+cp .env.example .env
+# Edit DATA_DIR / CONFIG_DIR / TZ / PUID / PGID if needed
+./scripts/bootstrap-dirs.sh
+docker compose --profile direct up -d
 ```
 
-## 2. Initialize
+Ensure `.env` has `COMPOSE_PROFILES=direct` (default in `.env.example`), or pass `--profile direct` as above.
+
+Open qBittorrent: http://localhost:8080  
+(linuxserver prints the temporary WebUI password in container logs on first start.)
+
+Set download paths in the WebUI:
+
+- Default save path: `/data/torrents`
+- Keep incomplete torrents in: `/data/torrents/incomplete`
+
+```bash
+docker compose --profile direct ps
+docker compose --profile direct logs -f qbittorrent
+docker compose --profile direct down
+```
+
+## Target UX (Phase 5+)
 
 ```bash
 ./bin/flixbox init
-```
-
-The wizard should ask for:
-
-- Timezone
-- `${DATA_DIR}` (default suggestion: `/srv/flixbox/data`)
-- `${CONFIG_DIR}` (default suggestion: `/srv/flixbox/config`)
-- VPN or Direct mode (+ provider/protocol if VPN)
-- Basic permission IDs (`PUID`/`PGID`, usually `1000`)
-
-It creates the directory tree (including `torrents/incomplete`) and a local `.env` that is **not** committed to git.
-
-## 3. Start
-
-```bash
 ./bin/flixbox up
-```
-
-Useful variants (planned):
-
-```bash
-./bin/flixbox up core
-./bin/flixbox up media
 ./bin/flixbox status
-./bin/flixbox logs
 ```
 
-## 4. Open the UIs
-
-Default ports (see [Configuration](06-configuration.md)):
+## Default ports (so far)
 
 | Service | URL |
 | --- | --- |
-| Homepage | http://localhost:3000 |
-| Seerr | http://localhost:5055 |
-| Jellyfin | http://localhost:8096 |
-| Prowlarr | http://localhost:9696 |
-| Radarr | http://localhost:7878 |
-| Sonarr | http://localhost:8989 |
+| qBittorrent (Direct) | http://localhost:8080 |
 
-## 5. Verify basics
-
-```bash
-# VPN mode only
-./bin/flixbox vpn-test
-
-# Hardlinks (after a test import) — same inode on both paths
-ls -i /srv/flixbox/data/torrents/movies/...
-ls -i /srv/flixbox/data/media/movies/...
-```
+Full matrix (planned services): [Configuration](06-configuration.md).
 
 ## Next
 
-[First-run setup](05-first-run.md) — wire the apps in the right order.
+[First-run setup](05-first-run.md) (full stack wiring — as more modules land).

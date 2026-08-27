@@ -18,6 +18,8 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 
 **Exit criteria:** Clone is understandable; no secrets; docs link correctly; MIT `LICENSE` present.
 
+**Status:** Done (docs + `.env.example` + `compose.yaml` include scaffold + `scripts/bootstrap-dirs.sh`).
+
 ## Phase 1 — Network + dual-mode downloaders
 
 1. `compose/network-base.yml` → `flixbox_net`
@@ -27,6 +29,8 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 5. Explicit doc warning: never attach *arr/Seerr/Jellyfin to Gluetun netns
 
 **Exit criteria:** VPN and Direct modes start separately; manual `vpn-test` via `docker exec` works.
+
+**Status:** Direct mode implemented (`COMPOSE_PROFILES=direct`). VPN module still planned.
 
 ## Phase 2 — Storage tree + Servarr core
 

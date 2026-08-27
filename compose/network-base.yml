@@ -1,0 +1,5 @@
+# Shared Docker network for all non-VPN-netns services.
+networks:
+  flixbox_net:
+    name: flixbox_net
+    driver: bridge
