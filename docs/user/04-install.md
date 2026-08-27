@@ -1,32 +1,46 @@
 # Install
 
-> **Implementation status:** Direct-mode Compose (qBittorrent) is available. The Bash CLI (`bin/flixbox`) arrives in Phase 5. VPN mode is next.
+> **Implementation status:** Direct and VPN downloader modes are available (qBittorrent ± Gluetun). Servarr and `bin/flixbox` land in later phases.
 
-## Current bootstrap (Direct mode)
+## Bootstrap
 
 ```bash
 git clone https://github.com/aleaz/flixbox.git
 cd flixbox
 cp .env.example .env
-# Edit DATA_DIR / CONFIG_DIR / TZ / PUID / PGID if needed
+# Edit DATA_DIR, CONFIG_DIR, TZ, PUID/PGID
+# Choose mode: FLIXBOX_MODE=direct  OR  FLIXBOX_MODE=vpn (+ VPN_* secrets)
 ./scripts/bootstrap-dirs.sh
-docker compose --profile direct up -d
+docker compose up -d
 ```
 
-Ensure `.env` has `COMPOSE_PROFILES=direct` (default in `.env.example`), or pass `--profile direct` as above.
+`compose.yaml` includes `compose/downloaders-${FLIXBOX_MODE}.yml` automatically.
 
-Open qBittorrent: http://localhost:8080  
-(linuxserver prints the temporary WebUI password in container logs on first start.)
+### Direct mode (`FLIXBOX_MODE=direct`)
 
-Set download paths in the WebUI:
+- Open http://localhost:8080 (qBittorrent)
+- *arr download client host later: `qbittorrent`
+- Password: see `docker compose logs qbittorrent` on first start
+
+### VPN mode (`FLIXBOX_MODE=vpn`)
+
+1. Set `VPN_ENABLED=true` and fill Gluetun variables in `.env` (see [Gluetun wiki](https://github.com/qdm12/gluetun-wiki)).
+2. `docker compose up -d` — qBittorrent starts only after Gluetun is **healthy**.
+3. WebUI still on http://localhost:8080 (published on **Gluetun**).
+4. *arr / Decluttarr download client host: **`gluetun`** (not `qbittorrent`).
+5. In qBittorrent WebUI, enable **Bypass authentication for clients on localhost** if you use VPN port forwarding.
+6. Check tunnel: `./scripts/vpn-test.sh`
+
+### qBittorrent paths (both modes)
 
 - Default save path: `/data/torrents`
-- Keep incomplete torrents in: `/data/torrents/incomplete`
+- Incomplete: `/data/torrents/incomplete`
 
 ```bash
-docker compose --profile direct ps
-docker compose --profile direct logs -f qbittorrent
-docker compose --profile direct down
+docker compose ps
+docker compose logs -f
+docker compose down
+./scripts/vpn-test.sh
 ```
 
 ## Target UX (Phase 5+)
@@ -34,17 +48,15 @@ docker compose --profile direct down
 ```bash
 ./bin/flixbox init
 ./bin/flixbox up
-./bin/flixbox status
+./bin/flixbox vpn-test
 ```
 
-## Default ports (so far)
+## Ports (downloaders)
 
-| Service | URL |
+| Service | URL / port |
 | --- | --- |
-| qBittorrent (Direct) | http://localhost:8080 |
-
-Full matrix (planned services): [Configuration](06-configuration.md).
+| qBittorrent WebUI | http://localhost:8080 |
 
 ## Next
 
-[First-run setup](05-first-run.md) (full stack wiring — as more modules land).
+[VPN and Direct](07-vpn-and-direct.md) · [First-run setup](05-first-run.md)

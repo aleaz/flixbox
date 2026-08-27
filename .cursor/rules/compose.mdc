@@ -12,6 +12,7 @@ alwaysApply: false
 - VPN mode: qBittorrent `network_mode: service:gluetun`; publish qBit ports on Gluetun; healthcheck gate.
 - Never attach *arr, Seerr, Jellyfin, or Bazarr to Gluetun netns.
 - All download/library services mount the same `${DATA_DIR}:/data` parent.
+- Dual-mode via exclusive include: `downloaders-${FLIXBOX_MODE}.yml` (`direct`|`vpn`) — do not define two `qbittorrent` services in one project.
 - Early development may use `:latest` (ADR 0010); pin before v0.1.
 - `servarr.yml`: Prowlarr, Radarr, Sonarr, Bazarr, Byparr (not FlareSolverr by default).
 - `requests.yml`: Seerr with `init: true` (`ghcr.io/seerr-team/seerr`).

@@ -4,7 +4,7 @@ Friendly documentation for operators who want to run Flixbox at home.
 
 **Language:** English (canonical). A Spanish translation is planned before the first public release — see [ADR 0011](../adr/0011-documentation-i18n.md).
 
-**Status:** Working Draft. Direct-mode qBittorrent Compose is implemented; full stack and CLI are still landing.
+**Status:** Working Draft. Direct and VPN downloader modes are implemented; Servarr / media / CLI still landing.
 
 ## Contents
 

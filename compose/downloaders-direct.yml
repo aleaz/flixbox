@@ -1,5 +1,5 @@
 # Direct-mode BitTorrent (no VPN).
-# Profile: direct
+# Included when FLIXBOX_MODE=direct (see root compose.yaml).
 # Servarr / Decluttarr download client: http://qbittorrent:8080
 #
 # Configure qBittorrent save paths (first WebUI login):
@@ -11,7 +11,6 @@ services:
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: flixbox-qbittorrent
-    profiles: ["direct"]
     environment:
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}

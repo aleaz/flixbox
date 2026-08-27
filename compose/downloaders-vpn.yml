@@ -1,0 +1,77 @@
+# VPN-mode BitTorrent via Gluetun.
+# Included when FLIXBOX_MODE=vpn (see root compose.yaml).
+# Servarr / Decluttarr download client: http://gluetun:8080
+#
+# Never attach *arr, Seerr, or Jellyfin to Gluetun's network namespace.
+#
+# qBittorrent WebUI: enable "Bypass authentication for clients on localhost"
+# so Gluetun port-forward hooks can call the WebAPI on 127.0.0.1:8080.
+
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: flixbox-gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      TZ: ${TZ:-UTC}
+      VPN_SERVICE_PROVIDER: ${VPN_SERVICE_PROVIDER:?set VPN_SERVICE_PROVIDER}
+      VPN_TYPE: ${VPN_TYPE:-wireguard}
+      WIREGUARD_PRIVATE_KEY: ${WIREGUARD_PRIVATE_KEY:-}
+      WIREGUARD_ADDRESSES: ${WIREGUARD_ADDRESSES:-}
+      OPENVPN_USER: ${OPENVPN_USER:-}
+      OPENVPN_PASSWORD: ${OPENVPN_PASSWORD:-}
+      SERVER_COUNTRIES: ${SERVER_COUNTRIES:-}
+      SERVER_CITIES: ${SERVER_CITIES:-}
+      SERVER_REGIONS: ${SERVER_REGIONS:-}
+      BLOCK_IPV6: ${BLOCK_IPV6:-on}
+      DOT: ${DOT:-on}
+      VPN_PORT_FORWARDING: ${VPN_PORT_FORWARDING:-off}
+      FIREWALL_OUTBOUND_SUBNETS: ${FIREWALL_OUTBOUND_SUBNETS:-}
+      # Update qBittorrent listen port when the provider assigns a forwarded port
+      VPN_PORT_FORWARDING_UP_COMMAND: >-
+        /bin/sh -c 'wget -O- -nv --retry-connrefused --post-data
+        "json={\"listen_port\":{{PORT}},\"current_network_interface\":\"{{VPN_INTERFACE}}\",\"random_port\":false,\"upnp\":false}"
+        http://127.0.0.1:8080/api/v2/app/setPreferences'
+      VPN_PORT_FORWARDING_DOWN_COMMAND: >-
+        /bin/sh -c 'wget -O- -nv --retry-connrefused --post-data
+        "json={\"listen_port\":0,\"current_network_interface\":\"lo\"}"
+        http://127.0.0.1:8080/api/v2/app/setPreferences'
+    volumes:
+      - ${CONFIG_DIR:?set CONFIG_DIR}/gluetun:/gluetun
+    ports:
+      - ${QBITTORRENT_PORT:-8080}:8080
+      - ${QBITTORRENT_BT_PORT:-6881}:${QBITTORRENT_BT_PORT:-6881}
+      - ${QBITTORRENT_BT_PORT:-6881}:${QBITTORRENT_BT_PORT:-6881}/udp
+    restart: unless-stopped
+    stop_grace_period: 60s
+    networks:
+      - flixbox_net
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: flixbox-qbittorrent
+    network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      UMASK: ${UMASK:-002}
+      WEBUI_PORT: 8080
+      TORRENTING_PORT: ${QBITTORRENT_BT_PORT:-6881}
+    volumes:
+      - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent:/config
+      - ${DATA_DIR:?set DATA_DIR}:/data
+    restart: unless-stopped
+    stop_grace_period: 60s

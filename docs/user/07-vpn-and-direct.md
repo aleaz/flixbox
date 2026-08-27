@@ -2,41 +2,52 @@
 
 ## Choose a mode
 
+Set in `.env` (only one downloader module is included):
+
+| `.env` | Behavior | *arr download client |
+| --- | --- | --- |
+| `FLIXBOX_MODE=direct` | qBittorrent on `flixbox_net` | `http://qbittorrent:8080` |
+| `FLIXBOX_MODE=vpn` | qBittorrent shares Gluetun netns | `http://gluetun:8080` |
+
+Keep `VPN_ENABLED` aligned (`false` / `true`) for future CLI use.
+
 | Choose **VPN** if… | Choose **Direct** if… |
 | --- | --- |
-| You want torrent egress masked | You use IP-authenticated private trackers |
-| Your provider works with Gluetun | You want maximum line speed |
-| You accept VPN overhead | You accept that your IP is visible to peers |
+| You want torrent egress masked | Private trackers with IP auth |
+| Your provider works with Gluetun | Max line speed / lab testing |
 
-You can switch later by changing `VPN_ENABLED` and recreating the downloader stack (`flixbox up` after config change).
+Switching: `docker compose down` → change `FLIXBOX_MODE` → `docker compose up -d`.
 
 ## VPN mode essentials
 
 1. Only **qBittorrent** uses `network_mode: service:gluetun`.
-2. WebUI ports are published on **Gluetun**, not on the qBittorrent service.
-3. Radarr/Sonarr/Decluttarr must use download client host **`gluetun`**.
-4. IPv6 is blocked by default unless you configure an IPv6 VPN on purpose.
-5. Port forwarding (when the provider supports it) should update qBittorrent’s listen port automatically via Gluetun hooks.
+2. WebUI / BT ports are published on **Gluetun**, not on the qBittorrent service.
+3. Radarr/Sonarr/Decluttarr must use host **`gluetun`**.
+4. IPv6 blocked by default (`BLOCK_IPV6=on`); DNS over TLS on (`DOT=on`).
+5. Optional port forwarding: `VPN_PORT_FORWARDING=on` (supported providers). Enable qBittorrent **Bypass authentication for clients on localhost**.
+6. Put provider credentials only in `.env` or files under `${CONFIG_DIR}/gluetun` — never in git.
 
 ## Direct mode essentials
 
 1. Gluetun is not started.
 2. Download client host is **`qbittorrent`**.
-3. Still keep the single `/data` hardlink layout.
+3. Still use the single `/data` hardlink layout.
 
 ## Verify
 
 ```bash
-./bin/flixbox vpn-test
+./scripts/vpn-test.sh
 ```
 
-You want a public IP that is **not** your home ISP when VPN mode is on, and no obvious DNS leak in the test output.
+VPN mode: public IP should **not** be your home ISP.  
+Direct mode: public IP is your normal egress.
 
 ## Anti-patterns
 
 - Putting Radarr/Sonarr/Seerr/Jellyfin behind Gluetun
 - Split Docker mounts for torrents vs media
 - Storing `${CONFIG_DIR}` on NFS/SMB
+- Running both modes at once (unsupported — exclusive compose include)
 
 ## Next
 

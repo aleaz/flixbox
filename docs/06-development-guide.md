@@ -30,7 +30,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 
 **Exit criteria:** VPN and Direct modes start separately; manual `vpn-test` via `docker exec` works.
 
-**Status:** Direct mode implemented (`COMPOSE_PROFILES=direct`). VPN module still planned.
+**Status:** Direct and VPN modes implemented (`FLIXBOX_MODE=direct|vpn`). Use `./scripts/vpn-test.sh` to check egress IP.
 
 ## Phase 2 — Storage tree + Servarr core
 

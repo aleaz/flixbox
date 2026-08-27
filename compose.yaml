@@ -1,13 +1,15 @@
 # Root Compose project. Modules live under compose/.
-# Start Direct mode (default in .env.example):
+#
+# Dual-mode downloaders (mutually exclusive includes — same service name qbittorrent):
+#   FLIXBOX_MODE=direct  → compose/downloaders-direct.yml
+#   FLIXBOX_MODE=vpn     → compose/downloaders-vpn.yml
+#
 #   cp .env.example .env
 #   ./scripts/bootstrap-dirs.sh
 #   docker compose up -d
-#
-# Profiles: direct | vpn (vpn module lands in a follow-up phase)
 
 name: flixbox
 
 include:
   - path: compose/network-base.yml
-  - path: compose/downloaders-direct.yml
+  - path: compose/downloaders-${FLIXBOX_MODE:-direct}.yml
