@@ -1,0 +1,27 @@
+# Local secrets and runtime
+.env
+.env.*
+!.env.example
+
+# VPN / provider material
+**/wg0.conf
+**/custom.ovpn
+**/*.ovpn
+
+# Host runtime (if ever linked into repo by mistake)
+/srv/
+data/
+config/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+!.cursor/rules/
+
+# Python / misc
+__pycache__/
+*.pyc
+.venv/

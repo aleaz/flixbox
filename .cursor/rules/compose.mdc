@@ -1,0 +1,20 @@
+---
+description: Docker Compose standards for Flixbox modules
+globs: compose/**/*.yml,compose/**/*.yaml,**/docker-compose*.yml,**/compose*.yml
+alwaysApply: false
+---
+
+# Compose rules
+
+- Use Compose v2 modular files under `compose/`; max ~150 lines per file.
+- Use profiles for optional services (Plex, socket-proxy).
+- Stateful services: `stop_grace_period: 60s`.
+- VPN mode: qBittorrent `network_mode: service:gluetun`; publish qBit ports on Gluetun; healthcheck gate.
+- Never attach *arr, Seerr, Jellyfin, or Bazarr to Gluetun netns.
+- All download/library services mount the same `${DATA_DIR}:/data` parent.
+- Early development may use `:latest` (ADR 0010); pin before v0.1.
+- `servarr.yml`: Prowlarr, Radarr, Sonarr, Bazarr, Byparr (not FlareSolverr by default).
+- `requests.yml`: Seerr with `init: true` (`ghcr.io/seerr-team/seerr`).
+- `optimization.yml`: Unpackerr, Recyclarr, Decluttarr, Maintainerr — follow `docs/09-hygiene-defaults.md`.
+- Decluttarr qBit URL must be mode-aware (`gluetun` vs `qbittorrent`).
+- Do not add Lidarr/Readarr/SABnzbd/Whisper/Autobrr during MVP.

@@ -1,0 +1,18 @@
+---
+description: Bash CLI and host script standards
+globs: bin/**,scripts/**/*.sh
+alwaysApply: false
+---
+
+# Shell / CLI rules
+
+- Bash only for MVP (`bin/flixbox`); do not add `bin/flixbox.ps1` unless scope changes.
+- Start scripts with `set -euo pipefail`.
+- Trap EXIT/INT/TERM when altering terminal state or temp files.
+- Respect `NO_COLOR` and non-TTY output.
+- MVP commands: `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`.
+- `init` must create data/config trees and write local untracked env — never commit secrets.
+- Warn on unsafe layouts: config on NFS/SMB, data on WSL `/mnt/c` / NTFS when detectable.
+- In VPN mode guidance, download client host is `gluetun`; in Direct mode it is `qbittorrent` (same for Decluttarr).
+- Create `torrents/incomplete` under the data tree during `init`.
+- LF line endings only.

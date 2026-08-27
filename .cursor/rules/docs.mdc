@@ -1,0 +1,17 @@
+---
+description: Documentation and ADR editing conventions
+globs: docs/**/*.md,AGENTS.md,README.md
+alwaysApply: false
+---
+
+# Docs rules
+
+- Keep status honest: Working Draft until MVP exists.
+- Use relative links only (no `file://` absolute home paths).
+- Scope changes must update `docs/01-scope.md` and usually an ADR.
+- Prefer current names: Seerr, Byparr, Decluttarr, Maintainerr.
+- Do not restore Jellyseerr/Overseerr or FlareSolverr-as-default without a superseding ADR.
+- Canonical content is the numbered docs + ADRs + `docs/user/`.
+- Spanish user docs go under `docs/es/user/` mirroring EN filenames (ADR 0011); do not move EN to `docs/user/en/`.
+- Roadmap items must not be phrased as MVP MUSTs in requirements.
+- Maintainerr/Decluttarr docs must warn about destructive actions.

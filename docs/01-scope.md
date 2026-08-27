@@ -1,0 +1,82 @@
+# Scope
+
+**Status:** Working Draft — frozen for MVP implementation  
+**Related ADRs:** [0004](adr/0004-jellyfin-first.md), [0005](adr/0005-cli-bash-first.md), [0006](adr/0006-mvp-service-inventory.md), [0007](adr/0007-platform-support-tiers.md), [0008](adr/0008-maintenance-decluttarr-maintainerr.md)
+
+## In scope (MVP)
+
+### Services
+
+| Service | Role |
+| --- | --- |
+| Gluetun | Multi-provider VPN (WireGuard / OpenVPN / custom) |
+| qBittorrent | BitTorrent client (VPN netns or Direct bridge) |
+| Prowlarr | Central indexer manager |
+| Byparr | Cloudflare / anti-bot bypass (FlareSolverr-compatible API) |
+| Radarr | Movies automation |
+| Sonarr | TV automation |
+| Bazarr | Subtitles |
+| Unpackerr | Archive extraction without breaking seeding |
+| Recyclarr | TRaSH Guides quality / custom format sync |
+| Decluttarr | Queue hygiene (stalled/failed downloads → remove/blocklist/research) |
+| Maintainerr | Library hygiene (unwatched / rule-based cleanup via Jellyfin + *arr) |
+| Seerr | Request portal (successor to Jellyseerr/Overseerr) |
+| Jellyfin | Primary media server |
+| Homepage | Dashboard with live widgets |
+| Caddy | Reverse proxy / HTTPS ingress |
+| docker-socket-proxy | Optional read-limited Docker socket for dashboard |
+
+### Tooling
+
+- Bash CLI `bin/flixbox` with at least: `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`
+- Host helpers: `scripts/host-tuning.sh`, `scripts/backup.sh` (as needed by phases)
+- Modular Compose under `compose/`
+- `.env.example` with no real secrets
+- English docs in `docs/`
+
+### Platforms (MVP)
+
+- **First-class:** Linux x86_64 and ARM64 (Docker Engine + Compose v2 plugin)
+- **Best-effort:** Windows Docker Desktop + WSL2 (ext4 paths only), macOS Docker Desktop
+
+## Out of scope (MVP)
+
+Do **not** implement these until the roadmap phase says so:
+
+- Lidarr, Readarr, Audiobookshelf
+- SABnzbd / Usenet
+- Whisper AI subtitles
+- Overseerr / Jellyseerr as separate products (use **Seerr** only)
+- FlareSolverr as the default image (Byparr is default; FlareSolverr remains a documented alternative)
+- PowerShell CLI (`bin/flixbox.ps1`)
+- Vagrant / lab VM packaging
+- Telegram or other bots as first-class Flixbox features (use Seerr/Maintainerr notifications instead)
+- Authelia / Authentik / SSO in front of Caddy
+- Autobrr, cross-seed
+- Profilarr (Recyclarr remains the TRaSH sync tool)
+- Streamystats (optional Maintainerr companion — not required for MVP)
+- Kubernetes / Ansible / Terraform packaging
+- Full zero-touch Servarr API wiring (indexers still need user credentials; document remaining manual steps honestly)
+
+## Later (post-MVP)
+
+See [08-roadmap.md](08-roadmap.md).
+
+## Definition of done (MVP)
+
+MVP is done when all of the following are true:
+
+1. Modular Compose starts the MVP inventory with profiles for VPN vs Direct and optional Plex/proxy as designed.
+2. All download/media containers mount the same `${DATA_DIR}:/data` parent; hardlinks work on a single local filesystem (including `torrents/incomplete`).
+3. VPN mode: qBittorrent shares Gluetun netns; ports published on Gluetun; healthcheck gates start; killswitch drops egress if tunnel is down; port-forward hook documented/wired when provider supports it; `vpn-test` reports masked IP.
+4. Direct mode: qBittorrent on `flixbox_net` without Gluetun.
+5. Decluttarr reaches Radarr/Sonarr and the correct qBit URL for the active mode (`gluetun` vs `qbittorrent`).
+6. Maintainerr is configured against Jellyfin + Radarr/Sonarr (Plex only if Plex profile enabled).
+7. `bin/flixbox` supports the minimum command set and creates the directory tree with the frozen permissions model.
+8. README describes real setup steps (including remaining UI configuration) without false “fully zero-touch” claims.
+9. No secrets in git-tracked files; `.gitignore` covers `.env` and local config/data paths.
+10. Operational footguns from [07-operations-risks.md](07-operations-risks.md) are documented and, where feasible, enforced by CLI validation.
+
+## Explicit non-migration
+
+Flixbox is a greenfield public project. There is **no** migration path from any prior personal HTPC compose stack. Do not add migration guides or legacy compatibility layers.
