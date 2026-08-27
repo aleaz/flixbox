@@ -1,9 +1,12 @@
-# CLI binaries (Phase 5: bin/flixbox)
+# CLI binaries
 
-Placeholder until the Bash CLI is implemented. Use Compose directly for Phase 1:
+Primary tool: [`flixbox`](flixbox)
 
 ```bash
-cp .env.example .env
-./scripts/bootstrap-dirs.sh
-docker compose up -d
+./bin/flixbox init --non-interactive
+./bin/flixbox up
+./bin/flixbox status
+./bin/flixbox vpn-test
+./bin/flixbox logs qbittorrent -f
+./bin/flixbox down
 ```

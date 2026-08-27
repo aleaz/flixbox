@@ -1,19 +1,20 @@
 # Configuration
 
-## Paths
+## Paths and mode
 
 | Variable | Typical default | Purpose |
 | --- | --- | --- |
-| `DATA_DIR` | `/srv/flixbox/data` | Torrents + media (hardlink tree) |
-| `CONFIG_DIR` | `/srv/flixbox/config` | App databases (local SSD) |
-| `PUID` / `PGID` | `1000` / `1000` | File ownership |
-| `UMASK` | `002` | Group-writable new files |
-| `TZ` | e.g. `America/Argentina/Buenos_Aires` | Timezone |
-| `VPN_ENABLED` | `true` / `false` | Dual-mode switch |
+| `FLIXBOX_MODE` | `direct` | `direct` or `vpn` downloader include |
+| `VPN_ENABLED` | `false` | Keep aligned with mode |
+| `DATA_DIR` | `/srv/flixbox/data` | Torrents + media (hardlinks) |
+| `CONFIG_DIR` | `/srv/flixbox/config` | App configs (local SSD) |
+| `PUID` / `PGID` | `1000` | File ownership |
+| `UMASK` | `002` | Group-writable creates |
+| `DECLUTTARR_QBIT_URL` | mode-dependent | `http://qbittorrent:8080` or `http://gluetun:8080` |
 
-Secrets belong in `.env` or provider files under config — never in git.
+Secrets only in `.env` / config volumes — never in git.
 
-## Default ports
+## Ports
 
 | Service | Port |
 | --- | --- |
@@ -22,28 +23,20 @@ Secrets belong in `.env` or provider files under config — never in git.
 | Jellyfin | 8096 |
 | qBittorrent | 8080 |
 | Prowlarr | 9696 |
+| Byparr | 8191 |
 | Radarr | 7878 |
 | Sonarr | 8989 |
 | Bazarr | 6767 |
 | Maintainerr | 6246 |
-| Byparr | 8191 |
 | Caddy | 80 / 443 |
 
-In VPN mode, qBittorrent’s UI port is published on the **Gluetun** service.
+## Optional profiles
 
-## Compose profiles (planned)
-
-Examples of optional toggles:
-
-- Plex media server
-- docker-socket-proxy for Homepage
-- Proxy-only / media-only subsets via `flixbox up <profile>`
-
-Exact profile names will match the Compose files when implemented.
+`plex`, `proxy`, `socket-proxy`, `recyclarr` — via `COMPOSE_PROFILES` or `./bin/flixbox up <profile>` / `docker compose --profile recyclarr run ...`.
 
 ## Image tags
 
-Early development may use `:latest`. Pin versions before you treat a deploy as production / before v0.1 — see [ADR 0010](../adr/0010-mit-and-image-tags.md).
+Early builds use `:latest` ([ADR 0010](../adr/0010-mit-and-image-tags.md)). Pin before production v0.1.
 
 ## Next
 

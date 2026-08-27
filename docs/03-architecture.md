@@ -119,7 +119,9 @@ Host: ${DATA_DIR}/                  Container: /data/
 - Hardlinks require the same filesystem device (avoid MergerFS/Unraid/`exFAT` pitfalls).
 - `/config` on **local SSD/NVMe only** — never NFS/SMB.
 
-## 6. Compose layout (target)
+## 6. Compose layout
+
+Downloader VPN vs Direct is selected by `FLIXBOX_MODE` (exclusive `include`), not Compose profiles.
 
 ```
 compose/

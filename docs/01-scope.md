@@ -66,7 +66,7 @@ See [08-roadmap.md](08-roadmap.md).
 
 MVP is done when all of the following are true:
 
-1. Modular Compose starts the MVP inventory with profiles for VPN vs Direct and optional Plex/proxy as designed.
+1. Modular Compose starts the MVP inventory with `FLIXBOX_MODE` selecting VPN vs Direct downloaders, plus optional profiles (Plex/proxy/socket-proxy/recyclarr) as designed.
 2. All download/media containers mount the same `${DATA_DIR}:/data` parent; hardlinks work on a single local filesystem (including `torrents/incomplete`).
 3. VPN mode: qBittorrent shares Gluetun netns; ports published on Gluetun; healthcheck gates start; killswitch drops egress if tunnel is down; port-forward hook documented/wired when provider supports it; `vpn-test` reports masked IP.
 4. Direct mode: qBittorrent on `flixbox_net` without Gluetun.

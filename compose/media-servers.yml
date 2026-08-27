@@ -1,0 +1,45 @@
+# Media servers. Jellyfin is default; Plex is optional (profile: plex).
+# For Intel/AMD GPU transcode, add under jellyfin:
+#   devices:
+#     - /dev/dri:/dev/dri
+
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: flixbox-jellyfin
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      JELLYFIN_PublishedServerUrl: ${JELLYFIN_PUBLISHED_URL:-}
+    volumes:
+      - ${CONFIG_DIR}/jellyfin:/config
+      - ${DATA_DIR}/media:/data/media
+      - /dev/shm:/transcode
+    ports:
+      - ${JELLYFIN_PORT:-8096}:8096
+    restart: unless-stopped
+    stop_grace_period: 60s
+    networks:
+      - flixbox_net
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: flixbox-plex
+    profiles: ["plex"]
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      VERSION: docker
+      PLEX_CLAIM: ${PLEX_CLAIM:-}
+    volumes:
+      - ${CONFIG_DIR}/plex:/config
+      - ${DATA_DIR}/media:/data/media
+      - /dev/shm:/transcode
+    ports:
+      - ${PLEX_PORT:-32400}:32400
+    restart: unless-stopped
+    stop_grace_period: 60s
+    networks:
+      - flixbox_net

@@ -1,0 +1,86 @@
+# Servarr core + indexer helpers.
+# Download client host: qbittorrent (direct) or gluetun (vpn) — configure in each *arr UI.
+
+services:
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: flixbox-prowlarr
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      UMASK: ${UMASK:-002}
+    volumes:
+      - ${CONFIG_DIR}/prowlarr:/config
+    ports:
+      - ${PROWLARR_PORT:-9696}:9696
+    restart: unless-stopped
+    stop_grace_period: 60s
+    networks:
+      - flixbox_net
+
+  byparr:
+    image: ghcr.io/thephaseless/byparr:latest
+    container_name: flixbox-byparr
+    environment:
+      TZ: ${TZ:-UTC}
+    ports:
+      - ${BYPARR_PORT:-8191}:8191
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      - flixbox_net
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: flixbox-radarr
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      UMASK: ${UMASK:-002}
+    volumes:
+      - ${CONFIG_DIR}/radarr:/config
+      - ${DATA_DIR}:/data
+    ports:
+      - ${RADARR_PORT:-7878}:7878
+    restart: unless-stopped
+    stop_grace_period: 60s
+    networks:
+      - flixbox_net
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: flixbox-sonarr
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      UMASK: ${UMASK:-002}
+    volumes:
+      - ${CONFIG_DIR}/sonarr:/config
+      - ${DATA_DIR}:/data
+    ports:
+      - ${SONARR_PORT:-8989}:8989
+    restart: unless-stopped
+    stop_grace_period: 60s
+    networks:
+      - flixbox_net
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: flixbox-bazarr
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      UMASK: ${UMASK:-002}
+    volumes:
+      - ${CONFIG_DIR}/bazarr:/config
+      - ${DATA_DIR}:/data
+    ports:
+      - ${BAZARR_PORT:-6767}:6767
+    restart: unless-stopped
+    stop_grace_period: 60s
+    networks:
+      - flixbox_net

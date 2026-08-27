@@ -1,0 +1,32 @@
+---
+# Homepage starter — copy to ${CONFIG_DIR}/homepage/services.yaml
+- Media:
+    - Jellyfin:
+        href: http://localhost:8096
+        description: Media server
+        icon: jellyfin.png
+    - Seerr:
+        href: http://localhost:5055
+        description: Requests
+        icon: overseerr.png  # Homepage icon pack name; product is Seerr
+- Downloads:
+    - qBittorrent:
+        href: http://localhost:8080
+        description: Torrents
+        icon: qbittorrent.png
+    - Prowlarr:
+        href: http://localhost:9696
+        icon: prowlarr.png
+    - Radarr:
+        href: http://localhost:7878
+        icon: radarr.png
+    - Sonarr:
+        href: http://localhost:8989
+        icon: sonarr.png
+- Hygiene:
+    - Maintainerr:
+        href: http://localhost:6246
+        icon: mdi-broom
+    - Bazarr:
+        href: http://localhost:6767
+        icon: bazarr.png

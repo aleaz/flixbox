@@ -3,28 +3,28 @@
 **Status:** Working Draft  
 Versions below are planning labels, not semver promises until the first public tag.
 
-## Now — Documentation freeze (current)
+## Now — MVP scaffolding (current)
 
 - [x] Formal docs, ADRs, AGENTS.md, Cursor rules
 - [x] Audit corrections: Seerr, Byparr, port-forward contract, permissions model, Decluttarr + Maintainerr in MVP
 - [x] MIT license; `:latest` allowed for early compose; hygiene defaults documented
 - [x] English user guide (`docs/user/`) + i18n layout reserved (`docs/es/`, `images/{shared,en,es}/`)
-- [ ] No application code yet
-- [ ] No git versioning until the maintainer requests it
+- [x] Modular Compose for MVP inventory (including Decluttarr + Maintainerr)
+- [x] Bash CLI minimum commands (`bin/flixbox`)
+- [x] Hygiene/Recyclarr/Homepage/Caddy templates
+- [ ] Key screenshots in `docs/images/en/`
+- [ ] Spanish user guide (`README.es.md` + `docs/es/user/`) before first public release tag
+- [ ] Image tag pins + CI (gitleaks/trivy) — phase 7 / before v0.1 tag
 
-## Next — MVP implementation (v0.1)
+## Next — Public v0.1 polish
 
-Follow [06-development-guide.md](06-development-guide.md) phases 0–7.
+Follow [06-development-guide.md](06-development-guide.md) phase 7 and remaining DoD items.
 
 Deliverables:
 
-- Modular Compose for MVP inventory (including Decluttarr + Maintainerr)
-- Templates matching [09-hygiene-defaults.md](09-hygiene-defaults.md)
-- Bash CLI minimum commands
-- User guide install/first-run updated to match reality + key screenshots in `docs/images/en/`
-- **Spanish user guide** (`README.es.md` + `docs/es/user/`) when the stack is functional, **before** the first public release tag
-- Hardlink + VPN/Direct verification paths
-- Image tags may start as `:latest`; **pin before tagging v0.1**
+- Screenshots + Spanish user guide
+- Hardlink + VPN/Direct verification documented with operator checklist
+- Image tags pinned before tagging v0.1
 
 ## After MVP — v0.2
 

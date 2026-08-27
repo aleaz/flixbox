@@ -1,0 +1,18 @@
+# LAN-only starter Caddyfile — copy to ${CONFIG_DIR}/caddy/Caddyfile
+# Enable with: COMPOSE_PROFILES=proxy (or flixbox up --profile proxy)
+#
+# Replace hostnames and enable TLS when exposing beyond localhost.
+
+:80 {
+	encode gzip
+
+	handle_path /jellyfin* {
+		reverse_proxy jellyfin:8096
+	}
+	handle_path /seerr* {
+		reverse_proxy seerr:5055
+	}
+	handle / {
+		reverse_proxy homepage:3000
+	}
+}

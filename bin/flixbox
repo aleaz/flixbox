@@ -1,0 +1,241 @@
+#!/usr/bin/env bash
+# Flixbox CLI — day-0 / day-2 operations (MVP).
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${ROOT_DIR}"
+
+NO_COLOR="${NO_COLOR:-}"
+if [[ -t 1 && -z "${NO_COLOR}" ]]; then
+  C_INFO='\033[34m'
+  C_OK='\033[32m'
+  C_WARN='\033[33m'
+  C_ERR='\033[31m'
+  C_RST='\033[0m'
+else
+  C_INFO=''; C_OK=''; C_WARN=''; C_ERR=''; C_RST=''
+fi
+
+log() { printf '%b%s%b\n' "${C_INFO}" "$*" "${C_RST}"; }
+ok() { printf '%b%s%b\n' "${C_OK}" "$*" "${C_RST}"; }
+warn() { printf '%b%s%b\n' "${C_WARN}" "$*" "${C_RST}" >&2; }
+die() { printf '%b%s%b\n' "${C_ERR}" "$*" "${C_RST}" >&2; exit 1; }
+
+load_env() {
+  if [[ -f "${ROOT_DIR}/.env" ]]; then
+    set -a
+    # shellcheck disable=SC1090
+    source <(grep -E '^[A-Z_][A-Z0-9_]*=' "${ROOT_DIR}/.env" | sed 's/\r$//')
+    set +a
+  fi
+  DATA_DIR="${DATA_DIR:-/srv/flixbox/data}"
+  CONFIG_DIR="${CONFIG_DIR:-/srv/flixbox/config}"
+  PUID="${PUID:-1000}"
+  PGID="${PGID:-1000}"
+  FLIXBOX_MODE="${FLIXBOX_MODE:-direct}"
+  VPN_ENABLED="${VPN_ENABLED:-false}"
+}
+
+compose() {
+  docker compose --project-directory "${ROOT_DIR}" "$@"
+}
+
+warn_unsafe_paths() {
+  local path="$1"
+  if [[ "${path}" == /mnt/c/* || "${path}" == /mnt/d/* ]]; then
+    warn "Warning: ${path} looks like a Windows/WSL NTFS mount — hardlinks may fail."
+  fi
+  if [[ "${path}" == *exfat* ]]; then
+    warn "Warning: path mentions exfat — hardlinks are unsupported."
+  fi
+}
+
+copy_templates() {
+  mkdir -p \
+    "${CONFIG_DIR}/recyclarr" \
+    "${CONFIG_DIR}/homepage" \
+    "${CONFIG_DIR}/caddy" \
+    "${CONFIG_DIR}/maintainerr" \
+    "${CONFIG_DIR}/gluetun" \
+    "${CONFIG_DIR}/qbittorrent" \
+    "${CONFIG_DIR}/prowlarr" \
+    "${CONFIG_DIR}/radarr" \
+    "${CONFIG_DIR}/sonarr" \
+    "${CONFIG_DIR}/bazarr" \
+    "${CONFIG_DIR}/jellyfin" \
+    "${CONFIG_DIR}/seerr" \
+    "${CONFIG_DIR}/unpackerr"
+
+  [[ -f "${CONFIG_DIR}/recyclarr/recyclarr.yml" ]] || \
+    cp "${ROOT_DIR}/templates/recyclarr/recyclarr.yml" "${CONFIG_DIR}/recyclarr/recyclarr.yml"
+  [[ -f "${CONFIG_DIR}/homepage/services.yaml" ]] || \
+    cp "${ROOT_DIR}/templates/homepage/services.yaml" "${CONFIG_DIR}/homepage/services.yaml"
+  [[ -f "${CONFIG_DIR}/homepage/settings.yaml" ]] || \
+    cp "${ROOT_DIR}/templates/homepage/settings.yaml" "${CONFIG_DIR}/homepage/settings.yaml"
+  [[ -f "${CONFIG_DIR}/homepage/widgets.yaml" ]] || \
+    cp "${ROOT_DIR}/templates/homepage/widgets.yaml" "${CONFIG_DIR}/homepage/widgets.yaml"
+  [[ -f "${CONFIG_DIR}/homepage/docker.yaml" ]] || \
+    cp "${ROOT_DIR}/templates/homepage/docker.yaml" "${CONFIG_DIR}/homepage/docker.yaml"
+  [[ -f "${CONFIG_DIR}/caddy/Caddyfile" ]] || \
+    cp "${ROOT_DIR}/templates/caddy/Caddyfile" "${CONFIG_DIR}/caddy/Caddyfile"
+  [[ -f "${CONFIG_DIR}/maintainerr/README.md" ]] || \
+    cp "${ROOT_DIR}/templates/maintainerr/README.md" "${CONFIG_DIR}/maintainerr/README.md"
+}
+
+cmd_init() {
+  load_env
+  local force=0 non_interactive=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --force) force=1; shift ;;
+      --non-interactive) non_interactive=1; shift ;;
+      *) die "Unknown init option: $1" ;;
+    esac
+  done
+
+  if [[ -f "${ROOT_DIR}/.env" && "${force}" -ne 1 ]]; then
+    warn ".env already exists (use --force to overwrite from .env.example)."
+  else
+    cp -f "${ROOT_DIR}/.env.example" "${ROOT_DIR}/.env"
+    ok "Wrote .env from .env.example"
+  fi
+
+  if [[ "${non_interactive}" -eq 0 ]]; then
+    log "Edit .env now if needed (DATA_DIR, CONFIG_DIR, FLIXBOX_MODE, VPN_*)."
+    log "Press Enter to continue with bootstrap dirs..."
+    read -r _
+  fi
+
+  load_env
+  warn_unsafe_paths "${DATA_DIR}"
+  warn_unsafe_paths "${CONFIG_DIR}"
+
+  if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
+    sed -i 's/^VPN_ENABLED=.*/VPN_ENABLED=true/' "${ROOT_DIR}/.env" || true
+  else
+    sed -i 's/^VPN_ENABLED=.*/VPN_ENABLED=false/' "${ROOT_DIR}/.env" || true
+  fi
+
+  # Align Decluttarr qBit URL with mode
+  if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
+    if grep -q '^DECLUTTARR_QBIT_URL=' "${ROOT_DIR}/.env"; then
+      sed -i 's|^DECLUTTARR_QBIT_URL=.*|DECLUTTARR_QBIT_URL=http://gluetun:8080|' "${ROOT_DIR}/.env"
+    else
+      printf '\nDECLUTTARR_QBIT_URL=http://gluetun:8080\n' >> "${ROOT_DIR}/.env"
+    fi
+  else
+    if grep -q '^DECLUTTARR_QBIT_URL=' "${ROOT_DIR}/.env"; then
+      sed -i 's|^DECLUTTARR_QBIT_URL=.*|DECLUTTARR_QBIT_URL=http://qbittorrent:8080|' "${ROOT_DIR}/.env"
+    else
+      printf '\nDECLUTTARR_QBIT_URL=http://qbittorrent:8080\n' >> "${ROOT_DIR}/.env"
+    fi
+  fi
+
+  "${ROOT_DIR}/scripts/bootstrap-dirs.sh"
+  load_env
+  copy_templates
+  chown -R "${PUID}:${PGID}" "${CONFIG_DIR}" 2>/dev/null || warn "Could not chown CONFIG_DIR (may need sudo)."
+  ok "Init complete. Next: ./bin/flixbox up"
+}
+
+cmd_up() {
+  load_env
+  local profiles=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --profile)
+        profiles+=(--profile "$2")
+        shift 2
+        ;;
+      plex|proxy|socket-proxy|recyclarr)
+        profiles+=(--profile "$1")
+        shift
+        ;;
+      *)
+        die "Unknown up argument: $1 (try plex|proxy|socket-proxy|recyclarr or --profile NAME)"
+        ;;
+    esac
+  done
+  log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
+  compose "${profiles[@]}" up -d
+  ok "Stack started. ./bin/flixbox status"
+}
+
+cmd_down() {
+  load_env
+  compose down "$@"
+  ok "Stack stopped."
+}
+
+cmd_restart() {
+  load_env
+  local svc="${1:-}"
+  [[ -n "${svc}" ]] || die "Usage: flixbox restart <service>"
+  compose restart "${svc}"
+}
+
+cmd_status() {
+  load_env
+  compose ps
+  echo
+  log "FLIXBOX_MODE=${FLIXBOX_MODE}  VPN_ENABLED=${VPN_ENABLED}"
+  log "DATA_DIR=${DATA_DIR}"
+  log "CONFIG_DIR=${CONFIG_DIR}"
+  if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
+    log "Download client URL for *arr: http://gluetun:8080"
+  else
+    log "Download client URL for *arr: http://qbittorrent:8080"
+  fi
+}
+
+cmd_logs() {
+  load_env
+  if [[ $# -eq 0 ]]; then
+    compose logs --tail=100 -f
+  else
+    compose logs --tail=100 "$@"
+  fi
+}
+
+cmd_vpn_test() {
+  load_env
+  exec "${ROOT_DIR}/scripts/vpn-test.sh"
+}
+
+usage() {
+  cat <<EOF
+Flixbox CLI
+
+Usage:
+  flixbox init [--force] [--non-interactive]
+  flixbox up [plex|proxy|socket-proxy|recyclarr]...
+  flixbox down [--volumes]
+  flixbox restart <service>
+  flixbox status
+  flixbox logs [service] [-f]
+  flixbox vpn-test
+
+Recyclarr sync (one-shot):
+  docker compose --profile recyclarr run --rm recyclarr sync
+
+EOF
+}
+
+main() {
+  local cmd="${1:-}"
+  [[ -n "${cmd}" ]] || { usage; exit 1; }
+  shift || true
+  case "${cmd}" in
+    init) cmd_init "$@" ;;
+    up) cmd_up "$@" ;;
+    down) cmd_down "$@" ;;
+    restart) cmd_restart "$@" ;;
+    status) cmd_status "$@" ;;
+    logs) cmd_logs "$@" ;;
+    vpn-test) cmd_vpn_test "$@" ;;
+    -h|--help|help) usage ;;
+    *) die "Unknown command: ${cmd}" ;;
+  esac
+}
+
+main "$@"

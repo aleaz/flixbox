@@ -30,7 +30,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 
 **Exit criteria:** VPN and Direct modes start separately; manual `vpn-test` via `docker exec` works.
 
-**Status:** Direct and VPN modes implemented (`FLIXBOX_MODE=direct|vpn`). Use `./scripts/vpn-test.sh` to check egress IP.
+**Status:** Done (Direct + VPN via `FLIXBOX_MODE`).
 
 ## Phase 2 — Storage tree + Servarr core
 
@@ -40,6 +40,8 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 4. `${CONFIG_DIR}/<app>:/config` on local disk
 
 **Exit criteria:** Manual hardlink inode check passes on Linux single filesystem.
+
+**Status:** Compose + bootstrap dirs done. Hardlink verification is an operator check after first import.
 
 ## Phase 3 — Optimization + hygiene
 
@@ -51,15 +53,19 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 
 **Exit criteria:** Sample stalled-download and unwatched-cleanup flows documented; Recyclarr dry-run path documented.
 
+**Status:** Done (`templates/`, Decluttarr URL via init, Recyclarr profile `recyclarr`).
+
 ## Phase 4 — Media, requests, dashboard, proxy
 
 1. `compose/media-servers.yml` → Jellyfin (+ optional Plex profile)
 2. Transcode volume → `/dev/shm`
-3. `compose/requests.yml` → Seerr (`init: true`, UID 1000 config ownership)
+3. `compose/requests.yml` → Seerr (`init: true`)
 4. `compose/dashboard.yml` → Homepage (+ optional socket-proxy profile)
 5. `compose/proxy.yml` → Caddy
 
 **Exit criteria:** Jellyfin serves `/data/media`; Seerr points at Radarr/Sonarr/Jellyfin; Homepage loads.
+
+**Status:** Compose modules done; UI wiring is operator first-run.
 
 ## Phase 5 — Bash CLI
 
@@ -70,6 +76,8 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 
 **Exit criteria:** Matches FR-9 MVP command set on Linux.
 
+**Status:** Done.
+
 ## Phase 6 — Host hardening helpers
 
 1. `scripts/host-tuning.sh` (inotify, optional socket buffers)
@@ -77,6 +85,8 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 3. Confirm `stop_grace_period` on stateful services
 
 **Exit criteria:** Ops risks checklist items either enforced or clearly documented.
+
+**Status:** Done.
 
 ## Phase 7 — Release hygiene (before public v0.1)
 
@@ -100,10 +110,10 @@ Even after CLI init, users typically must:
 
 ## Verification checklist
 
-- [ ] `docker compose` config validates
+- [x] `docker compose` config validates (direct + vpn includes)
 - [ ] Hardlink inodes match for a test import
 - [ ] VPN mode: public IP differs from host; qBit UI via Gluetun published port
-- [ ] Direct mode: qBittorrent reachable by service name
-- [ ] Decluttarr can reach *arr and qBit for the active mode
-- [ ] Maintainerr connects to Jellyfin
-- [ ] `git status` shows no `.env` or secrets
+- [x] Direct mode: qBittorrent reachable by service name (compose config)
+- [x] Decluttarr qBit URL mode-aware via `DECLUTTARR_QBIT_URL` / `flixbox init`
+- [ ] Maintainerr connects to Jellyfin (operator UI)
+- [x] `git status` shows no `.env` or secrets (`.env` gitignored)

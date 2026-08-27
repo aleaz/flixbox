@@ -1,11 +1,9 @@
-# Root Compose project. Modules live under compose/.
+# Root Compose project.
 #
-# Dual-mode downloaders (mutually exclusive includes — same service name qbittorrent):
-#   FLIXBOX_MODE=direct  → compose/downloaders-direct.yml
-#   FLIXBOX_MODE=vpn     → compose/downloaders-vpn.yml
+# FLIXBOX_MODE=direct|vpn selects the downloader module.
+# Optional profiles: plex, proxy, socket-proxy, recyclarr
 #
-#   cp .env.example .env
-#   ./scripts/bootstrap-dirs.sh
+#   cp .env.example .env && ./scripts/bootstrap-dirs.sh
 #   docker compose up -d
 
 name: flixbox
@@ -13,3 +11,9 @@ name: flixbox
 include:
   - path: compose/network-base.yml
   - path: compose/downloaders-${FLIXBOX_MODE:-direct}.yml
+  - path: compose/servarr.yml
+  - path: compose/optimization.yml
+  - path: compose/media-servers.yml
+  - path: compose/requests.yml
+  - path: compose/dashboard.yml
+  - path: compose/proxy.yml

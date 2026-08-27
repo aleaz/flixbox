@@ -1,0 +1,3 @@
+# Optional Docker integration for Homepage.
+# Prefer profile socket-proxy and point widgets at http://docker-socket-proxy:2375
+{}

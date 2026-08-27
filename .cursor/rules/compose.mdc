@@ -7,7 +7,7 @@ alwaysApply: false
 # Compose rules
 
 - Use Compose v2 modular files under `compose/`; max ~150 lines per file.
-- Use profiles for optional services (Plex, socket-proxy).
+- Use profiles for optional services (Plex, proxy, socket-proxy, recyclarr).
 - Stateful services: `stop_grace_period: 60s`.
 - VPN mode: qBittorrent `network_mode: service:gluetun`; publish qBit ports on Gluetun; healthcheck gate.
 - Never attach *arr, Seerr, Jellyfin, or Bazarr to Gluetun netns.

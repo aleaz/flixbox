@@ -12,6 +12,8 @@
 /srv/
 data/
 config/
+.tmp-smoke/
+backups/
 
 # OS / editor
 .DS_Store

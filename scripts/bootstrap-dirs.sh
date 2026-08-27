@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
-# Create Flixbox data/config directory trees (Phase 0b helper until bin/flixbox init exists).
+# Create Flixbox data/config directory trees.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if [[ -f "${ROOT_DIR}/.env" ]]; then
-  # shellcheck disable=SC1091
   set -a
-  # Prefer simple KEY=VAL lines; ignore comments/blank
   # shellcheck disable=SC1090
-  source <(grep -E '^[A-Z_]+=.*' "${ROOT_DIR}/.env" | sed 's/\r$//')
+  source <(grep -E '^[A-Z_][A-Z0-9_]*=' "${ROOT_DIR}/.env" | sed 's/\r$//')
   set +a
 fi
 
@@ -27,7 +25,22 @@ mkdir -p \
   "${DATA_DIR}/torrents/tv" \
   "${DATA_DIR}/media/movies" \
   "${DATA_DIR}/media/tv" \
-  "${CONFIG_DIR}/qbittorrent"
+  "${CONFIG_DIR}/qbittorrent" \
+  "${CONFIG_DIR}/gluetun" \
+  "${CONFIG_DIR}/prowlarr" \
+  "${CONFIG_DIR}/radarr" \
+  "${CONFIG_DIR}/sonarr" \
+  "${CONFIG_DIR}/bazarr" \
+  "${CONFIG_DIR}/byparr" \
+  "${CONFIG_DIR}/jellyfin" \
+  "${CONFIG_DIR}/seerr" \
+  "${CONFIG_DIR}/homepage" \
+  "${CONFIG_DIR}/maintainerr" \
+  "${CONFIG_DIR}/recyclarr" \
+  "${CONFIG_DIR}/unpackerr" \
+  "${CONFIG_DIR}/caddy/data" \
+  "${CONFIG_DIR}/caddy/config" \
+  "${CONFIG_DIR}/plex"
 
 chmod g+s \
   "${DATA_DIR}" \

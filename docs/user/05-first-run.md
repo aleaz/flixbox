@@ -1,70 +1,56 @@
 # First-run setup
 
-Do this **once** after `flixbox up`. Order matters.
+Do this **once** after `./bin/flixbox up`. Order matters.
 
-> Screenshot placeholders below will become real PNGs under `docs/images/en/` (and `docs/images/es/` for the Spanish guide).
+## 1. Prowlarr + Byparr
 
-## Recommended order
+1. Open Prowlarr (`:9696`).
+2. Add indexers.
+3. Settings → Indexers → Add Indexer Proxy → type **FlareSolverr** → URL `http://byparr:8191` (protocol name stays FlareSolverr; service is Byparr).
+4. Sync apps to Radarr and Sonarr.
 
-### 1. Prowlarr — indexers + Byparr
+## 2. qBittorrent
 
-1. Open Prowlarr.
-2. Add your indexers.
-3. Add an indexer proxy of type **FlareSolverr** pointing at Byparr (for example `http://byparr:8191`). The UI label says “FlareSolverr”; the Flixbox default service is **Byparr**.
-4. Sync apps to Radarr and Sonarr when they exist.
+1. Open WebUI (`:8080`).
+2. Paths: `/data/torrents`, incomplete `/data/torrents/incomplete`.
+3. Optional tag `flixbox-keep` for Decluttarr protection.
+4. If VPN + port forwarding: enable **Bypass authentication for clients on localhost**.
 
-> Screenshot: `docs/images/en/prowlarr-byparr-proxy.png`
+## 3. Radarr / Sonarr
 
-### 2. qBittorrent — categories and paths
-
-1. Open the WebUI (VPN mode: published via Gluetun).
-2. Default save paths under `/data/torrents/...` (incomplete under `/data/torrents/incomplete`).
-3. Optional: create tag `flixbox-keep` for torrents Decluttarr must never remove.
-4. Enable **Bypass authentication for clients on localhost** if you use Gluetun port-forward hooks.
-
-### 3. Radarr / Sonarr — root folders + download client
-
-1. Root folders: `/data/media/movies` and `/data/media/tv`.
+1. Root folders: `/data/media/movies`, `/data/media/tv`.
 2. Download client:
-   - VPN mode → host **`gluetun`**, port `8080`
-   - Direct mode → host **`qbittorrent`**, port `8080`
-3. Categories matching qBittorrent (for example `movies` / `tv`).
-4. Enable hardlinks / use the standard media management options recommended by TRaSH where applicable.
+   - Direct → host `qbittorrent`, port `8080`
+   - VPN → host `gluetun`, port `8080`
+3. Categories matching qBit.
+4. Copy API keys into `.env` (`RADARR_API_KEY`, `SONARR_API_KEY`) and recreate Decluttarr/Unpackerr: `./bin/flixbox up`.
 
-> Screenshot: `docs/images/en/radarr-download-client-gluetun.png`
+## 4. Bazarr
 
-### 4. Bazarr
+Connect to Radarr/Sonarr; set subtitle language priorities.
 
-Connect to Radarr/Sonarr; set language priorities (Castellano / Latino / English are common defaults to document).
+## 5. Jellyfin
 
-### 5. Jellyfin
+Wizard → libraries under `/data/media/movies` and `/data/media/tv`.
 
-1. Complete the wizard.
-2. Add libraries pointing at `/data/media/movies` and `/data/media/tv`.
-3. Create users you will link from Seerr / Maintainerr.
+## 6. Seerr
 
-### 6. Seerr
+Connect Jellyfin + Radarr + Sonarr; set household permissions.
 
-1. Connect Jellyfin.
-2. Connect Radarr and Sonarr (API keys from each app).
-3. Set request permissions / approval rules for your household.
+## 7. Recyclarr
 
-> Screenshot: `docs/images/en/seerr-jellyfin.png`
+Edit `${CONFIG_DIR}/recyclarr/recyclarr.yml` API keys →  
+`docker compose --profile recyclarr run --rm recyclarr sync`.
 
-### 7. Recyclarr
+## 8. Decluttarr / Maintainerr
 
-Run profile sync when the CLI command exists (`flixbox sync-profiles`), or run the container/job documented in engineering docs. Start from TRaSH-oriented templates.
+- Decluttarr uses env from `.env` (qBit URL set by `flixbox init` from mode).
+- Maintainerr (`:6246`): connect **Jellyfin** + Radarr/Sonarr; apply rules from [Hygiene](08-hygiene.md) / [09-hygiene-defaults](../09-hygiene-defaults.md). Review before first delete.
 
-### 8. Decluttarr / Maintainerr
+## 9. Homepage / Caddy
 
-1. Point Decluttarr at Radarr, Sonarr, and the correct qBit URL for your mode.
-2. Point Maintainerr at **Jellyfin** + Radarr/Sonarr.
-3. Import / enable the [standard hygiene pack](08-hygiene.md). Review before the first delete cycle.
-
-### 9. Homepage + Caddy
-
-Add service widgets and (if used) TLS routes. Prefer not publishing raw admin UIs to the WAN.
+Homepage (`:3000`) templates are copied by init. Enable Caddy with `./bin/flixbox up proxy` when ready.
 
 ## Next
 
-[Configuration reference](06-configuration.md) · [VPN and Direct](07-vpn-and-direct.md)
+[Configuration](06-configuration.md) · [VPN and Direct](07-vpn-and-direct.md)

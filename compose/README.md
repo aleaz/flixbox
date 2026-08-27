@@ -2,29 +2,31 @@
 
 | File | Status | Role |
 | --- | --- | --- |
-| `network-base.yml` | **active** | `flixbox_net` bridge |
-| `downloaders-direct.yml` | **active** | qBittorrent (`FLIXBOX_MODE=direct`) |
-| `downloaders-vpn.yml` | **active** | Gluetun + qBittorrent (`FLIXBOX_MODE=vpn`) |
-| `servarr.yml` | planned | Prowlarr, Radarr, Sonarr, Bazarr, Byparr |
-| `optimization.yml` | planned | Unpackerr, Recyclarr, Decluttarr, Maintainerr |
-| `media-servers.yml` | planned | Jellyfin (+ optional Plex) |
-| `requests.yml` | planned | Seerr |
-| `dashboard.yml` | planned | Homepage |
-| `proxy.yml` | planned | Caddy |
+| `network-base.yml` | active | `flixbox_net` |
+| `downloaders-direct.yml` | active | qBittorrent (`FLIXBOX_MODE=direct`) |
+| `downloaders-vpn.yml` | active | Gluetun + qBittorrent (`FLIXBOX_MODE=vpn`) |
+| `servarr.yml` | active | Prowlarr, Byparr, Radarr, Sonarr, Bazarr |
+| `optimization.yml` | active | Unpackerr, Recyclarr, Decluttarr, Maintainerr |
+| `media-servers.yml` | active | Jellyfin (+ optional `plex` profile) |
+| `requests.yml` | active | Seerr |
+| `dashboard.yml` | active | Homepage (+ optional `socket-proxy`) |
+| `proxy.yml` | active | Caddy (`proxy` profile) |
 
-Root entrypoint: [`../compose.yaml`](../compose.yaml) includes `downloaders-${FLIXBOX_MODE}.yml`.
+Root: [`../compose.yaml`](../compose.yaml).
 
-## Dual-mode rule
-
-Set **one** mode in `.env`:
+## Dual-mode
 
 ```bash
-FLIXBOX_MODE=direct   # http://qbittorrent:8080 for *arr
-# or
-FLIXBOX_MODE=vpn      # http://gluetun:8080 for *arr
-VPN_ENABLED=true
+FLIXBOX_MODE=direct   # *arr client http://qbittorrent:8080
+FLIXBOX_MODE=vpn      # *arr client http://gluetun:8080
 ```
 
-Never attach *arr / Seerr / Jellyfin to Gluetun’s network namespace. Only qBittorrent uses `network_mode: service:gluetun`.
+Never put *arr / Seerr / Jellyfin on Gluetun’s netns.
 
-Switching modes: `docker compose down` then change `FLIXBOX_MODE` and `docker compose up -d`.
+## Optional profiles
+
+```bash
+docker compose --profile plex --profile proxy up -d
+docker compose --profile recyclarr run --rm recyclarr sync
+# or: ./bin/flixbox up plex proxy
+```

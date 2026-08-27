@@ -1,0 +1,6 @@
+---
+# Minimal Homepage settings — copy to ${CONFIG_DIR}/homepage/settings.yaml
+title: Flixbox
+theme: dark
+color: slate
+headerStyle: clean
