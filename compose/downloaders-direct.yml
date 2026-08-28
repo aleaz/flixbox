@@ -2,10 +2,9 @@
 # Included when FLIXBOX_MODE=direct (see root compose.yaml).
 # Servarr / Decluttarr download client: http://qbittorrent:8080
 #
-# Configure qBittorrent save paths (applied by custom-cont-init on start; override UI optional):
-#   Default: /data/torrents
-#   Incomplete: /data/torrents/incomplete
-#   Optional categories under /data/torrents/movies and /data/torrents/tv
+# Paths/WebUI: linuxserver runs scripts from /custom-cont-init.d (not /config/...).
+# init installs ${CONFIG_DIR}/qbittorrent-cont-init/99-flixbox-qbittorrent.sh
+#   Default: /data/torrents ; Incomplete: /data/torrents/incomplete
 
 services:
   qbittorrent:
@@ -21,6 +20,7 @@ services:
       FLIXBOX_QBIT_FORCE_PATHS: ${FLIXBOX_QBIT_FORCE_PATHS:-false}
     volumes:
       - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent:/config
+      - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent-cont-init:/custom-cont-init.d:ro
       - ${DATA_DIR:?set DATA_DIR}:/data
     ports:
       - ${QBITTORRENT_PORT:-8080}:8080

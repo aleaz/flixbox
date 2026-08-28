@@ -10,6 +10,7 @@ alwaysApply: false
 - Use profiles for optional services (Plex, proxy, socket-proxy, recyclarr).
 - Stateful services: `stop_grace_period: 60s`.
 - VPN mode: qBittorrent `network_mode: service:gluetun`; publish qBit ports on Gluetun; healthcheck gate.
+- Mount qBit cont-init at `/custom-cont-init.d` via `${CONFIG_DIR}/qbittorrent-cont-init` (not under `/config`).
 - Never attach *arr, Seerr, Jellyfin, or Bazarr to Gluetun netns.
 - All download/library services mount the same `${DATA_DIR}:/data` parent.
 - Dual-mode via exclusive include: `downloaders-${FLIXBOX_MODE}.yml` (`direct`|`vpn`) — do not define two `qbittorrent` services in one project.

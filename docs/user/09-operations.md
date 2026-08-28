@@ -57,7 +57,7 @@ Container:  /data/torrents/...         /data/media/...
 
 Inside containers, paths are always under **`/data/...`**. Editing `DATA_DIR` in `.env` only changes **which host directory** is mounted at `/data` — not the in-container paths.
 
-**Most apps do not auto-update** when you change storage. Only qBittorrent paths are reconciled on container start (via `custom-cont-init.d/99-flixbox-qbittorrent.sh`). Radarr, Sonarr, Jellyfin, and others keep paths in their **own config databases** until you change them in each UI.
+**Most apps do not auto-update** when you change storage. Only qBittorrent paths are reconciled on container start (via `${CONFIG_DIR}/qbittorrent-cont-init` → `/custom-cont-init.d`). Radarr, Sonarr, Jellyfin, and others keep paths in their **own config databases** until you change them in each UI.
 
 ### What updates automatically vs manually
 
@@ -80,7 +80,7 @@ Inside containers, paths are always under **`/data/...`**. Editing `DATA_DIR` in
 
 3. **Update `.env`:** `DATA_DIR=${NEW_DATA}` (keep layout: `torrents/`, `media/`).
 4. **Start:** `./bin/flixbox up`
-5. **qBittorrent:** `docker compose restart qbittorrent` — verify **Options → Downloads** → `/data/torrents/`.
+5. **qBittorrent:** `docker compose up -d --force-recreate qbittorrent` — verify **Options → Downloads** → `/data/torrents/` (plain `restart` is enough only if the cont-init mount already exists).
 6. **Radarr / Sonarr:** Settings → confirm root folders `/data/media/movies` and `/data/media/tv`; test download client.
 7. **Jellyfin:** Dashboard → Libraries → paths still under `/data/media/...`.
 8. **Seerr / Maintainerr / Bazarr:** confirm linked servers and paths if prompted.

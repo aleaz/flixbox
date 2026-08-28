@@ -1,6 +1,9 @@
 #!/usr/bin/with-contenv bash
 # Flixbox qBittorrent bootstrap (linuxserver image).
 #
+# Installed to ${CONFIG_DIR}/qbittorrent-cont-init/ and mounted at /custom-cont-init.d
+# (linuxserver ignores the legacy path /config/custom-cont-init.d).
+#
 # 1. WebUI: allow Docker host port maps (qBit 5.x + custom QBITTORRENT_PORT).
 # 2. Paths: align with ADR 0001 (/data/torrents) instead of linuxserver /downloads defaults.
 #

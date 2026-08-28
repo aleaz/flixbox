@@ -107,13 +107,18 @@ Then `./bin/flixbox up` and log in with `admin` plus the temporary password from
 
 #### Automation
 
-`flixbox init` installs `custom-cont-init.d/99-flixbox-qbittorrent.sh` under `${CONFIG_DIR}/qbittorrent/` so WebUI keys are applied on every container start. Re-run `./bin/flixbox init` if your config predates that hook.
+`flixbox init` installs `99-flixbox-qbittorrent.sh` under `${CONFIG_DIR}/qbittorrent-cont-init/`, mounted into the container at **`/custom-cont-init.d`** (linuxserver’s supported path — **not** `/config/custom-cont-init.d`, which current images ignore). Re-run `./bin/flixbox init` then recreate qBit if your install predates this mount:
+
+```bash
+./bin/flixbox init --non-interactive
+docker compose up -d --force-recreate qbittorrent
+```
 
 If you use **VPN port forwarding**, after login still enable **Bypass authentication for clients on localhost** under **Options → Web UI** (separate from the two keys above; Gluetun hooks call the API on `127.0.0.1:8080` inside the VPN netns).
 
 ### 2c. Download paths (automatic)
 
-Flixbox sets qBittorrent paths **on container start** via `99-flixbox-qbittorrent.sh` (no WebUI step required for defaults):
+Flixbox sets qBittorrent paths **on container start** via `/custom-cont-init.d/99-flixbox-qbittorrent.sh` (no WebUI step required for defaults):
 
 | Setting | Path |
 | --- | --- |

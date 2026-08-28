@@ -103,6 +103,15 @@ grep -q 'condition: service_healthy' compose/downloaders-vpn.yml || \
   fail C-23 'missing qBittorrent depends_on gluetun healthy'
 pass C-23
 
+# --- C-24: qBit cont-init mounted at linuxserver path (not legacy /config/...) ---
+for f in compose/downloaders-direct.yml compose/downloaders-vpn.yml; do
+  grep -q 'qbittorrent-cont-init:/custom-cont-init.d' "${f}" || \
+    fail C-24 "${f} missing qbittorrent-cont-init:/custom-cont-init.d mount"
+done
+[[ -f templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh ]] || \
+  fail C-24 'missing templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh'
+pass C-24
+
 # --- C-30: banned default images ---
 while IFS= read -r line; do
   lower="$(echo "${line}" | tr '[:upper:]' '[:lower:]')"

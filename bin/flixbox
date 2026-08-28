@@ -101,11 +101,15 @@ copy_templates() {
     cp "${ROOT_DIR}/templates/caddy/Caddyfile" "${CONFIG_DIR}/caddy/Caddyfile"
   [[ -f "${CONFIG_DIR}/maintainerr/README.md" ]] || \
     cp "${ROOT_DIR}/templates/maintainerr/README.md" "${CONFIG_DIR}/maintainerr/README.md"
-  mkdir -p "${CONFIG_DIR}/qbittorrent/custom-cont-init.d"
+  # linuxserver runs /custom-cont-init.d (separate mount), not /config/custom-cont-init.d
+  mkdir -p "${CONFIG_DIR}/qbittorrent-cont-init"
   cp -f "${ROOT_DIR}/templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh" \
-    "${CONFIG_DIR}/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh"
-  chmod +x "${CONFIG_DIR}/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh"
-  rm -f "${CONFIG_DIR}/qbittorrent/custom-cont-init.d/99-flixbox-webui.sh"
+    "${CONFIG_DIR}/qbittorrent-cont-init/99-flixbox-qbittorrent.sh"
+  chmod +x "${CONFIG_DIR}/qbittorrent-cont-init/99-flixbox-qbittorrent.sh"
+  # Remove legacy location (ignored by current linuxserver images)
+  rm -f "${CONFIG_DIR}/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh" \
+    "${CONFIG_DIR}/qbittorrent/custom-cont-init.d/99-flixbox-webui.sh"
+  rmdir "${CONFIG_DIR}/qbittorrent/custom-cont-init.d" 2>/dev/null || true
 }
 
 cmd_init() {

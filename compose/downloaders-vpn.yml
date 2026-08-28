@@ -73,6 +73,7 @@ services:
       FLIXBOX_QBIT_FORCE_PATHS: ${FLIXBOX_QBIT_FORCE_PATHS:-false}
     volumes:
       - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent:/config
+      - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent-cont-init:/custom-cont-init.d:ro
       - ${DATA_DIR:?set DATA_DIR}:/data
     restart: unless-stopped
     stop_grace_period: 60s

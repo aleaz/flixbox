@@ -5,7 +5,7 @@
 | `mkdir: /srv: Read-only file system` on init | Linux template paths on macOS without `init` | Run `./bin/flixbox init --force --non-interactive` or set `DATA_DIR`/`CONFIG_DIR` under `$HOME/flixbox/` |
 | Imports are slow / disk doubles | Split mounts; hardlink failed (`EXDEV`) | One `${DATA_DIR}:/data` parent; check MergerFS/exFAT |
 | Media missing after moving `DATA_DIR` | *arr / Jellyfin still ok but data not at expected host mount | Follow [Changing paths](09-operations.md#changing-paths-and-storage-layout); verify root folders and libraries use `/data/media/...` |
-| qBit saves to wrong folder | Legacy `/downloads/` or hook not installed | Restart qBit; run `./bin/flixbox init`; or `FLIXBOX_QBIT_FORCE_PATHS=true` — [First-run §2c](05-first-run.md#2c-download-paths-automatic) |
+| qBit saves to wrong folder (`/downloads/`) | Hook not mounted at `/custom-cont-init.d` or not recreated | `./bin/flixbox init --non-interactive` then `docker compose up -d --force-recreate qbittorrent`; or `FLIXBOX_QBIT_FORCE_PATHS=true` — [First-run §2c](05-first-run.md#2c-download-paths-automatic) |
 | Radarr cannot reach qBit (VPN) | Wrong hostname or ports on wrong service | Use `http://gluetun:8080`; publish UI on Gluetun |
 | qBit crash-loops at boot (VPN) | Started before Gluetun healthy | Healthcheck `depends_on`; restart qBit after Gluetun is healthy |
 | VPN test shows home IP | Not in VPN mode / tunnel down | Check `VPN_ENABLED`, Gluetun logs, `vpn-test` |

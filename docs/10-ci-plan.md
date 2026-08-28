@@ -202,7 +202,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-20 | Only qBit uses `network_mode: service:gluetun` | grep across compose; must appear only in `downloaders-vpn.yml` on `qbittorrent` |
 | C-21 | *arr / Seerr / Jellyfin NOT on Gluetun netns | no `network_mode: service:gluetun` in servarr, requests, media-servers |
 | C-22 | Gluetun publishes qBit ports | ports on `gluetun` service in vpn module |
-| C-23 | Gluetun healthcheck + qBit `depends_on` healthy | `downloaders-vpn.yml` |
+| C-24 | qBit cont-init at `/custom-cont-init.d` | `qbittorrent-cont-init:/custom-cont-init.d` in both downloader modules + template present |
 
 ### 5.4 Service inventory (ADR 0006)
 
