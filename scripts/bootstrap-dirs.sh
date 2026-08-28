@@ -3,6 +3,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=lib/paths.sh
+source "${ROOT_DIR}/scripts/lib/paths.sh"
 
 if [[ -f "${ROOT_DIR}/.env" ]]; then
   set -a
@@ -18,6 +20,8 @@ PGID="${PGID:-1000}"
 
 echo "DATA_DIR=${DATA_DIR}"
 echo "CONFIG_DIR=${CONFIG_DIR}"
+
+validate_flixbox_paths "${DATA_DIR}" "${CONFIG_DIR}" || exit 1
 
 mkdir -p \
   "${DATA_DIR}/torrents/incomplete" \

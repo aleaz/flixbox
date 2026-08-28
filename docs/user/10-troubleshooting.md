@@ -2,6 +2,7 @@
 
 | Symptom | Likely cause | What to try |
 | --- | --- | --- |
+| `mkdir: /srv: Read-only file system` on init | Linux default paths on macOS | Set `DATA_DIR`/`CONFIG_DIR` under `$HOME/flixbox/` in `.env`, or `./bin/flixbox init --force --non-interactive` on macOS |
 | Imports are slow / disk doubles | Split mounts; hardlink failed (`EXDEV`) | One `${DATA_DIR}:/data` parent; check MergerFS/exFAT |
 | Radarr cannot reach qBit (VPN) | Wrong hostname or ports on wrong service | Use `http://gluetun:8080`; publish UI on Gluetun |
 | qBit crash-loops at boot (VPN) | Started before Gluetun healthy | Healthcheck `depends_on`; restart qBit after Gluetun is healthy |
