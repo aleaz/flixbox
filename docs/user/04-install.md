@@ -30,12 +30,14 @@ docker compose up -d
 
 VPN: fill Gluetun secrets in `.env`, then `./scripts/vpn-test.sh` or `./bin/flixbox vpn-test`.
 
-### qBittorrent paths
+### qBittorrent paths and ports
 
-- Default: `/data/torrents`
-- Incomplete: `/data/torrents/incomplete`
+- Default host WebUI: port `8080` (`QBITTORRENT_PORT` in `.env`)
+- Inside Docker, WebUI stays on port **8080**; *arr use `qbittorrent:8080` or `gluetun:8080`
+- Custom host port example: `QBITTORRENT_PORT=9898` → browser `http://localhost:9898`, *arr still `8080`
 - First-run password: `docker compose logs qbittorrent`
 - VPN port-forward: enable **Bypass authentication for clients on localhost**
+- Stale config after port changes: see [First-run §2e](05-first-run.md#2e-custom-host-ports-and-stale-config)
 
 ### Optional profiles
 

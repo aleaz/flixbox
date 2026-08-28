@@ -4,9 +4,16 @@
 | --- | --- | --- |
 | `mkdir: /srv: Read-only file system` on init | Linux template paths on macOS without `init` | Run `./bin/flixbox init --force --non-interactive` or set `DATA_DIR`/`CONFIG_DIR` under `$HOME/flixbox/` |
 | Imports are slow / disk doubles | Split mounts; hardlink failed (`EXDEV`) | One `${DATA_DIR}:/data` parent; check MergerFS/exFAT |
+| Media missing after moving `DATA_DIR` | *arr / Jellyfin still ok but data not at expected host mount | Follow [Changing paths](09-operations.md#changing-paths-and-storage-layout); verify root folders and libraries use `/data/media/...` |
+| qBit saves to wrong folder | Legacy `/downloads/` or hook not installed | Restart qBit; run `./bin/flixbox init`; or `FLIXBOX_QBIT_FORCE_PATHS=true` — [First-run §2c](05-first-run.md#2c-download-paths-automatic) |
 | Radarr cannot reach qBit (VPN) | Wrong hostname or ports on wrong service | Use `http://gluetun:8080`; publish UI on Gluetun |
 | qBit crash-loops at boot (VPN) | Started before Gluetun healthy | Healthcheck `depends_on`; restart qBit after Gluetun is healthy |
 | VPN test shows home IP | Not in VPN mode / tunnel down | Check `VPN_ENABLED`, Gluetun logs, `vpn-test` |
+| Homepage link goes to wrong port after `.env` change | `services.yaml` copied once at init with default ports | Edit `${CONFIG_DIR}/homepage/services.yaml` or regenerate from `.env` |
+| qBit WebUI `Unauthorized` after login attempts | Not logged in yet | Browser → `http://localhost:<QBITTORRENT_PORT>`; user `admin`; temp password in `docker compose logs qbittorrent` |
+| qBit WebUI plain `Unauthorized` (no login form) | qBittorrent 5.x rejects `Host: localhost:<mapped-port>` when internal WebUI is 8080 | Set `WebUI\HostHeaderValidation=false` and `WebUI\LocalHostAuth=false`; [First-run §2b.1 — why](05-first-run.md#2b1-webui-stuck-on-plain-unauthorized-qbittorrent-5x) |
+| qBit `Unauthorized` persists after port experiments | Stale `qBittorrent.conf` in config volume | Stop stack; remove `${CONFIG_DIR}/qbittorrent/qBittorrent/`; `./bin/flixbox up` (see [First-run §2e](05-first-run.md#2e-custom-host-ports-and-stale-config)) |
+| Changed `WEBUI_PORT` + `8420:8420` style mapping | Internal/listen port mismatch | Prefer Flixbox default: `QBITTORRENT_PORT:8080` only; keep `WEBUI_PORT=8080` in Compose |
 | Indexers fail Cloudflare (`blocked by CloudFlare Protection`) | Proxy missing, wrong host, or tags not linked | Create FlareSolverr proxy → host `byparr`, port `8191`; same **tag** on proxy and indexer; see [First-run §1](05-first-run.md#1-prowlarr--byparr) |
 | Indexer test OK in Prowlarr but missing in Radarr/Sonarr | Tag on indexer but not on app | **Settings → Apps** → add the same tag to Radarr/Sonarr, or remove tags |
 | Byparr logs show challenge then `200 OK` | Normal for CF indexers | No action; if search still fails, try another indexer or check `./bin/flixbox logs byparr` |

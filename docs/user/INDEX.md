@@ -18,7 +18,7 @@ Friendly documentation for operators who want to run Flixbox at home.
 | [06 — Configuration](06-configuration.md) | Paths, env, ports, Compose profiles |
 | [07 — VPN and Direct](07-vpn-and-direct.md) | Gluetun, port forwarding, leak checks |
 | [08 — Hygiene](08-hygiene.md) | Decluttarr and Maintainerr in plain language |
-| [09 — Day-2 operations](09-operations.md) | Status, logs, updates, backups, hardlink check |
+| [09 — Day-2 operations](09-operations.md) | Status, logs, updates, backups, **path changes**, hardlink check |
 | [10 — Troubleshooting](10-troubleshooting.md) | Common failures and fixes |
 | [11 — Smoke test](11-smoke-test.md) | MVP validation checklist before v0.1 |
 

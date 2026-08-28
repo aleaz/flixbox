@@ -25,6 +25,19 @@ Maintainerr cleans forgotten library items (rules).
 5. **Stream** from Jellyfin; Bazarr can fetch subtitles.
 6. **Hygiene** tools keep queues and libraries from rotting.
 
+## What Prowlarr syncs (and what it does not)
+
+Prowlarr is the **indexer hub**. When you connect Radarr and Sonarr under **Settings → Apps**, it pushes **indexers only** to those apps.
+
+| Syncs from Prowlarr → Radarr/Sonarr | Does **not** sync — configure in each app |
+| --- | --- |
+| Indexers (Torznab/Newznab, etc.) | **Download clients** (qBittorrent) |
+| Indexer tags (if you use them) | **Root folders** (`/data/media/...`) |
+| | **Quality profiles** (use Recyclarr later) |
+| | **Jellyfin**, Seerr, paths, API keys for *arr |
+
+So qBittorrent is added **once in Radarr** and **once in Sonarr** under **Settings → Download Clients**. Same host (`qbittorrent`), port `8080`, API key from qBit — see [First-run §3](05-first-run.md#3-radarr--sonarr).
+
 ## Why one `/data` mount matters
 
 All download and library apps must see the **same parent folder** inside the container (`/data`). If torrents and media are separate Docker mounts, hardlinks fail and *arr falls back to a full **copy** (slow, doubles disk while seeding).

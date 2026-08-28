@@ -93,6 +93,11 @@ Use this as an implementation checklist. Mitigations marked **enforce** should b
 
 - **Mitigation (document):** Compare inodes with `ls -i` after import.
 
+### 4.5 Path changes do not propagate to all apps
+
+- **Risk:** Operator changes `DATA_DIR` or folder layout; qBit hook updates save paths, but Radarr/Sonarr/Jellyfin keep old root folders or libraries in SQLite until UI is updated — imports fail or libraries look empty.
+- **Mitigation (document):** [user/09-operations.md — Changing paths](user/09-operations.md#changing-paths-and-storage-layout).
+
 ---
 
 ## 5. Cross-platform

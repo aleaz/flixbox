@@ -28,8 +28,8 @@ Platform defaults when you run `./bin/flixbox init` (new `.env`):
 | --- | --- | --- | --- |
 | `FLIXBOX_MODE` | `direct` | `direct`, `vpn` | Selects `compose/downloaders-*.yml`. See [VPN and Direct](07-vpn-and-direct.md). |
 | `VPN_ENABLED` | `false` | `true`, `false` | Must match mode. `flixbox init` syncs this from `FLIXBOX_MODE`. |
-| `DATA_DIR` | OS-dependent (table above) | Absolute path | Torrents + media on one filesystem for hardlinks. Not NFS/SMB/exFAT; not WSL `/mnt/c`. |
-| `CONFIG_DIR` | OS-dependent (table above) | Absolute path | App configs on local SSD/NVMe only. |
+| `DATA_DIR` | OS-dependent (table above) | Absolute path | Torrents + media on one filesystem for hardlinks. Not NFS/SMB/exFAT; not WSL `/mnt/c`. **If you change this after setup**, see [Day-2 — Changing paths](09-operations.md#changing-paths-and-storage-layout). |
+| `CONFIG_DIR` | OS-dependent (table above) | Absolute path | App configs on local SSD/NVMe only. Changing it is a config migration — same guide. |
 | `COMPOSE_PROJECT_NAME` | `flixbox` | Docker project name | Rarely changed. |
 
 ## File ownership and timezone
@@ -45,13 +45,20 @@ Platform defaults when you run `./bin/flixbox init` (new `.env`):
 
 Change **only** if the default port is already bound on the host. Internal service ports inside containers do not change.
 
+After changing any `*_PORT` in `.env`:
+
+1. Run `./bin/flixbox up` so Compose republishes ports.
+2. Update `${CONFIG_DIR}/homepage/services.yaml` links to match (or run `./bin/flixbox sync-templates` when available).
+3. *arr download clients still use **internal** ports (`8080` for qBit) — see [Download client URLs](#download-client-urls-arr-ui).
+
 | Variable | Default | Service |
 | --- | --- | --- |
 | `HOMEPAGE_PORT` | `3000` | Homepage |
 | `SEERR_PORT` | `5055` | Seerr |
 | `JELLYFIN_PORT` | `8096` | Jellyfin |
-| `QBITTORRENT_PORT` | `8080` | qBittorrent WebUI (published on Gluetun in VPN mode) |
+| `QBITTORRENT_PORT` | `8080` | qBittorrent WebUI (published on Gluetun in VPN mode). Browser uses this port; *arr use internal **8080**. If remapped, see [First-run §2b.1](05-first-run.md#2b1-webui-stuck-on-plain-unauthorized-qbittorrent-5x) (Host header vs Docker publish). |
 | `QBITTORRENT_BT_PORT` | `6881` | BitTorrent listen port |
+| `FLIXBOX_QBIT_FORCE_PATHS` | `false` | If `true`, qBit save paths reset to `/data/torrents/...` every start. Default: only fix missing or linuxserver `/downloads/` paths ([First-run §2c](05-first-run.md#2c-download-paths-automatic)). |
 | `PROWLARR_PORT` | `9696` | Prowlarr |
 | `BYPARR_PORT` | `8191` | Byparr |
 | `RADARR_PORT` | `7878` | Radarr |

@@ -50,23 +50,139 @@ If your Cloudflare indexers use tag `cf`:
 
 ### 1d. Sync to Radarr and Sonarr
 
-Use **Sync App Indexers** (or Prowlarr’s automatic sync) so Radarr and Sonarr receive the indexers from Prowlarr.
+Use **Sync App Indexers** (or Prowlarr’s automatic sync) so Radarr and Sonarr receive the **indexers** from Prowlarr.
+
+Prowlarr does **not** sync download clients, root folders, or quality settings — only indexers. See [How it works — What Prowlarr syncs](02-how-it-works.md#what-prowlarr-syncs-and-what-it-does-not).
 
 ## 2. qBittorrent
 
-1. Open WebUI (`:8080`).
-2. Paths: `/data/torrents`, incomplete `/data/torrents/incomplete`.
-3. Optional tag `flixbox-keep` for Decluttarr protection.
-4. If VPN + port forwarding: enable **Bypass authentication for clients on localhost**.
+### 2a. Open the WebUI
+
+Use the **host** port from `.env` (`QBITTORRENT_PORT`, default `8080`). Example: if you set `9898`, open `http://localhost:9898`.
+
+Inside Docker, Radarr/Sonarr still use host `qbittorrent` (or `gluetun` in VPN mode) and port **`8080`** — that internal port does not change when you remap the host port.
+
+### 2b. Login (`Unauthorized`)
+
+A bare `Unauthorized` response (curl or a blank page) usually means **not logged in yet**, not a wrong URL path. Open the URL in a normal browser tab; you should get the login form.
+
+| Field | Value |
+| --- | --- |
+| Username | `admin` |
+| Password | Temporary password from first container start |
+
+```bash
+docker compose logs qbittorrent 2>&1 | grep -iE 'password|temporary'
+```
+
+Change the password after login under **Options → Web UI**.
+
+Use **`http://127.0.0.1:<QBITTORRENT_PORT>`** (not `:8080` on the host unless that is your mapped port). If port `8080` is already used by another app on the host, set `QBITTORRENT_PORT` in `.env` and use that port in the browser only.
+
+### 2b.1 WebUI stuck on plain `Unauthorized` (qBittorrent 5.x)
+
+#### Why this happens
+
+Flixbox maps the WebUI as **`${QBITTORRENT_PORT}:8080`** (host port → container port). qBittorrent **always listens on 8080 inside the container**; only the published host port changes (for example `9898`).
+
+When you open `http://localhost:9898`, the browser sends `Host: localhost:9898`. qBittorrent 5.x (linuxserver image) may reject that request before showing the login page:
+
+| Setting | Default behavior | Problem behind Docker port remap |
+| --- | --- | --- |
+| `WebUI\HostHeaderValidation` | Validates the `Host` header against the internal WebUI port (`8080`) | Browser uses `:9898` → plain-text **`Unauthorized`**, no login form |
+| `WebUI\LocalHostAuth` | Special handling for localhost auth | Can block normal login through the published port in some 5.x builds |
+
+This is **not** a Flixbox bug and **not** fixed by Byparr or Gluetun. *arr apps are unaffected — they call `http://qbittorrent:8080` on the Docker network, not your host port.
+
+#### Fix
+
+Add to `${CONFIG_DIR}/qbittorrent/qBittorrent/qBittorrent.conf` while the stack is stopped (or let the init hook below apply it):
+
+```ini
+WebUI\HostHeaderValidation=false
+WebUI\LocalHostAuth=false
+```
+
+Then `./bin/flixbox up` and log in with `admin` plus the temporary password from `docker compose logs qbittorrent`. Access works with **`localhost:<QBITTORRENT_PORT>`** and **`127.0.0.1:<QBITTORRENT_PORT>`**.
+
+#### Automation
+
+`flixbox init` installs `custom-cont-init.d/99-flixbox-qbittorrent.sh` under `${CONFIG_DIR}/qbittorrent/` so WebUI keys are applied on every container start. Re-run `./bin/flixbox init` if your config predates that hook.
+
+If you use **VPN port forwarding**, after login still enable **Bypass authentication for clients on localhost** under **Options → Web UI** (separate from the two keys above; Gluetun hooks call the API on `127.0.0.1:8080` inside the VPN netns).
+
+### 2c. Download paths (automatic)
+
+Flixbox sets qBittorrent paths **on container start** via `99-flixbox-qbittorrent.sh` (no WebUI step required for defaults):
+
+| Setting | Path |
+| --- | --- |
+| Default save | `/data/torrents/` |
+| Incomplete | `/data/torrents/incomplete/` |
+
+The hook runs **before** qBittorrent starts. It:
+
+- Writes missing keys.
+- Replaces **linuxserver legacy** paths (`/downloads/`, `/downloads/incomplete/`).
+- **Leaves** other custom paths under `/data/` alone (if you deliberately use `/data/torrents/movies`, it is kept).
+- With `FLIXBOX_QBIT_FORCE_PATHS=true` in `.env`, always resets to the table above (then `./bin/flixbox up`).
+
+Verify under **Options → Downloads** after first start. Optional: tag `flixbox-keep` on torrents Decluttarr must not remove.
+
+If you change `DATA_DIR`, host ports, or folder layout **after** first-run, see [Day-2 — Changing paths](09-operations.md#changing-paths-and-storage-layout).
+
+### 2d. VPN port forwarding
+
+If `FLIXBOX_MODE=vpn` and `VPN_PORT_FORWARDING=on`: enable **Bypass authentication for clients on localhost** in the qBit WebUI.
+
+### 2e. Custom host ports and stale config
+
+Flixbox publishes the WebUI as `${QBITTORRENT_PORT}:8080` (host → container). Only change **`QBITTORRENT_PORT`** in `.env`, then `./bin/flixbox up`. Do **not** remap `8420:8420` unless you also change `WEBUI_PORT` inside the container — the stock Compose keeps `WEBUI_PORT=8080` on purpose.
+
+If the WebUI stays stuck on `Unauthorized` or refuses the new port **after** you changed ports or experimented with custom `WEBUI_PORT` / `TORRENTING_PORT`, the linuxserver config volume may still hold old values from a previous run. Restarting the container is not enough.
+
+**Reset qBittorrent config (loses qBit settings, not torrents on disk):**
+
+```bash
+./bin/flixbox down
+# default CONFIG_DIR; adjust if yours differs
+rm -rf "${CONFIG_DIR:-/srv/flixbox/config}/qbittorrent/qBittorrent"
+./bin/flixbox up
+docker compose logs qbittorrent   # new temporary password
+```
+
+Also update `${CONFIG_DIR}/homepage/services.yaml` so the qBittorrent link uses your host port (Homepage is not updated automatically from `.env` yet).
 
 ## 3. Radarr / Sonarr
 
-1. Root folders: `/data/media/movies`, `/data/media/tv`.
-2. Download client:
-   - Direct → host `qbittorrent`, port `8080`
-   - VPN → host `gluetun`, port `8080`
-3. Categories matching qBit.
-4. Copy API keys into `.env` (`RADARR_API_KEY`, `SONARR_API_KEY`) and recreate Decluttarr/Unpackerr: `./bin/flixbox up`.
+Configure **each app separately** (settings are not shared via Prowlarr).
+
+### 3a. Root folders
+
+| App | Root folder |
+| --- | --- |
+| Radarr | `/data/media/movies` |
+| Sonarr | `/data/media/tv` |
+
+### 3b. Download client (qBittorrent)
+
+Add in **both** Radarr and Sonarr: **Settings → Download Clients → + → qBittorrent**
+
+| Field | Direct mode | VPN mode |
+| --- | --- | --- |
+| Host | `qbittorrent` | `gluetun` |
+| Port | `8080` | `8080` |
+| URL Base | *(leave empty)* | *(leave empty)* |
+| Username / Password | qBit WebUI creds if auth enabled | same |
+| API Key | qBit → **Options → Web UI → API access** | same |
+
+Use **Test** — must be green in Radarr **and** Sonarr. Host port `9898` (or any `QBITTORRENT_PORT`) is **only for your browser**; *arr always use internal port **8080**.
+
+Optional: category `movies` (Radarr) / `tv` (Sonarr) if you use qBit categories.
+
+### 3c. API keys for Decluttarr / Unpackerr
+
+Copy **Radarr** and **Sonarr** API keys (Settings → General) into `.env` (`RADARR_API_KEY`, `SONARR_API_KEY`), then `./bin/flixbox up`.
 
 ## 4. Bazarr
 
