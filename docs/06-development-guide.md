@@ -91,7 +91,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 ## Phase 7 — Release hygiene (before public v0.1)
 
 1. Pin image tags
-2. CI stubs: gitleaks (required), trivy (recommended)
+2. CI phase 1 done — see [10-ci-plan.md](10-ci-plan.md); phase 2 (Trivy) before public tag
 3. Honest quickstart in README
 4. `LICENSE` is MIT (already in repo)
 5. Pin image tags (leave `:latest` only for pre-release experimentation)

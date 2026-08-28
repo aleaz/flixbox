@@ -25,6 +25,7 @@
 | [07-operations-risks.md](07-operations-risks.md) | Edge cases and mitigations |
 | [08-roadmap.md](08-roadmap.md) | MVP → later releases |
 | [09-hygiene-defaults.md](09-hygiene-defaults.md) | Decluttarr + Maintainerr thresholds |
+| [10-ci-plan.md](10-ci-plan.md) | GitHub Actions plan and contract checks |
 
 ## Decisions
 

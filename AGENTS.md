@@ -19,7 +19,8 @@ Flixbox is a **docs-first, pre-implementation** open-source Docker media stack. 
 - **Never break** VPN dual-mode; only qBit uses Gluetun netns; publish qBit ports on Gluetun; mode-aware client URLs for *arr and Decluttarr.
 - **Maintainerr**: default Jellyfin; no destructive rules enabled by default.
 - **No git commits** unless the user explicitly asks.
-- Prefer **small, phase-aligned diffs** from the development guide.
+- **Commit messages:** public-facing only — see [docs/05-standards.md](docs/05-standards.md) §8. No phase/MVP/agent-session wording in subjects or bodies.
+- Prefer **small, focused diffs** aligned with [docs/06-development-guide.md](docs/06-development-guide.md).
 - Docs language: **English** for canonical technical docs.
 
 ## Current repo state

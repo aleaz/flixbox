@@ -15,5 +15,6 @@ alwaysApply: true
 - Maintainerr defaults to Jellyfin; do not enable destructive cleanup rules by default.
 - No secrets in git-tracked files.
 - Do not commit unless the user explicitly asks.
+- Commit messages are public-facing: no MVP/phase/agent-session wording (see `docs/05-standards.md` §8).
 - Canonical docs are English.
 - Prefer phase order in `docs/06-development-guide.md`.

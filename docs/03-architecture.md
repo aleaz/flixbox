@@ -155,7 +155,7 @@ See [ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md).
 - Non-root app containers via PUID/PGID where applicable; Seerr runs as UID 1000 with `init: true`.
 - Optional docker-socket-proxy for Homepage.
 - Caddy for TLS; SSO/Authelia is post-MVP.
-- Future CI: gitleaks + image scanning (roadmap).
+- Future CI: gitleaks + trivy — see `docs/10-ci-plan.md`.
 
 ## 10. Resilience baseline
 

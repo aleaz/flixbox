@@ -14,7 +14,8 @@ Versions below are planning labels, not semver promises until the first public t
 - [x] Hygiene/Recyclarr/Homepage/Caddy templates
 - [ ] Key screenshots in `docs/images/en/`
 - [ ] Spanish user guide (`README.es.md` + `docs/es/user/`) before first public release tag
-- [ ] Image tag pins + CI (gitleaks/trivy) — phase 7 / before v0.1 tag
+- [x] CI phase 1 (gitleaks + validate) — [10-ci-plan.md](10-ci-plan.md)
+- [ ] Image tag pins before public v0.1 tag
 
 ## Next — Public v0.1 polish
 
@@ -30,7 +31,7 @@ Deliverables:
 
 - CLI: `sync-profiles`, `backup`, `restore`, `update`
 - Stronger init validation (hardlink probe, config-on-NFS guard, exFAT guard)
-- GitHub Actions: gitleaks (+ trivy)
+- CI phase 2: Trivy + init smoke — [10-ci-plan.md](10-ci-plan.md)
 - Image tag pinning policy documented and applied
 
 ## v0.3 — Optional media profiles

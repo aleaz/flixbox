@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  validate:
+    name: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compose config (direct)
+        run: docker compose --env-file .env.example config --quiet
+
+      - name: Compose config (vpn)
+        run: FLIXBOX_MODE=vpn docker compose --env-file .env.example config --quiet
+
+      - name: Compose config (profiles)
+        run: >-
+          docker compose --env-file .env.example
+          --profile plex --profile proxy --profile socket-proxy --profile recyclarr
+          config --quiet
+
+      - name: Install ShellCheck
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+
+      - name: ShellCheck
+        run: shellcheck bin/flixbox scripts/*.sh scripts/ci-validate.sh
+
+      - name: Contract validation
+        run: ./scripts/ci-validate.sh
