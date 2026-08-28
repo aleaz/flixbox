@@ -30,7 +30,7 @@ flixbox/
 └── .gitignore
 ```
 
-Runtime data and configs live on the host (e.g. `/srv/flixbox/{data,config}`), not in git.
+Runtime data and configs live on the host (e.g. `/srv/flixbox/{data,config}` on Linux, `$HOME/flixbox/{data,config}` on macOS via `init`), not in git.
 
 ## 3. Docker Compose
 

@@ -5,6 +5,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 
+# shellcheck source=lib/paths.sh
+source "${ROOT_DIR}/scripts/lib/paths.sh"
+
 if [[ -f .env ]]; then
   set -a
   # shellcheck disable=SC1090
@@ -12,7 +15,7 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-CONFIG_DIR="${CONFIG_DIR:-/srv/flixbox/config}"
+CONFIG_DIR="${CONFIG_DIR:-$(flixbox_default_config_dir)}"
 DEST="${1:-${ROOT_DIR}/backups}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUT="${DEST}/flixbox-config-${STAMP}.tar.gz"

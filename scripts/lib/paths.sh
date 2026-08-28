@@ -1,9 +1,67 @@
 #!/usr/bin/env bash
-# Shared path validation for Flixbox CLI and bootstrap scripts.
-# Source from bin/flixbox or scripts/bootstrap-dirs.sh — do not execute directly.
+# Shared path validation and platform defaults for Flixbox CLI/scripts.
+# Source from bin/flixbox or scripts/*.sh — do not execute directly.
 
 _paths_hint() {
   printf 'hint: %s\n' "$*" >&2
+}
+
+_paths_sed_inplace() {
+  if [[ "$(uname -s)" == Darwin ]]; then
+    sed -i '' "$@"
+  else
+    sed -i "$@"
+  fi
+}
+
+# Linux reference default (FHS /srv). Used for hints and .env.example.
+flixbox_linux_data_dir() {
+  printf '/srv/flixbox/data'
+}
+
+flixbox_linux_config_dir() {
+  printf '/srv/flixbox/config'
+}
+
+# Default DATA_DIR for the current host OS.
+flixbox_default_data_dir() {
+  case "$(uname -s)" in
+    Darwin) printf '%s/flixbox/data' "${HOME}" ;;
+    Linux) flixbox_linux_data_dir ;;
+    *) printf '%s/flixbox/data' "${HOME}" ;;
+  esac
+}
+
+# Default CONFIG_DIR for the current host OS.
+flixbox_default_config_dir() {
+  case "$(uname -s)" in
+    Darwin) printf '%s/flixbox/config' "${HOME}" ;;
+    Linux) flixbox_linux_config_dir ;;
+    *) printf '%s/flixbox/config' "${HOME}" ;;
+  esac
+}
+
+# Write platform-appropriate DATA_DIR / CONFIG_DIR into an env file.
+apply_platform_env_paths() {
+  local env_file="$1"
+  local data_dir config_dir
+
+  data_dir="$(flixbox_default_data_dir)"
+  config_dir="$(flixbox_default_config_dir)"
+
+  _paths_sed_inplace "s|^DATA_DIR=.*|DATA_DIR=${data_dir}|" "${env_file}"
+  _paths_sed_inplace "s|^CONFIG_DIR=.*|CONFIG_DIR=${config_dir}|" "${env_file}"
+}
+
+# Paths plus macOS PUID/PGID (linuxserver images need the host user on Docker Desktop).
+apply_platform_env_defaults() {
+  local env_file="$1"
+
+  apply_platform_env_paths "${env_file}"
+  if [[ "$(uname -s)" == Darwin ]]; then
+    _paths_sed_inplace "s|^PUID=.*|PUID=$(id -u)|" "${env_file}"
+    _paths_sed_inplace "s|^PGID=.*|PGID=$(id -g)|" "${env_file}"
+  fi
 }
 
 # True when path is an absolute path.
@@ -21,7 +79,6 @@ _path_existing_ancestor() {
 }
 
 # Validate that path can be created or is already a writable directory.
-# arg1: path  arg2: label (e.g. DATA_DIR)
 validate_path_writable() {
   local path="$1"
   local label="$2"
@@ -60,33 +117,33 @@ validate_path_writable() {
   return 0
 }
 
-# Platform-specific guidance when Linux-centric defaults are used on macOS.
-warn_macos_srv_paths() {
+# Guidance when Linux template paths are used on macOS without init.
+warn_platform_path_mismatch() {
   local data_dir="$1"
   local config_dir="$2"
+  local linux_data linux_config
 
   [[ "$(uname -s)" == Darwin ]] || return 0
 
-  if [[ "${data_dir}" == /srv/flixbox/* || "${config_dir}" == /srv/flixbox/* ]]; then
-    _paths_hint "on macOS, /srv is often missing or not writable."
-    _paths_hint "edit .env, for example:"
-    _paths_hint "  DATA_DIR=${HOME}/flixbox/data"
-    _paths_hint "  CONFIG_DIR=${HOME}/flixbox/config"
-    _paths_hint "or run: ./bin/flixbox init --force --non-interactive (macOS defaults)"
+  linux_data="$(flixbox_linux_data_dir)"
+  linux_config="$(flixbox_linux_config_dir)"
+
+  if [[ "${data_dir}" == "${linux_data}"* || "${config_dir}" == "${linux_config}"* ]]; then
+    _paths_hint "on macOS, ${linux_data} is not available by default."
+    _paths_hint "run: ./bin/flixbox init --force --non-interactive"
+    _paths_hint "or set DATA_DIR=${HOME}/flixbox/data and CONFIG_DIR=${HOME}/flixbox/config"
   fi
 }
 
-# Validate DATA_DIR and CONFIG_DIR before mkdir/bootstrap.
 validate_flixbox_paths() {
   local data_dir="$1"
   local config_dir="$2"
 
-  warn_macos_srv_paths "${data_dir}" "${config_dir}"
+  warn_platform_path_mismatch "${data_dir}" "${config_dir}"
   validate_path_writable "${data_dir}" "DATA_DIR" || return 1
   validate_path_writable "${config_dir}" "CONFIG_DIR" || return 1
 }
 
-# Require directories created by init before compose up.
 require_flixbox_dirs() {
   local data_dir="$1"
   local config_dir="$2"

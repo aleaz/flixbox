@@ -40,8 +40,8 @@ load_env() {
     source <(grep -E '^[A-Z_][A-Z0-9_]*=' "${ROOT_DIR}/.env" | sed 's/\r$//')
     set +a
   fi
-  DATA_DIR="${DATA_DIR:-/srv/flixbox/data}"
-  CONFIG_DIR="${CONFIG_DIR:-/srv/flixbox/config}"
+  DATA_DIR="${DATA_DIR:-$(flixbox_default_data_dir)}"
+  CONFIG_DIR="${CONFIG_DIR:-$(flixbox_default_config_dir)}"
   PUID="${PUID:-1000}"
   PGID="${PGID:-1000}"
   FLIXBOX_MODE="${FLIXBOX_MODE:-direct}"
@@ -62,11 +62,13 @@ warn_unsafe_paths() {
   fi
 }
 
-apply_macos_path_defaults() {
-  [[ "$(uname -s)" == Darwin ]] || return 0
-  sed_inplace "s|^DATA_DIR=.*|DATA_DIR=${HOME}/flixbox/data|" "${ROOT_DIR}/.env"
-  sed_inplace "s|^CONFIG_DIR=.*|CONFIG_DIR=${HOME}/flixbox/config|" "${ROOT_DIR}/.env"
-  ok "Set macOS-friendly paths in .env (\$HOME/flixbox/{data,config})"
+apply_platform_path_defaults() {
+  apply_platform_env_defaults "${ROOT_DIR}/.env"
+  if [[ "$(uname -s)" == Darwin ]]; then
+    ok "Platform defaults in .env (paths under \$HOME/flixbox, PUID/PGID=$(id -u)/$(id -g))"
+  else
+    ok "Platform defaults in .env (DATA_DIR=$(flixbox_default_data_dir), CONFIG_DIR=$(flixbox_default_config_dir))"
+  fi
 }
 
 copy_templates() {
@@ -116,8 +118,8 @@ cmd_init() {
     warn ".env already exists (use --force to overwrite from .env.example)."
   else
     cp -f "${ROOT_DIR}/.env.example" "${ROOT_DIR}/.env"
-    apply_macos_path_defaults
     ok "Wrote .env from .env.example"
+    apply_platform_path_defaults
   fi
 
   if [[ "${non_interactive}" -eq 0 ]]; then

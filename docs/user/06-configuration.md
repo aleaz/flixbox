@@ -15,20 +15,29 @@ The template file groups variables by when you need them: **required before firs
 
 ## Required before first `up`
 
+Platform defaults when you run `./bin/flixbox init` (new `.env`):
+
+| OS | `DATA_DIR` | `CONFIG_DIR` |
+| --- | --- | --- |
+| Linux | `/srv/flixbox/data` | `/srv/flixbox/config` |
+| macOS | `$HOME/flixbox/data` | `$HOME/flixbox/config` |
+
+`.env.example` shows the Linux reference paths. `init` rewrites them on macOS.
+
 | Variable | Default | Valid values | Notes |
 | --- | --- | --- | --- |
 | `FLIXBOX_MODE` | `direct` | `direct`, `vpn` | Selects `compose/downloaders-*.yml`. See [VPN and Direct](07-vpn-and-direct.md). |
 | `VPN_ENABLED` | `false` | `true`, `false` | Must match mode. `flixbox init` syncs this from `FLIXBOX_MODE`. |
-| `DATA_DIR` | `/srv/flixbox/data` | Absolute path | Torrents + media on one filesystem for hardlinks. Not NFS/SMB/exFAT; not WSL `/mnt/c`. |
-| `CONFIG_DIR` | `/srv/flixbox/config` | Absolute path | App configs on local SSD/NVMe only. |
+| `DATA_DIR` | OS-dependent (table above) | Absolute path | Torrents + media on one filesystem for hardlinks. Not NFS/SMB/exFAT; not WSL `/mnt/c`. |
+| `CONFIG_DIR` | OS-dependent (table above) | Absolute path | App configs on local SSD/NVMe only. |
 | `COMPOSE_PROJECT_NAME` | `flixbox` | Docker project name | Rarely changed. |
 
 ## File ownership and timezone
 
 | Variable | Default | Notes |
 | --- | --- | --- |
-| `PUID` | `1000` | UID for linuxserver-style containers and file ownership. |
-| `PGID` | `1000` | GID; should match the group that owns `DATA_DIR`. |
+| `PUID` | `1000` (Linux) / `id -u` (macOS via `init`) | UID for linuxserver-style containers and file ownership. |
+| `PGID` | `1000` (Linux) / `id -g` (macOS via `init`) | GID; should match the group that owns `DATA_DIR`. |
 | `UMASK` | `002` | Group-writable new files (`init` also sets SGID on data dirs). |
 | `TZ` | `UTC` | IANA timezone for all containers. |
 

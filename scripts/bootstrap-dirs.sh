@@ -13,8 +13,8 @@ if [[ -f "${ROOT_DIR}/.env" ]]; then
   set +a
 fi
 
-DATA_DIR="${DATA_DIR:-/srv/flixbox/data}"
-CONFIG_DIR="${CONFIG_DIR:-/srv/flixbox/config}"
+DATA_DIR="${DATA_DIR:-$(flixbox_default_data_dir)}"
+CONFIG_DIR="${CONFIG_DIR:-$(flixbox_default_config_dir)}"
 PUID="${PUID:-1000}"
 PGID="${PGID:-1000}"
 
