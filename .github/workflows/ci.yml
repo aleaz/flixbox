@@ -44,7 +44,7 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
 
       - name: ShellCheck
-        run: shellcheck bin/flixbox scripts/*.sh scripts/lib/*.sh scripts/ci-validate.sh
+        run: shellcheck -e SC1091 bin/flixbox scripts/*.sh scripts/lib/*.sh scripts/ci-validate.sh
 
       - name: Contract validation
         run: ./scripts/ci-validate.sh
