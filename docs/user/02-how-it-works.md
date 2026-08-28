@@ -19,7 +19,7 @@ Maintainerr cleans forgotten library items (rules).
 ```
 
 1. **Request** something in Seerr (or add it in Radarr/Sonarr).
-2. **Search** goes through Prowlarr (Byparr helps with Cloudflare-protected indexers).
+2. **Search** goes through Prowlarr. Cloudflare-protected indexers (for example 1337x) need the **Byparr** proxy in Prowlarr — see [First-run setup](05-first-run.md#1-prowlarr--byparr).
 3. **Download** lands in `/data/torrents/...` via qBittorrent.
 4. **Import** creates a **hardlink** into `/data/media/...` (same file, second name — almost no extra disk).
 5. **Stream** from Jellyfin; Bazarr can fetch subtitles.

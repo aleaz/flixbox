@@ -7,7 +7,9 @@
 | Radarr cannot reach qBit (VPN) | Wrong hostname or ports on wrong service | Use `http://gluetun:8080`; publish UI on Gluetun |
 | qBit crash-loops at boot (VPN) | Started before Gluetun healthy | Healthcheck `depends_on`; restart qBit after Gluetun is healthy |
 | VPN test shows home IP | Not in VPN mode / tunnel down | Check `VPN_ENABLED`, Gluetun logs, `vpn-test` |
-| Indexers fail Cloudflare | Bypass service misconfigured | Byparr URL in Prowlarr proxy type “FlareSolverr” |
+| Indexers fail Cloudflare (`blocked by CloudFlare Protection`) | Proxy missing, wrong host, or tags not linked | Create FlareSolverr proxy → host `byparr`, port `8191`; same **tag** on proxy and indexer; see [First-run §1](05-first-run.md#1-prowlarr--byparr) |
+| Indexer test OK in Prowlarr but missing in Radarr/Sonarr | Tag on indexer but not on app | **Settings → Apps** → add the same tag to Radarr/Sonarr, or remove tags |
+| Byparr logs show challenge then `200 OK` | Normal for CF indexers | No action; if search still fails, try another indexer or check `./bin/flixbox logs byparr` |
 | Jellyfin dies on 4K transcode | Small `/dev/shm` | Mount host `/dev/shm` for transcode |
 | *arr DB corrupt after reboot | Short stop timeout | `stop_grace_period: 60s`; local SSD for config |
 | Config weirdness on NAS path | SQLite over NFS/SMB | Move `${CONFIG_DIR}` to local disk |

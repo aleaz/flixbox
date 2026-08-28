@@ -4,10 +4,53 @@ Do this **once** after `./bin/flixbox up`. Order matters.
 
 ## 1. Prowlarr + Byparr
 
+Byparr bypasses Cloudflare on indexers that need it (for example 1337x). Configure the proxy **before** adding those indexers.
+
+### 1a. Add the Byparr proxy (once)
+
 1. Open Prowlarr (`:9696`).
-2. Add indexers.
-3. Settings → Indexers → Add Indexer Proxy → type **FlareSolverr** → URL `http://byparr:8191` (protocol name stays FlareSolverr; service is Byparr).
-4. Sync apps to Radarr and Sonarr.
+2. **Settings** → **Indexers** → **Indexer Proxies** → **+**.
+3. Type **FlareSolverr** (Prowlarr’s protocol name; the service in Flixbox is **Byparr**).
+4. Set:
+   - **Host:** `byparr` (not `localhost` — Prowlarr runs inside Docker)
+   - **Port:** `8191`
+   - **Use SSL:** off  
+   Or use URL: `http://byparr:8191`
+5. **Tags (recommended):** add a tag such as `cf` or `byparr` on the proxy entry.
+6. **Test** — should succeed. If not: `./bin/flixbox logs byparr`.
+
+### 1b. Add indexers
+
+**Indexers without Cloudflare** — add normally (no proxy tag needed).
+
+**Indexers with Cloudflare** (for example 1337x):
+
+1. **Indexers** → **Add indexer**.
+2. Configure the indexer as usual.
+3. Under **Tags**, add the **same tag** you put on the Byparr proxy (for example `cf`).
+4. **Test** — Prowlarr should reach the site via Byparr.
+
+Successful Byparr logs look like:
+
+```text
+Challenge detected, waiting for it to clear...
+Done https://... in 9.43s
+POST /v1 HTTP/1.1" 200 OK
+```
+
+### 1c. Tags and app sync (important)
+
+Prowlarr warns: *an indexer with a tag only syncs to apps with the same tag.*
+
+If your Cloudflare indexers use tag `cf`:
+
+1. **Settings** → **Apps** → open **Radarr** and **Sonarr**.
+2. Add the same tag (`cf`) to each app **or** leave indexers untagged if you want them on all apps without tag rules.
+3. **Test** each app connection, then confirm the indexer appears under each app’s indexer list.
+
+### 1d. Sync to Radarr and Sonarr
+
+Use **Sync App Indexers** (or Prowlarr’s automatic sync) so Radarr and Sonarr receive the indexers from Prowlarr.
 
 ## 2. qBittorrent
 
