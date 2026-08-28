@@ -8,7 +8,7 @@
 git clone https://github.com/aleaz/flixbox.git
 cd flixbox
 ./bin/flixbox init --non-interactive
-# Edit .env: DATA_DIR, CONFIG_DIR, TZ, FLIXBOX_MODE, VPN_*, API keys later
+# Edit .env — see docs/user/06-configuration.md (DATA_DIR, FLIXBOX_MODE, TZ, VPN if needed)
 ./bin/flixbox up
 ./bin/flixbox status
 ```

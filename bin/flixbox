@@ -144,7 +144,10 @@ cmd_init() {
   load_env
   copy_templates
   chown -R "${PUID}:${PGID}" "${CONFIG_DIR}" 2>/dev/null || warn "Could not chown CONFIG_DIR (may need sudo)."
-  ok "Init complete. Next: ./bin/flixbox up"
+  ok "Init complete."
+  log "Review .env before first up: DATA_DIR, CONFIG_DIR, FLIXBOX_MODE (Gluetun vars if vpn)."
+  log "After *arr login: RADARR_API_KEY, SONARR_API_KEY → ./bin/flixbox up"
+  log "Reference: docs/user/06-configuration.md · First-run: docs/user/05-first-run.md"
 }
 
 cmd_up() {
