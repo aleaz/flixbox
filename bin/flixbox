@@ -101,6 +101,11 @@ copy_templates() {
     cp "${ROOT_DIR}/templates/caddy/Caddyfile" "${CONFIG_DIR}/caddy/Caddyfile"
   [[ -f "${CONFIG_DIR}/maintainerr/README.md" ]] || \
     cp "${ROOT_DIR}/templates/maintainerr/README.md" "${CONFIG_DIR}/maintainerr/README.md"
+  mkdir -p "${CONFIG_DIR}/qbittorrent/custom-cont-init.d"
+  cp -f "${ROOT_DIR}/templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh" \
+    "${CONFIG_DIR}/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh"
+  chmod +x "${CONFIG_DIR}/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh"
+  rm -f "${CONFIG_DIR}/qbittorrent/custom-cont-init.d/99-flixbox-webui.sh"
 }
 
 cmd_init() {

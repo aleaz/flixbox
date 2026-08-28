@@ -217,7 +217,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 
 | ID | Rule | Validation |
 | --- | --- | --- |
-| C-40 | Decluttarr protect tag | `NO_STALLED_REMOVAL_QBIT_TAG: flixbox-keep` in `optimization.yml` |
+| C-40 | Decluttarr protect tag | `PROTECTED_TAG: flixbox-keep` (Decluttarr v2) or legacy `NO_STALLED_REMOVAL_QBIT_TAG` in `optimization.yml` |
 | C-41 | Decluttarr unmonitored off | `REMOVE_UNMONITORED: "False"` |
 | C-42 | Stateful `stop_grace_period` | grep count ≥ expected minimum on long-running services |
 

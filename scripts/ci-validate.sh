@@ -134,7 +134,7 @@ grep -q 'init: true' compose/requests.yml || fail C-33 'Seerr missing init: true
 pass C-33
 
 # --- C-40 / C-41: Decluttarr hygiene defaults ---
-grep -q 'NO_STALLED_REMOVAL_QBIT_TAG: flixbox-keep' compose/optimization.yml || \
+grep -qE '(NO_STALLED_REMOVAL_QBIT_TAG|PROTECTED_TAG): flixbox-keep' compose/optimization.yml || \
   fail C-40 'Decluttarr missing flixbox-keep protect tag'
 grep -q 'REMOVE_UNMONITORED: "False"' compose/optimization.yml || \
   fail C-41 'Decluttarr REMOVE_UNMONITORED must be False'

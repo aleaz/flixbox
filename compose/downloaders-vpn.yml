@@ -70,6 +70,7 @@ services:
       UMASK: ${UMASK:-002}
       WEBUI_PORT: 8080
       TORRENTING_PORT: ${QBITTORRENT_BT_PORT:-6881}
+      FLIXBOX_QBIT_FORCE_PATHS: ${FLIXBOX_QBIT_FORCE_PATHS:-false}
     volumes:
       - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent:/config
       - ${DATA_DIR:?set DATA_DIR}:/data

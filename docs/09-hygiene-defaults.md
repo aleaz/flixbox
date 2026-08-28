@@ -32,6 +32,8 @@ These are the Flixbox-recommended starting rules. Templates shipped with the pro
 
 Download client **name** in Decluttarr must match the name configured in Radarr/Sonarr (default suggestion: `qBittorrent`).
 
+**Compose env (Decluttarr v2, Nov 2025):** list-based `RADARR` / `SONARR` / `QBITTORRENT` blocks in `optimization.yml`; protect tag is `PROTECTED_TAG: flixbox-keep` (v1 `NO_STALLED_REMOVAL_QBIT_TAG` is ignored).
+
 **After removal:** trigger *arr search for a replacement when the app supports it.
 
 ---
