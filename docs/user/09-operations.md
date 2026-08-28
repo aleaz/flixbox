@@ -45,6 +45,18 @@ ls -i ${DATA_DIR}/media/movies/Example\ \(2024\)/example.mkv
 
 Same inode ⇒ hardlink worked.
 
+## MVP smoke test (before v0.1)
+
+Full checklist and automated helper:
+
+```bash
+./scripts/smoke-test.sh preflight   # no containers
+./scripts/smoke-test.sh run         # init + up + HTTP probes (Direct)
+./scripts/smoke-test.sh down
+```
+
+See [11 — Smoke test](11-smoke-test.md).
+
 ## Quality profiles
 
 ```bash

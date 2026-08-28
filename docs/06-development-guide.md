@@ -110,6 +110,8 @@ Even after CLI init, users typically must:
 
 ## Verification checklist
 
+Operator smoke test: [docs/user/11-smoke-test.md](user/11-smoke-test.md) and `./scripts/smoke-test.sh`.
+
 - [x] `docker compose` config validates (direct + vpn includes)
 - [ ] Hardlink inodes match for a test import
 - [ ] VPN mode: public IP differs from host; qBit UI via Gluetun published port

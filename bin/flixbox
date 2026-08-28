@@ -21,6 +21,15 @@ ok() { printf '%b%s%b\n' "${C_OK}" "$*" "${C_RST}"; }
 warn() { printf '%b%s%b\n' "${C_WARN}" "$*" "${C_RST}" >&2; }
 die() { printf '%b%s%b\n' "${C_ERR}" "$*" "${C_RST}" >&2; exit 1; }
 
+# BSD sed (macOS) requires '' after -i; GNU sed does not.
+sed_inplace() {
+  if [[ "$(uname -s)" == Darwin ]]; then
+    sed -i '' "$@"
+  else
+    sed -i "$@"
+  fi
+}
+
 load_env() {
   if [[ -f "${ROOT_DIR}/.env" ]]; then
     set -a
@@ -111,21 +120,21 @@ cmd_init() {
   warn_unsafe_paths "${CONFIG_DIR}"
 
   if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
-    sed -i 's/^VPN_ENABLED=.*/VPN_ENABLED=true/' "${ROOT_DIR}/.env" || true
+    sed_inplace 's/^VPN_ENABLED=.*/VPN_ENABLED=true/' "${ROOT_DIR}/.env" || true
   else
-    sed -i 's/^VPN_ENABLED=.*/VPN_ENABLED=false/' "${ROOT_DIR}/.env" || true
+    sed_inplace 's/^VPN_ENABLED=.*/VPN_ENABLED=false/' "${ROOT_DIR}/.env" || true
   fi
 
   # Align Decluttarr qBit URL with mode
   if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
     if grep -q '^DECLUTTARR_QBIT_URL=' "${ROOT_DIR}/.env"; then
-      sed -i 's|^DECLUTTARR_QBIT_URL=.*|DECLUTTARR_QBIT_URL=http://gluetun:8080|' "${ROOT_DIR}/.env"
+      sed_inplace 's|^DECLUTTARR_QBIT_URL=.*|DECLUTTARR_QBIT_URL=http://gluetun:8080|' "${ROOT_DIR}/.env"
     else
       printf '\nDECLUTTARR_QBIT_URL=http://gluetun:8080\n' >> "${ROOT_DIR}/.env"
     fi
   else
     if grep -q '^DECLUTTARR_QBIT_URL=' "${ROOT_DIR}/.env"; then
-      sed -i 's|^DECLUTTARR_QBIT_URL=.*|DECLUTTARR_QBIT_URL=http://qbittorrent:8080|' "${ROOT_DIR}/.env"
+      sed_inplace 's|^DECLUTTARR_QBIT_URL=.*|DECLUTTARR_QBIT_URL=http://qbittorrent:8080|' "${ROOT_DIR}/.env"
     else
       printf '\nDECLUTTARR_QBIT_URL=http://qbittorrent:8080\n' >> "${ROOT_DIR}/.env"
     fi

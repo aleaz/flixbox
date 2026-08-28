@@ -18,9 +18,17 @@ pass() {
   printf 'OK   %s\n' "$1"
 }
 
+sed_inplace() {
+  if [[ "$(uname -s)" == Darwin ]]; then
+    sed -i '' "$@"
+  else
+    sed -i "$@"
+  fi
+}
+
 write_ci_env() {
   cp -f "${ROOT_DIR}/.env.example" "${CI_ENV}"
-  sed -i \
+  sed_inplace \
     's|^DATA_DIR=.*|DATA_DIR=/tmp/flixbox-ci/data|; s|^CONFIG_DIR=.*|CONFIG_DIR=/tmp/flixbox-ci/config|' \
     "${CI_ENV}"
 }
