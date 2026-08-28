@@ -48,9 +48,8 @@ grep -q '^include:' compose.yaml || fail C-02 'compose.yaml missing include:'
 pass C-02
 
 # --- C-03: FLIXBOX_MODE downloader include ---
-grep -q 'downloaders-\${FLIXBOX_MODE' compose.yaml || \
-  grep -q 'downloaders-${FLIXBOX_MODE' compose.yaml || \
-  fail C-03 'compose.yaml missing downloaders-${FLIXBOX_MODE} include'
+grep -qE 'downloaders-\$\{FLIXBOX_MODE' compose.yaml || \
+  fail C-03 'compose.yaml missing downloaders FLIXBOX_MODE include'
 pass C-03
 
 # --- C-10: /data mount on download and *arr services ---
@@ -135,7 +134,11 @@ pass C-40
 pass C-41
 
 # --- C-42: stop_grace_period on stateful services ---
-grace_count="$(grep -h 'stop_grace_period:' compose/*.yml | wc -l | tr -d ' ')"
+grace_count=0
+for f in compose/*.yml; do
+  n="$(grep -c 'stop_grace_period:' "${f}" || true)"
+  grace_count=$((grace_count + n))
+done
 if [[ "${grace_count}" -lt 10 ]]; then
   fail C-42 "expected ≥10 stop_grace_period entries, found ${grace_count}"
 fi
