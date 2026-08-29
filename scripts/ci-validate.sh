@@ -141,6 +141,8 @@ grep -q 'entrypoint: \["/bin/sh", "/flixbox-entrypoint.sh"\]' compose/optimizati
   fail C-26 'Decluttarr missing flixbox entrypoint'
 # Guard against baking secrets into Compose command: strings
 if grep -A20 'decluttarr:' compose/optimization.yml | grep -q 'command:'; then
+  # Literal compose interpolation token — not shell expansion (SC2016).
+  # shellcheck disable=SC2016
   if grep -A40 'decluttarr:' compose/optimization.yml | grep -q '\${QBITTORRENT_PASSWORD'; then
     fail C-26 'Decluttarr must not interpolate QBITTORRENT_PASSWORD into command'
   fi
