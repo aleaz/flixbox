@@ -25,17 +25,31 @@ INCOMPLETE_PATH="/data/torrents/incomplete/"
 mkdir -p /config/qBittorrent
 touch "${CONF}"
 
-set_kv() {
-  local key="$1"
-  local value="$2"
+# qBittorrent uses INI sections; keys appended at EOF land under the wrong group
+# (e.g. [RSS]) and are ignored — WebUI keeps linuxserver /downloads/ defaults.
+set_section_kv() {
+  local section="$1"
+  local key="$2"
+  local value="$3"
+  local header="[${section}]"
+  local entry="${key}=${value}"
   local tmp
-  if grep -Fq "${key}=" "${CONF}"; then
+
+  tmp="$(mktemp)"
+  grep -Fv "${key}=" "${CONF}" > "${tmp}" || true
+  mv "${tmp}" "${CONF}"
+
+  if grep -Fxq "${header}" "${CONF}"; then
     tmp="$(mktemp)"
-    grep -Fv "${key}=" "${CONF}" > "${tmp}"
-    printf '%s=%s\n' "${key}" "${value}" >> "${tmp}"
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+      printf '%s\n' "${line}"
+      if [[ "${line}" == "${header}" ]]; then
+        printf '%s\n' "${entry}"
+      fi
+    done < "${CONF}" > "${tmp}"
     mv "${tmp}" "${CONF}"
   else
-    printf '%s=%s\n' "${key}" "${value}" >> "${CONF}"
+    printf '\n%s\n%s\n' "${header}" "${entry}" >> "${CONF}"
   fi
 }
 
@@ -71,13 +85,13 @@ ensure_path() {
   local current
   current="$(get_kv "${key}")"
   if should_set_path "${current}"; then
-    set_kv "${key}" "${want}"
+    set_section_kv 'BitTorrent' "${key}" "${want}"
   fi
 }
 
 # --- WebUI (always enforce for Docker port maps) ---
-set_kv 'WebUI\HostHeaderValidation' 'false'
-set_kv 'WebUI\LocalHostAuth' 'false'
+set_section_kv 'Preferences' 'WebUI\HostHeaderValidation' 'false'
+set_section_kv 'Preferences' 'WebUI\LocalHostAuth' 'false'
 
 # --- Download paths (Flixbox / TRaSH contract) ---
 ensure_path 'Downloads\SavePath' "${SAVE_PATH}"
