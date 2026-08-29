@@ -8,10 +8,9 @@ The template file groups variables by when you need them: **required before firs
 
 1. **Before first `up`:** `DATA_DIR`, `CONFIG_DIR`, `FLIXBOX_MODE`, `TZ`, `PUID`/`PGID` if not 1000.
 2. **Start stack:** `./bin/flixbox up`
-3. **After *arr first login:** `RADARR_API_KEY`, `SONARR_API_KEY` → `./bin/flixbox up`
-4. **If qBit auth enabled:** `QBITTORRENT_USERNAME`, `QBITTORRENT_PASSWORD`
-5. **VPN mode only:** Gluetun credentials → `./bin/flixbox vpn-test`
-6. **UI wiring:** [First-run setup](05-first-run.md)
+3. **After *arr first login:** wire credentials per [Credentials and API keys](#credentials-and-api-keys) → `./bin/flixbox up`
+4. **VPN mode only:** Gluetun credentials → `./bin/flixbox vpn-test`
+5. **UI wiring:** [First-run setup](05-first-run.md)
 
 ## Required before first `up`
 
@@ -89,18 +88,53 @@ docker compose --profile recyclarr run --rm recyclarr sync
 | `socket-proxy` | Read-only Docker socket proxy for Homepage |
 | `recyclarr` | TRaSH Guides sync (one-shot via `run`) |
 
-## After first-run (API keys and auth)
+## Credentials and API keys
+
+Flixbox uses **five credential types** for inter-app wiring (plus per-indexer tracker accounts in Prowlarr). They are not interchangeable — each consumer expects the one listed below.
+
+| Credential | Used by | Where to configure | Notes |
+| --- | --- | --- | --- |
+| qBittorrent **WebUI login** (username + password) | You (browser), **Decluttarr** | qBit WebUI; `.env` as `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` | Default user is `admin`. Change the temporary password after first login. Decluttarr does **not** use qBit’s API key. |
+| qBittorrent **API key** | **Radarr**, **Sonarr** (download client) | qBit → **Options → Web UI → API access**; paste in *arr → **Settings → Download Clients → qBittorrent** | **Recommended:** use API key only; leave username/password empty in *arr. See [First-run §3b](05-first-run.md#3b-download-client-qbittorrent). |
+| **Radarr** API key | Unpackerr, Decluttarr; also Prowlarr Apps, Seerr, Bazarr, Maintainerr, Recyclarr | Radarr → Settings → General | Same key everywhere — `.env` for Compose services; each app’s UI or `recyclarr.yml` for the rest. See [App-to-app connections](#app-to-app-connections). |
+| **Sonarr** API key | Unpackerr, Decluttarr; also Prowlarr Apps, Seerr, Bazarr, Maintainerr, Recyclarr | Sonarr → Settings → General | Same as Radarr — per-app key. |
+| **Jellyfin** API key | Seerr, Maintainerr | Jellyfin → Dashboard → **API Keys** | Created after the Jellyfin admin account exists. Not stored in `.env`. |
+
+**Recyclarr** uses Radarr/Sonarr API keys in `${CONFIG_DIR}/recyclarr/recyclarr.yml` (template copied by `init`), not in `.env`.
+
+The stack **starts** without after-first-run keys. Unpackerr and Decluttarr cannot talk to *arr until `RADARR_API_KEY` and `SONARR_API_KEY` are set. After editing `.env`, run `./bin/flixbox up` to recreate affected containers.
+
+### `.env` variables (after first-run)
 
 | Variable | When required | Source |
 | --- | --- | --- |
 | `RADARR_API_KEY` | Unpackerr, Decluttarr | Radarr → Settings → General |
 | `SONARR_API_KEY` | Unpackerr, Decluttarr | Sonarr → Settings → General |
-| `QBITTORRENT_USERNAME` | Decluttarr, if qBit auth on | qBittorrent WebUI |
-| `QBITTORRENT_PASSWORD` | Decluttarr, if qBit auth on | qBittorrent WebUI |
+| `QBITTORRENT_USERNAME` | Decluttarr (once qBit WebUI auth is on) | qBittorrent WebUI login |
+| `QBITTORRENT_PASSWORD` | Decluttarr (once qBit WebUI auth is on) | qBittorrent WebUI login |
 
-The stack **starts** without API keys. Unpackerr and Decluttarr cannot talk to *arr until keys are set. After editing `.env`, run `./bin/flixbox up` to recreate those containers.
+### App-to-app connections
 
-Recyclarr reads API keys from `${CONFIG_DIR}/recyclarr/recyclarr.yml` (template copied by `init`), not from `.env`.
+Most Flixbox apps talk over the Docker network (`flixbox_net`). Only **Unpackerr**, **Decluttarr**, and **Gluetun** read auth from `.env`; everything else stores connections in its own UI or config file.
+
+| App | Connects to | Credential | Where to configure |
+| --- | --- | --- | --- |
+| **Prowlarr** | Radarr, Sonarr | Each *arr **API key** | Prowlarr → Settings → Apps — [First-run §1](05-first-run.md#1-prowlarr--byparr) |
+| **Prowlarr** | Indexers (trackers) | Per-indexer login/API | Prowlarr → Indexers (external accounts; not in `.env`) |
+| **Prowlarr** | Byparr | *(none)* | Proxy host `byparr`, port `8191` — internal HTTP only |
+| **Radarr / Sonarr** | qBittorrent | qBit **API key** | *arr → Download Clients — [First-run §3b](05-first-run.md#3b-download-client-qbittorrent) |
+| **Seerr** | Jellyfin, Radarr, Sonarr | Each service **API key** | Seerr setup wizard / Settings — [First-run §6](05-first-run.md#6-seerr) |
+| **Bazarr** | Radarr, Sonarr | *arr **API keys** | Bazarr UI — [First-run §4](05-first-run.md#4-bazarr) |
+| **Maintainerr** | Jellyfin, Radarr, Sonarr | Each service **API key** | Maintainerr UI — [First-run §8](05-first-run.md#8-decluttarr--maintainerr) |
+| **Recyclarr** | Radarr, Sonarr | *arr **API keys** | `${CONFIG_DIR}/recyclarr/recyclarr.yml` |
+| **Unpackerr** | Radarr, Sonarr | *arr **API keys** | `.env` (`RADARR_API_KEY`, `SONARR_API_KEY`) |
+| **Decluttarr** | Radarr, Sonarr, qBit | *arr API keys + qBit **user/pass** | `.env` — table above |
+| **Jellyfin** | *(served to users)* | Admin account + optional users | Jellyfin first-run wizard |
+| **Seerr** | *(request portal users)* | Seerr login accounts | Seerr UI (separate from Jellyfin users) |
+| **Homepage** | *(links only)* | *(none)* | `${CONFIG_DIR}/homepage/services.yaml` — no API auth |
+| **Byparr** | *(CF proxy)* | *(none)* | No login; not exposed beyond your LAN unless you publish it |
+
+There is no `SEERR_API_KEY` or `PROWLARR_API_KEY` in `.env` — those apps expose their own API keys only if you integrate them externally.
 
 ## Decluttarr tuning
 

@@ -52,6 +52,8 @@ If your Cloudflare indexers use tag `cf`:
 
 Use **Sync App Indexers** (or Prowlarr’s automatic sync) so Radarr and Sonarr receive the **indexers** from Prowlarr.
 
+When you add Radarr/Sonarr under **Settings → Apps**, Prowlarr asks for each app’s **API key** (Radarr/Sonarr → Settings → General). That is the same key you later copy to `.env` for Unpackerr/Decluttarr — [App-to-app connections](06-configuration.md#app-to-app-connections).
+
 Prowlarr does **not** sync download clients, root folders, or quality settings — only indexers. See [How it works — What Prowlarr syncs](02-how-it-works.md#what-prowlarr-syncs-and-what-it-does-not).
 
 ## 2. qBittorrent
@@ -178,38 +180,64 @@ Add in **both** Radarr and Sonarr: **Settings → Download Clients → + → qBi
 | Host | `qbittorrent` | `gluetun` |
 | Port | `8080` | `8080` |
 | URL Base | *(leave empty)* | *(leave empty)* |
-| Username / Password | qBit WebUI creds if auth enabled | same |
-| API Key | qBit → **Options → Web UI → API access** | same |
+| **API Key** | qBit → **Options → Web UI → API access** | same |
+| Username / Password | *(leave empty)* when API key works | same |
+
+**Use the qBit API key**, not your WebUI login. Radarr and Sonarr authenticate to qBittorrent with this key; Decluttarr is different — it uses username/password in `.env` ([Configuration — Credentials](06-configuration.md#credentials-and-api-keys)).
 
 Use **Test** — must be green in Radarr **and** Sonarr. Host port `9898` (or any `QBITTORRENT_PORT`) is **only for your browser**; *arr always use internal port **8080**.
 
 Optional: category `movies` (Radarr) / `tv` (Sonarr) if you use qBit categories.
 
-### 3c. API keys for Decluttarr / Unpackerr
+### 3c. Hygiene credentials (Decluttarr / Unpackerr)
 
-Copy **Radarr** and **Sonarr** API keys (Settings → General) into `.env` (`RADARR_API_KEY`, `SONARR_API_KEY`), then `./bin/flixbox up`.
+Copy **Radarr** and **Sonarr** API keys (each app → Settings → General) into `.env`:
+
+```env
+RADARR_API_KEY=...
+SONARR_API_KEY=...
+```
+
+If qBittorrent WebUI auth is enabled (you changed the default password), also set:
+
+```env
+QBITTORRENT_USERNAME=admin
+QBITTORRENT_PASSWORD=your_qbit_password
+```
+
+Decluttarr needs these WebUI credentials; it does **not** accept qBit’s API key. Unpackerr only needs the Radarr/Sonarr keys.
+
+Then `./bin/flixbox up`. Full reference: [Configuration — Credentials](06-configuration.md#credentials-and-api-keys).
 
 ## 4. Bazarr
 
-Connect to Radarr/Sonarr; set subtitle language priorities.
+Connect to Radarr and Sonarr using each app’s **API key** (Settings → General in Radarr/Sonarr). Set subtitle language priorities in the Bazarr UI.
 
 ## 5. Jellyfin
 
-Wizard → libraries under `/data/media/movies` and `/data/media/tv`.
+Complete the first-run wizard (admin account). Add libraries under `/data/media/movies` and `/data/media/tv`.
+
+Create a **Jellyfin API key** (Dashboard → **API Keys**) for Seerr and Maintainerr — [App-to-app connections](06-configuration.md#app-to-app-connections).
 
 ## 6. Seerr
 
-Connect Jellyfin + Radarr + Sonarr; set household permissions.
+Connect **Jellyfin**, **Radarr**, and **Sonarr** using each service’s **API key** (not your Jellyfin password). Set household permissions and approval rules.
+
+| Service | API key source |
+| --- | --- |
+| Jellyfin | Jellyfin → Dashboard → API Keys |
+| Radarr | Radarr → Settings → General |
+| Sonarr | Sonarr → Settings → General |
 
 ## 7. Recyclarr
 
-Edit `${CONFIG_DIR}/recyclarr/recyclarr.yml` API keys →  
+Edit `${CONFIG_DIR}/recyclarr/recyclarr.yml` with the same Radarr/Sonarr **API keys** (Settings → General) →  
 `docker compose --profile recyclarr run --rm recyclarr sync`.
 
 ## 8. Decluttarr / Maintainerr
 
-- Decluttarr uses env from `.env` (qBit URL set by `flixbox init` from mode).
-- Maintainerr (`:6246`): connect **Jellyfin** + Radarr/Sonarr; apply rules from [Hygiene](08-hygiene.md) / [09-hygiene-defaults](../09-hygiene-defaults.md). Review before first delete.
+- Decluttarr reads `.env`: Radarr/Sonarr API keys, qBit username/password (if auth on), and qBit URL from `flixbox init` — see [Credentials](06-configuration.md#credentials-and-api-keys).
+- Maintainerr (`:6246`): connect **Jellyfin**, **Radarr**, and **Sonarr** with each service’s **API key** (same sources as Seerr); apply rules from [Hygiene](08-hygiene.md) / [09-hygiene-defaults](../09-hygiene-defaults.md). Review before first delete.
 
 ## 9. Homepage / Caddy
 
