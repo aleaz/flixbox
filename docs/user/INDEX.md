@@ -21,6 +21,7 @@ Friendly documentation for operators who want to run Flixbox at home.
 | [09 — Day-2 operations](09-operations.md) | Status, logs, updates, backups, **path changes**, hardlink check |
 | [10 — Troubleshooting](10-troubleshooting.md) | Common failures and fixes |
 | [11 — Smoke test](11-smoke-test.md) | MVP validation checklist before v0.1 |
+| [12 — Torrent privacy and security](12-torrent-privacy-and-security.md) | VPN privacy, qBit settings, leak prevention, audit checklist |
 
 ## Screenshots
 

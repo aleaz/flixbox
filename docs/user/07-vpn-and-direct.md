@@ -42,6 +42,10 @@ Switching: `docker compose down` → change `FLIXBOX_MODE` → `docker compose u
 VPN mode: public IP should **not** be your home ISP.  
 Direct mode: public IP is your normal egress.
 
+## Privacy and qBittorrent settings
+
+For IP masking expectations, qBit WebUI recommendations, leak scenarios, and an audit checklist, see [Torrent privacy and security](12-torrent-privacy-and-security.md).
+
 ## Anti-patterns
 
 - Putting Radarr/Sonarr/Seerr/Jellyfin behind Gluetun

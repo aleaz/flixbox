@@ -71,6 +71,8 @@ Config databases live separately under `${CONFIG_DIR}` on a **local SSD/NVMe** (
 In VPN mode, other apps talk to qBittorrent at `http://gluetun:8080`.  
 In Direct mode, they use `http://qbittorrent:8080`.
 
+Privacy expectations, qBit settings, and leak checklist: [Torrent privacy and security](12-torrent-privacy-and-security.md).
+
 ## Hygiene in one sentence
 
 - **Decluttarr** — “this download is dead; remove it and try another.”

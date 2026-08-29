@@ -176,7 +176,7 @@ Ignore when `FLIXBOX_MODE=direct`. Full guide: [VPN and Direct](07-vpn-and-direc
 | `VPN_PORT_FORWARDING` | `off` | Set `on` only if provider supports it; enable qBit localhost auth bypass. |
 | `FIREWALL_OUTBOUND_SUBNETS` | (empty) | LAN CIDR (e.g. `192.168.1.0/24`) for host/LAN access through Gluetun. |
 
-Verify after start: `./bin/flixbox vpn-test`.
+Verify after start: `./bin/flixbox vpn-test`. Full privacy checklist: [Torrent privacy and security](12-torrent-privacy-and-security.md).
 
 ## Download client URLs (*arr UI)
 

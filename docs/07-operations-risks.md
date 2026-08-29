@@ -57,6 +57,8 @@ Use this as an implementation checklist. Mitigations marked **enforce** should b
 
 ## 3. Security / privacy
 
+Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-security.md) (qBit settings, leak checklist).
+
 ### 3.1 IPv6 bypass leak
 
 - **Mitigation (enforce):** Gluetun `BLOCK_IPV6=on` by default unless user supplies IPv6 VPN.

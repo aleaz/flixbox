@@ -35,6 +35,8 @@ Store `${DATA_DIR}` on a filesystem that supports hardlinks (**not exFAT**). On 
 - VPN credentials if you enable VPN mode
 - **Do not** expose raw *arr ports to the public internet without auth (SSO is post-MVP; prefer LAN or a hardened reverse proxy)
 
+Torrent-specific privacy (VPN mode, qBit settings, leak checks): [Torrent privacy and security](12-torrent-privacy-and-security.md).
+
 ## Accounts you will need later
 
 - Indexer / tracker credentials (Prowlarr)

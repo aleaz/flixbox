@@ -86,6 +86,8 @@ Same leading number ⇒ hardlink OK.
 | D4 | Leak test | `./bin/flixbox vpn-test` | Container IP ≠ host public IP |
 | D5 | Port forward (if provider supports) | `VPN_PORT_FORWARDING=on` + localhost bypass in qBit | Listen port updates in qBit logs |
 
+Privacy checklist and qBit settings: [Torrent privacy and security](12-torrent-privacy-and-security.md).
+
 ## Phase E — Hygiene wiring (manual, after credentials)
 
 Reference: [Credentials and API keys](06-configuration.md#credentials-and-api-keys) · [App-to-app connections](06-configuration.md#app-to-app-connections).
