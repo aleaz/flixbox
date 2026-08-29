@@ -18,6 +18,9 @@ services:
     volumes:
       - ${DATA_DIR}:/data
       - ${CONFIG_DIR}/unpackerr:/config
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
     restart: unless-stopped
     stop_grace_period: 60s
     networks:
@@ -39,6 +42,9 @@ services:
   decluttarr:
     image: ghcr.io/manimatter/decluttarr:latest
     container_name: flixbox-decluttarr
+    # Idle gate: templates/decluttarr/entrypoint.sh → ${CONFIG_DIR}/decluttarr-entrypoint.sh
+    # (copied by flixbox init). Checks env at runtime — do not put secrets in Compose command.
+    entrypoint: ["/bin/sh", "/flixbox-entrypoint.sh"]
     environment:
       TZ: ${TZ:-UTC}
       LOG_LEVEL: INFO
@@ -55,6 +61,8 @@ services:
         min_speed: ${DECLUTTARR_MIN_SPEED:-100}
       REMOVE_STALLED: "True"
       REMOVE_UNMONITORED: "False"
+      QBITTORRENT_USERNAME: ${QBITTORRENT_USERNAME:-}
+      QBITTORRENT_PASSWORD: ${QBITTORRENT_PASSWORD:-}
       RADARR: >
         - base_url: "http://radarr:7878"
           api_key: "${RADARR_API_KEY}"
@@ -68,6 +76,10 @@ services:
           name: "qBittorrent"
     volumes:
       - ${DATA_DIR}:/data
+      - ${CONFIG_DIR:?set CONFIG_DIR}/decluttarr-entrypoint.sh:/flixbox-entrypoint.sh:ro
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
     restart: unless-stopped
     stop_grace_period: 30s
     networks:

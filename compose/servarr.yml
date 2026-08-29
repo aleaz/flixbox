@@ -44,6 +44,9 @@ services:
       - ${DATA_DIR}:/data
     ports:
       - ${RADARR_PORT:-7878}:7878
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
     restart: unless-stopped
     stop_grace_period: 60s
     networks:
@@ -62,6 +65,9 @@ services:
       - ${DATA_DIR}:/data
     ports:
       - ${SONARR_PORT:-8989}:8989
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
     restart: unless-stopped
     stop_grace_period: 60s
     networks:

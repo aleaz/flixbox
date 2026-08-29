@@ -106,6 +106,10 @@ copy_templates() {
   cp -f "${ROOT_DIR}/templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh" \
     "${CONFIG_DIR}/qbittorrent-cont-init/99-flixbox-qbittorrent.sh"
   chmod +x "${CONFIG_DIR}/qbittorrent-cont-init/99-flixbox-qbittorrent.sh"
+  # Decluttarr idle-gate entrypoint (runtime env; not Compose-interpolated command)
+  cp -f "${ROOT_DIR}/templates/decluttarr/entrypoint.sh" \
+    "${CONFIG_DIR}/decluttarr-entrypoint.sh"
+  chmod +x "${CONFIG_DIR}/decluttarr-entrypoint.sh"
   # Remove legacy location (ignored by current linuxserver images)
   rm -f "${CONFIG_DIR}/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh" \
     "${CONFIG_DIR}/qbittorrent/custom-cont-init.d/99-flixbox-webui.sh"
@@ -195,6 +199,9 @@ cmd_up() {
   done
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
     die "Directories missing. Run ./bin/flixbox init after fixing paths in .env."
+  if [[ -z "${QBITTORRENT_PASSWORD:-}" || -z "${QBITTORRENT_USERNAME:-}" ]]; then
+    warn "QBITTORRENT_USERNAME/PASSWORD incomplete — Decluttarr stays idle until both are set in .env and Decluttarr is recreated."
+  fi
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
   ok "Stack started. ./bin/flixbox status"
