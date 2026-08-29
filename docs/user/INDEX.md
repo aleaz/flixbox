@@ -15,7 +15,7 @@ Friendly documentation for operators who want to run Flixbox at home.
 | [03 — Requirements](03-requirements.md) | Hardware, Docker, storage, network |
 | [04 — Install](04-install.md) | Clone, `init`, `up` (target UX) |
 | [05 — First-run setup](05-first-run.md) | Recommended UI wiring order |
-| [06 — Configuration](06-configuration.md) | Paths, env, ports, Compose profiles |
+| [06 — Configuration](06-configuration.md) | Paths, env, ports, **credentials & API keys**, Compose profiles |
 | [07 — VPN and Direct](07-vpn-and-direct.md) | Gluetun, port forwarding, leak checks |
 | [08 — Hygiene](08-hygiene.md) | Decluttarr and Maintainerr in plain language |
 | [09 — Day-2 operations](09-operations.md) | Status, logs, updates, backups, **path changes**, hardlink check |

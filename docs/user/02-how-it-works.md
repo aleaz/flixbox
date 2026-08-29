@@ -36,7 +36,9 @@ Prowlarr is the **indexer hub**. When you connect Radarr and Sonarr under **Sett
 | | **Quality profiles** (use Recyclarr later) |
 | | **Jellyfin**, Seerr, paths, API keys for *arr |
 
-So qBittorrent is added **once in Radarr** and **once in Sonarr** under **Settings → Download Clients**. Same host (`qbittorrent`), port `8080`, API key from qBit — see [First-run §3](05-first-run.md#3-radarr--sonarr).
+So qBittorrent is added **once in Radarr** and **once in Sonarr** under **Settings → Download Clients**. Same host (`qbittorrent`), port `8080`, **qBit API key** (not your WebUI password). Decluttarr uses qBit username/password in `.env` instead.
+
+For how every app connects (Prowlarr, Seerr, Bazarr, Maintainerr, etc.), see [Credentials and API keys](06-configuration.md#credentials-and-api-keys) and [App-to-app connections](06-configuration.md#app-to-app-connections). Step-by-step: [First-run §3](05-first-run.md#3-radarr--sonarr).
 
 ## Why one `/data` mount matters
 

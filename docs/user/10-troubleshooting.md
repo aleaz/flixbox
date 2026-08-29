@@ -6,6 +6,8 @@
 | Imports are slow / disk doubles | Split mounts; hardlink failed (`EXDEV`) | One `${DATA_DIR}:/data` parent; check MergerFS/exFAT |
 | Media missing after moving `DATA_DIR` | *arr / Jellyfin still ok but data not at expected host mount | Follow [Changing paths](09-operations.md#changing-paths-and-storage-layout); verify root folders and libraries use `/data/media/...` |
 | qBit saves to wrong folder (`/downloads/`) | Hook not mounted at `/custom-cont-init.d` or not recreated | `./bin/flixbox init --non-interactive` then `docker compose up -d --force-recreate qbittorrent`; or `FLIXBOX_QBIT_FORCE_PATHS=true` — [First-run §2c](05-first-run.md#2c-download-paths-automatic) |
+| Radarr/Sonarr qBit **Test** fails (auth) | Wrong credential type | Use qBit **API key** in *arr download client (not WebUI password). Leave username/password empty. Key from qBit → Options → Web UI → API access — [Credentials](06-configuration.md#credentials-and-api-keys) |
+| Decluttarr cannot connect to qBit | Missing or wrong `.env` creds | Set `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` (WebUI login). Decluttarr does **not** use qBit API key. Then `./bin/flixbox up` |
 | Radarr cannot reach qBit (VPN) | Wrong hostname or ports on wrong service | Use `http://gluetun:8080`; publish UI on Gluetun |
 | qBit crash-loops at boot (VPN) | Started before Gluetun healthy | Healthcheck `depends_on`; restart qBit after Gluetun is healthy |
 | VPN test shows home IP | Not in VPN mode / tunnel down | Check `VPN_ENABLED`, Gluetun logs, `vpn-test` |

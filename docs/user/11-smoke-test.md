@@ -86,13 +86,17 @@ Same leading number ⇒ hardlink OK.
 | D4 | Leak test | `./bin/flixbox vpn-test` | Container IP ≠ host public IP |
 | D5 | Port forward (if provider supports) | `VPN_PORT_FORWARDING=on` + localhost bypass in qBit | Listen port updates in qBit logs |
 
-## Phase E — Hygiene wiring (manual, after API keys)
+## Phase E — Hygiene wiring (manual, after credentials)
+
+Reference: [Credentials and API keys](06-configuration.md#credentials-and-api-keys) · [App-to-app connections](06-configuration.md#app-to-app-connections).
 
 | # | Check | How | Pass |
 |---|-------|-----|------|
-| E1 | API keys in `.env` | Radarr/Sonarr → copy keys → `./bin/flixbox up` | Unpackerr/Decluttarr logs show no auth errors |
+| E1 | *arr API keys in `.env` | Radarr/Sonarr → Settings → General → `RADARR_API_KEY` / `SONARR_API_KEY` → `./bin/flixbox up` | Unpackerr/Decluttarr logs show no *arr auth errors |
+| E1b | qBit creds for Decluttarr | If qBit auth on: `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` in `.env` (WebUI login, not API key) | Decluttarr logs connect to qBit |
 | E2 | Decluttarr | Logs | Connects to Radarr, Sonarr, qBit |
-| E3 | Maintainerr | UI → Jellyfin + Radarr + Sonarr | Connection test OK |
+| E3 | Maintainerr | UI → Jellyfin + Radarr + Sonarr (each **API key**) | Connection test OK |
+| E3b | Seerr | UI → Jellyfin + Radarr + Sonarr (each **API key**) | Connection test OK |
 | E4 | Maintainerr rules | Rules disabled or preview first | No surprise deletes |
 | E5 | Recyclarr | `docker compose --profile recyclarr run --rm recyclarr sync` | Sync completes (after keys in recyclarr.yml) |
 
