@@ -95,7 +95,8 @@ Reference: [Credentials and API keys](06-configuration.md#credentials-and-api-ke
 | # | Check | How | Pass |
 |---|-------|-----|------|
 | E1 | *arr API keys in `.env` | Radarr/Sonarr → Settings → General → `RADARR_API_KEY` / `SONARR_API_KEY` → `./bin/flixbox up` | Unpackerr/Decluttarr logs show no *arr auth errors |
-| E1b | qBit creds for Decluttarr | If qBit auth on: `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` in `.env` (WebUI login, not API key) | Decluttarr logs connect to qBit |
+| E1b | qBit creds for Decluttarr | If qBit auth on: `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` in `.env` (WebUI login, not API key) | Decluttarr logs connect to qBit (not `idle — set QBITTORRENT_…`) |
+| E1c | Recreate after `.env` | `docker compose up -d --force-recreate decluttarr` | New env applied (restart alone is not enough) |
 | E2 | Decluttarr | Logs | Connects to Radarr, Sonarr, qBit |
 | E3 | Maintainerr | UI → Jellyfin + Radarr + Sonarr (each **API key**) | Connection test OK |
 | E3b | Seerr | UI → Jellyfin + Radarr + Sonarr (each **API key**) | Connection test OK |

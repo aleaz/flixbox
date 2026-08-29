@@ -102,7 +102,7 @@ Flixbox uses **five credential types** for inter-app wiring (plus per-indexer tr
 
 **Recyclarr** uses Radarr/Sonarr API keys in `${CONFIG_DIR}/recyclarr/recyclarr.yml` (template copied by `init`), not in `.env`.
 
-The stack **starts** without after-first-run keys. Unpackerr and Decluttarr cannot talk to *arr until `RADARR_API_KEY` and `SONARR_API_KEY` are set. After editing `.env`, run `./bin/flixbox up` to recreate affected containers.
+The stack **starts** without after-first-run keys. Unpackerr cannot talk to *arr until `RADARR_API_KEY` and `SONARR_API_KEY` are set. Decluttarr **idles** (no qBit login) until both `QBITTORRENT_USERNAME` and `QBITTORRENT_PASSWORD` are set — see [ADR 0008](../adr/0008-maintenance-decluttarr-maintainerr.md). After editing `.env`, run `./bin/flixbox up` to recreate affected containers.
 
 ### `.env` variables (after first-run)
 

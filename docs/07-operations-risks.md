@@ -75,6 +75,14 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 
 - **Mitigation (document):** Shared netns + Gluetun firewall; verify with `vpn-test`. No millisecond SLA claims.
 
+### 3.5 Decluttarr / qBit WebUI ban during first-run
+
+- **Mitigation (enforce):** Decluttarr idle entrypoint when WebUI username/password missing; `flixbox_net` fixed subnet + qBit AuthSubnetWhitelist (trusted-peer auth bypass); qBit WebUI healthcheck + `depends_on` for *arr/Decluttarr/Unpackerr. See [ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md).
+
+### 3.6 Stale *arr “Connection refused” to qBit
+
+- **Mitigation (enforce + document):** Healthcheck gate on qBit; troubleshooting row when Test is OK but System status is stale.
+
 ---
 
 ## 4. Storage and transcoding

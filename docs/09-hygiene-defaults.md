@@ -34,6 +34,10 @@ Download client **name** in Decluttarr must match the name configured in Radarr/
 
 **Compose env (Decluttarr v2, Nov 2025):** list-based `RADARR` / `SONARR` / `QBITTORRENT` blocks in `optimization.yml`; protect tag is `PROTECTED_TAG: flixbox-keep` (v1 `NO_STALLED_REMOVAL_QBIT_TAG` is ignored).
 
+**First-run idle gate:** if `QBITTORRENT_USERNAME` or `QBITTORRENT_PASSWORD` is empty, Decluttarr does not start its cleanup loop (`templates/decluttarr/entrypoint.sh`). Set WebUI login in `.env` and recreate the container — [ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md).
+
+**qBittorrent / Docker:** `flixbox_net` uses subnet `172.30.42.0/24` (trusted); qBit whitelists that CIDR (**auth bypass** for stack peers). qBit has a WebUI healthcheck; Decluttarr waits until healthy.
+
 **After removal:** trigger *arr search for a replacement when the app supports it.
 
 ---

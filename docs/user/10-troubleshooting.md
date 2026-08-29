@@ -8,6 +8,11 @@
 | qBit saves to wrong folder (`/downloads/`) | Hook not mounted at `/custom-cont-init.d` or not recreated | `./bin/flixbox init --non-interactive` then `docker compose up -d --force-recreate qbittorrent`; or `FLIXBOX_QBIT_FORCE_PATHS=true` — [First-run §2c](05-first-run.md#2c-download-paths-automatic) |
 | Radarr/Sonarr qBit **Test** fails (auth) | Wrong credential type | Use qBit **API key** in *arr download client (not WebUI password). Leave username/password empty. Key from qBit → Options → Web UI → API access — [Credentials](06-configuration.md#credentials-and-api-keys) |
 | Decluttarr cannot connect to qBit | Missing or wrong `.env` creds | Set `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` (WebUI login). Decluttarr does **not** use qBit API key. Then `./bin/flixbox up` |
+| Decluttarr logs `idle — set QBITTORRENT_…` | Username/password not in `.env` yet (by design) | After qBit WebUI login, set both in `.env` → `docker compose up -d --force-recreate decluttarr` — [First-run §3c](05-first-run.md#3c-hygiene-credentials-decluttarr--unpackerr) |
+| Decluttarr missing `/flixbox-entrypoint.sh` | Entrypoint not copied | `./bin/flixbox init --non-interactive` then recreate Decluttarr |
+| Decluttarr `403` / “IP has been banned” | Fail-login loop before idle gate / old stack | `docker compose restart qbittorrent` (clears in-memory ban), confirm `.env` password, recreate Decluttarr; ensure cont-init whitelist + fixed `flixbox_net` subnet — [ADR 0008](../adr/0008-maintenance-decluttarr-maintainerr.md) |
+| *arr banner: Connection refused to qBit, but **Test** is OK | Health check ran while qBit WebUI was still starting (or stale status) | System → Tasks → **Check Health**, or wait for the next cycle. With current Compose, *arr wait for qBit `healthy` on new boots |
+| Services cannot join `flixbox_net` after upgrade | Old bridge without `172.30.42.0/24` | `docker compose down`, `docker network rm flixbox_net` if it still exists, then `./bin/flixbox up` |
 | Radarr cannot reach qBit (VPN) | Wrong hostname or ports on wrong service | Use `http://gluetun:8080`; publish UI on Gluetun |
 | qBit crash-loops at boot (VPN) | Started before Gluetun healthy | Healthcheck `depends_on`; restart qBit after Gluetun is healthy |
 | VPN test shows home IP | Not in VPN mode / tunnel down | Check `VPN_ENABLED`, Gluetun logs, `vpn-test` |

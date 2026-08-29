@@ -112,6 +112,41 @@ done
   fail C-24 'missing templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh'
 pass C-24
 
+# --- C-25: flixbox_net fixed subnet + qBit auth whitelist (ADR 0008) ---
+grep -q '172.30.42.0/24' compose/network-base.yml || \
+  fail C-25 'flixbox_net missing fixed subnet 172.30.42.0/24'
+grep -q "WebUI\\\\AuthSubnetWhitelistEnabled" templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh || \
+  fail C-25 'qBit cont-init missing AuthSubnetWhitelistEnabled'
+grep -q '172.30.42.0/24' templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh || \
+  fail C-25 'qBit cont-init missing flixbox_net whitelist CIDR'
+pass C-25
+
+# --- C-26: Decluttarr idle entrypoint (runtime env; no Compose command secrets) ---
+[[ -f templates/decluttarr/entrypoint.sh ]] || \
+  fail C-26 'missing templates/decluttarr/entrypoint.sh'
+grep -q 'decluttarr-entrypoint.sh:/flixbox-entrypoint.sh' compose/optimization.yml || \
+  fail C-26 'Decluttarr missing entrypoint mount'
+grep -q 'entrypoint: \["/bin/sh", "/flixbox-entrypoint.sh"\]' compose/optimization.yml || \
+  fail C-26 'Decluttarr missing flixbox entrypoint'
+# Guard against baking secrets into Compose command: strings
+if grep -A20 'decluttarr:' compose/optimization.yml | grep -q 'command:'; then
+  if grep -A40 'decluttarr:' compose/optimization.yml | grep -q '\${QBITTORRENT_PASSWORD'; then
+    fail C-26 'Decluttarr must not interpolate QBITTORRENT_PASSWORD into command'
+  fi
+fi
+pass C-26
+
+# --- C-27: qBit WebUI healthcheck + consumers wait ---
+for f in compose/downloaders-direct.yml compose/downloaders-vpn.yml; do
+  grep -q 'healthcheck:' "${f}" || fail C-27 "${f} missing qBittorrent healthcheck"
+  grep -q 'api/v2/app/version' "${f}" || fail C-27 "${f} healthcheck must probe WebUI API"
+done
+for f in compose/servarr.yml compose/optimization.yml; do
+  grep -q 'condition: service_healthy' "${f}" || \
+    fail C-27 "${f} missing depends_on qbittorrent healthy"
+done
+pass C-27
+
 # --- C-30: banned default images ---
 while IFS= read -r line; do
   lower="$(echo "${line}" | tr '[:upper:]' '[:lower:]')"

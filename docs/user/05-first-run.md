@@ -191,23 +191,31 @@ Optional: category `movies` (Radarr) / `tv` (Sonarr) if you use qBit categories.
 
 ### 3c. Hygiene credentials (Decluttarr / Unpackerr)
 
-Copy **Radarr** and **Sonarr** API keys (each app → Settings → General) into `.env`:
+**Order matters** — Decluttarr stays **idle** until both qBit WebUI username and password are in `.env` (avoids fail-login loops that ban its Docker IP). Ensure `flixbox init` has copied `${CONFIG_DIR}/decluttarr-entrypoint.sh`.
+
+1. Finish qBit login and set a stable WebUI password ([§2](#2-qbittorrent)).
+2. Copy **Radarr** and **Sonarr** API keys (each app → Settings → General) into `.env`:
 
 ```env
 RADARR_API_KEY=...
 SONARR_API_KEY=...
-```
-
-If qBittorrent WebUI auth is enabled (you changed the default password), also set:
-
-```env
 QBITTORRENT_USERNAME=admin
 QBITTORRENT_PASSWORD=your_qbit_password
 ```
 
-Decluttarr needs these WebUI credentials; it does **not** accept qBit’s API key. Unpackerr only needs the Radarr/Sonarr keys.
+3. Recreate hygiene containers so they pick up `.env` (a plain restart is not enough):
 
-Then `./bin/flixbox up`. Full reference: [Configuration — Credentials](06-configuration.md#credentials-and-api-keys).
+```bash
+./bin/flixbox init --non-interactive   # refreshes Decluttarr entrypoint + qBit cont-init
+./bin/flixbox up
+# or: docker compose up -d --force-recreate decluttarr unpackerr
+```
+
+4. Confirm Decluttarr: `docker compose logs decluttarr` — should connect (not the `idle — set QBITTORRENT_…` line).
+
+Decluttarr needs WebUI username/password; it does **not** accept qBit’s API key. Unpackerr only needs the Radarr/Sonarr keys.
+
+Full reference: [Configuration — Credentials](06-configuration.md#credentials-and-api-keys).
 
 ## 4. Bazarr
 
@@ -236,7 +244,7 @@ Edit `${CONFIG_DIR}/recyclarr/recyclarr.yml` with the same Radarr/Sonarr **API k
 
 ## 8. Decluttarr / Maintainerr
 
-- Decluttarr reads `.env`: Radarr/Sonarr API keys, qBit username/password (if auth on), and qBit URL from `flixbox init` — see [Credentials](06-configuration.md#credentials-and-api-keys).
+- Decluttarr: after [§3c](#3c-hygiene-credentials-decluttarr--unpackerr), logs should show a normal start (not idle). Reads Radarr/Sonarr API keys, qBit username/password, and mode-aware qBit URL — [Credentials](06-configuration.md#credentials-and-api-keys).
 - Maintainerr (`:6246`): connect **Jellyfin**, **Radarr**, and **Sonarr** with each service’s **API key** (same sources as Seerr); apply rules from [Hygiene](08-hygiene.md) / [09-hygiene-defaults](../09-hygiene-defaults.md). Review before first delete.
 
 ## 9. Homepage / Caddy

@@ -107,6 +107,8 @@ If port forwarding is on, enable **Bypass authentication for clients on localhos
 | Do not publish port `8080` to the public internet | Required |
 | Set `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` in `.env` for Decluttarr if auth is on | When using Decluttarr |
 
+**Trusted Docker network:** Flixbox pins `flixbox_net` to `172.30.42.0/24` and configures qBittorrent `AuthSubnetWhitelist` for that CIDR. Stack peers (and often the Docker gateway when you open the published WebUI from the host) **bypass WebUI password**. That is intentional for Decluttarr/*arr on the bridge — treat `flixbox_net` as trusted and keep qBit off the public internet ([ADR 0008](../adr/0008-maintenance-decluttarr-maintainerr.md)).
+
 ---
 
 ## 6. Common leak and misconfiguration scenarios

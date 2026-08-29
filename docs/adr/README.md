@@ -23,6 +23,7 @@ Each ADR uses:
 | [0006](0006-mvp-service-inventory.md) | MVP service inventory | Accepted |
 | [0007](0007-platform-support-tiers.md) | Platform support tiers | Accepted |
 | [0008](0008-maintenance-decluttarr-maintainerr.md) | Decluttarr + Maintainerr | Accepted |
+| [0009](0009-byparr-default-cf-bypass.md) | Byparr default CF bypass | Accepted |
 | [0010](0010-mit-and-image-tags.md) | MIT license + image tags | Accepted |
 | [0011](0011-documentation-i18n.md) | Documentation i18n (EN/ES) | Accepted |
 
