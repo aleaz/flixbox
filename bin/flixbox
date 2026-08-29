@@ -204,28 +204,14 @@ cmd_init() {
   chown -R "${PUID}:${PGID}" "${CONFIG_DIR}" 2>/dev/null || warn "Could not chown CONFIG_DIR (may need sudo)."
   ok "Init complete."
   log "Review .env before first up: DATA_DIR, CONFIG_DIR, FLIXBOX_MODE (Gluetun vars if vpn)."
-  log "After *arr login: RADARR_API_KEY, SONARR_API_KEY → ./bin/flixbox up"
-  log "Reference: docs/user/06-configuration.md · First-run: docs/user/05-first-run.md"
+  log "After *arr login: ./bin/flixbox configure  (or set RADARR_API_KEY, SONARR_API_KEY in .env)"
+  log "Reference: docs/user/REFERENCE.md · First-run: docs/user/05-first-run.md"
 }
 
 cmd_up() {
   load_env
   local profiles=()
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      --profile)
-        profiles+=(--profile "$2")
-        shift 2
-        ;;
-      plex|proxy|socket-proxy|recyclarr)
-        profiles+=(--profile "$1")
-        shift
-        ;;
-      *)
-        die "Unknown up argument: $1 (try plex|proxy|socket-proxy|recyclarr or --profile NAME)"
-        ;;
-    esac
-  done
+  parse_profiles profiles "$@"
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
     die "Directories missing. Run ./bin/flixbox init after fixing paths in .env."
   if [[ -z "${QBITTORRENT_PASSWORD:-}" || -z "${QBITTORRENT_USERNAME:-}" ]]; then
@@ -235,6 +221,29 @@ cmd_up() {
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
   ok "Stack started. ./bin/flixbox status"
+  log "Next: log into each app once, then run ./bin/flixbox configure"
+  log "Guide: docs/user/05-first-run.md · Cheat sheet: docs/user/REFERENCE.md"
+}
+
+parse_profiles() {
+  local -n _out=$1
+  shift
+  _out=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --profile)
+        _out+=(--profile "$2")
+        shift 2
+        ;;
+      plex|proxy|socket-proxy|recyclarr)
+        _out+=(--profile "$1")
+        shift
+        ;;
+      *)
+        die "Unknown profile argument: $1 (try plex|proxy|socket-proxy|recyclarr or --profile NAME)"
+        ;;
+    esac
+  done
 }
 
 cmd_down() {
@@ -248,6 +257,24 @@ cmd_restart() {
   local svc="${1:-}"
   [[ -n "${svc}" ]] || die "Usage: flixbox restart <service>"
   compose restart "${svc}"
+}
+
+cmd_reload() {
+  load_env
+  local profiles=()
+  parse_profiles profiles "$@"
+  require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
+    die "Directories missing. Run ./bin/flixbox init first."
+  warn_mode_vpn_mismatch || true
+  log "Recreating containers (applies .env and compose changes)..."
+  log "Tip: prefer reload over down when you only changed config."
+  compose "${profiles[@]}" up -d --force-recreate
+  ok "Stack reloaded. ./bin/flixbox status"
+}
+
+cmd_configure() {
+  load_env
+  exec "${ROOT_DIR}/scripts/configure-apps.sh" "$@"
 }
 
 cmd_status() {
@@ -288,6 +315,8 @@ Usage:
   flixbox up [plex|proxy|socket-proxy|recyclarr]...
   flixbox down [--volumes]
   flixbox restart <service>
+  flixbox reload [plex|proxy|socket-proxy|recyclarr]...
+  flixbox configure [--dry-run] [--verbose]
   flixbox status
   flixbox logs [service] [-f]
   flixbox vpn-test
@@ -307,6 +336,8 @@ main() {
     up) cmd_up "$@" ;;
     down) cmd_down "$@" ;;
     restart) cmd_restart "$@" ;;
+    reload) cmd_reload "$@" ;;
+    configure) cmd_configure "$@" ;;
     status) cmd_status "$@" ;;
     logs) cmd_logs "$@" ;;
     vpn-test) cmd_vpn_test "$@" ;;

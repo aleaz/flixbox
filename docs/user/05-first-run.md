@@ -1,12 +1,69 @@
 # First-run setup
 
-Do this **once** after `./bin/flixbox up`. Order matters.
+Do this **once** after `./bin/flixbox up`.
+
+**Estimated time:** ~30–45 minutes with `./bin/flixbox configure`; ~60 minutes if you wire everything manually.
+
+## Progress
+
+- [ ] Log into qBittorrent, Radarr, Sonarr, Prowlarr, Bazarr (each first-run wizard)
+- [ ] Run `./bin/flixbox configure` (or `--dry-run` first)
+- [ ] Add indexers in Prowlarr
+- [ ] Jellyfin libraries + API key
+- [ ] Seerr → Jellyfin / Radarr / Sonarr
+- [ ] Decluttarr credentials in `.env` → `./bin/flixbox reload`
+- [ ] Optional: Recyclarr, Maintainerr, Caddy
+
+Cheat sheet: [Quick reference](REFERENCE.md).
+
+---
+
+## 0. Script-assisted wiring (recommended)
+
+After each app has completed its first-run wizard (admin account / qBit password changed):
+
+```bash
+./bin/flixbox configure
+```
+
+Preview without changes:
+
+```bash
+./bin/flixbox configure --dry-run
+```
+
+**What the script configures (idempotent — safe to re-run):**
+
+| Service | Settings |
+| --- | --- |
+| qBittorrent | Categories `tv` / `movies`, basic preferences |
+| Sonarr | Root folder `/data/media/tv`, qBittorrent download client |
+| Radarr | Root folder `/data/media/movies`, qBittorrent download client |
+| Prowlarr | Byparr proxy (`http://byparr:8191`, tag `cf`), Radarr + Sonarr app sync |
+| Bazarr | Sonarr + Radarr connections |
+
+**Also:** writes `RADARR_API_KEY` and `SONARR_API_KEY` to `.env` when those fields are empty.
+
+**Prerequisites:**
+
+1. Stack running and healthy (`./bin/flixbox status`).
+2. VPN mode: Gluetun must be **healthy** before configure runs.
+3. qBittorrent: log in via WebUI and change the temporary password.
+4. Radarr, Sonarr, Prowlarr, Bazarr: complete each app's setup wizard once.
+
+**Stays manual** (sections below): indexers, Jellyfin, Seerr, Decluttarr `.env` password, Maintainerr, Recyclarr.
+
+If configure fails for qBit download clients, ensure qBit has an **API key** (Options → Web UI → API access) and re-run.
+
+---
 
 ## 1. Prowlarr + Byparr
 
+If you ran `./bin/flixbox configure`, the Byparr proxy and Radarr/Sonarr app entries should already exist. Verify under **Settings → Indexers → Indexer Proxies** and **Settings → Apps**.
+
 Byparr bypasses Cloudflare on indexers that need it (for example 1337x). Configure the proxy **before** adding those indexers.
 
-### 1a. Add the Byparr proxy (once)
+### 1a. Add the Byparr proxy (manual fallback)
 
 1. Open Prowlarr (`:9696`).
 2. **Settings** → **Indexers** → **Indexer Proxies** → **+**.
@@ -162,16 +219,18 @@ Also update `${CONFIG_DIR}/homepage/services.yaml` so the qBittorrent link uses 
 
 ## 3. Radarr / Sonarr
 
+If you ran `./bin/flixbox configure`, root folders and the qBittorrent download client should already exist. Use **Test** in each app to confirm.
+
 Configure **each app separately** (settings are not shared via Prowlarr).
 
-### 3a. Root folders
+### 3a. Root folders (manual fallback)
 
 | App | Root folder |
 | --- | --- |
 | Radarr | `/data/media/movies` |
 | Sonarr | `/data/media/tv` |
 
-### 3b. Download client (qBittorrent)
+### 3b. Download client (qBittorrent) — manual fallback
 
 Add in **both** Radarr and Sonarr: **Settings → Download Clients → + → qBittorrent**
 
@@ -203,11 +262,10 @@ QBITTORRENT_USERNAME=admin
 QBITTORRENT_PASSWORD=your_qbit_password
 ```
 
-3. Recreate hygiene containers so they pick up `.env` (a plain restart is not enough):
+3. Recreate hygiene containers:
 
 ```bash
-./bin/flixbox init --non-interactive   # refreshes Decluttarr entrypoint + qBit cont-init
-./bin/flixbox up
+./bin/flixbox reload
 # or: docker compose up -d --force-recreate decluttarr unpackerr
 ```
 
@@ -219,7 +277,7 @@ Full reference: [Configuration — Credentials](06-configuration.md#credentials-
 
 ## 4. Bazarr
 
-Connect to Radarr and Sonarr using each app’s **API key** (Settings → General in Radarr/Sonarr). Set subtitle language priorities in the Bazarr UI.
+If configure ran successfully, Bazarr should already list Sonarr and Radarr. Otherwise connect manually using each app’s **API key** (Settings → General in Radarr/Sonarr). Set subtitle language priorities in the Bazarr UI.
 
 ## 5. Jellyfin
 

@@ -8,9 +8,12 @@ The template file groups variables by when you need them: **required before firs
 
 1. **Before first `up`:** `DATA_DIR`, `CONFIG_DIR`, `FLIXBOX_MODE`, `TZ`, `PUID`/`PGID` if not 1000.
 2. **Start stack:** `./bin/flixbox up`
-3. **After *arr first login:** wire credentials per [Credentials and API keys](#credentials-and-api-keys) → `./bin/flixbox up`
-4. **VPN mode only:** Gluetun credentials → `./bin/flixbox vpn-test`
-5. **UI wiring:** [First-run setup](05-first-run.md)
+3. **After each *arr first login:** `./bin/flixbox configure` (or manual wiring in [First-run](05-first-run.md))
+4. **After configure / *arr login:** copy remaining credentials per [Credentials and API keys](#credentials-and-api-keys) → `./bin/flixbox reload`
+5. **VPN mode only:** Gluetun credentials → `./bin/flixbox vpn-test`
+6. **Remaining UI:** indexers, Jellyfin, Seerr — [First-run setup](05-first-run.md)
+
+Quick lookup: [REFERENCE](REFERENCE.md).
 
 ## Required before first `up`
 

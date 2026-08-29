@@ -11,6 +11,7 @@ cd flixbox
 # Edit .env — see docs/user/06-configuration.md (DATA_DIR, FLIXBOX_MODE, TZ, VPN if needed)
 ./bin/flixbox up
 ./bin/flixbox status
+./bin/flixbox configure   # after logging into each app once
 ```
 
 Or manually:
@@ -70,4 +71,5 @@ docker compose --profile recyclarr run --rm recyclarr sync
 
 ## Next
 
-[First-run setup](05-first-run.md) — wire APIs in the UI.
+[First-run setup](05-first-run.md) — `./bin/flixbox configure` then remaining UI steps.  
+[Quick reference](REFERENCE.md) — ports, URLs, CLI.

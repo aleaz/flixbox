@@ -2,7 +2,7 @@
 
 Friendly documentation for operators who want to run Flixbox at home.
 
-**Language:** English (canonical). A Spanish translation is planned before the first public release — see [ADR 0011](../adr/0011-documentation-i18n.md).
+**Language:** English (canonical). Spanish: [`docs/es/user/INDEX.md`](../es/user/INDEX.md) · [Quick reference (ES)](../es/user/REFERENCE.md) — see [ADR 0011](../adr/0011-documentation-i18n.md).
 
 **Status:** Working Draft. MVP Compose modules and `bin/flixbox` are implemented; complete UI first-run after `up`.
 
@@ -13,8 +13,9 @@ Friendly documentation for operators who want to run Flixbox at home.
 | [01 — Overview](01-overview.md) | What Flixbox is, who it is for, disclaimer |
 | [02 — How it works](02-how-it-works.md) | Mental model: pipeline, `/data`, VPN vs Direct |
 | [03 — Requirements](03-requirements.md) | Hardware, Docker, storage, network |
-| [04 — Install](04-install.md) | Clone, `init`, `up` (target UX) |
-| [05 — First-run setup](05-first-run.md) | Recommended UI wiring order |
+| [04 — Install](04-install.md) | Clone, `init`, `up` (~15 min) |
+| [05 — First-run setup](05-first-run.md) | `configure` + remaining UI wiring (~30–45 min) |
+| [REFERENCE — Quick reference](REFERENCE.md) | URLs, ports, CLI cheat sheet |
 | [06 — Configuration](06-configuration.md) | Paths, env, ports, **credentials & API keys**, Compose profiles |
 | [07 — VPN and Direct](07-vpn-and-direct.md) | Gluetun, port forwarding, leak checks |
 | [08 — Hygiene](08-hygiene.md) | Decluttarr and Maintainerr in plain language |
