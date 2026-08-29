@@ -5,7 +5,10 @@
 # (linuxserver ignores the legacy path /config/custom-cont-init.d).
 #
 # 1. WebUI: allow Docker host port maps (qBit 5.x + custom QBITTORRENT_PORT).
-# 2. Paths: align with ADR 0001 (/data/torrents) instead of linuxserver /downloads defaults.
+# 2. WebUI: whitelist flixbox_net (172.30.42.0/24) so stack peers are not
+#    banned after failed logins; auth is bypassed for that Docker subnet only.
+#    Must match compose/network-base.yml (hardcoded — see that file’s “Why”).
+# 3. Paths: align with ADR 0001 (/data/torrents) instead of linuxserver /downloads defaults.
 #
 # Path policy (each start, before qbittorrent-nox):
 #   - Set missing keys to Flixbox paths.
@@ -15,6 +18,9 @@
 #
 # VPN port-forward: after first login, enable "Bypass authentication for clients on
 # localhost" in the WebUI (separate from LocalHostAuth below).
+#
+# Do not publish qBit WebUI to the public internet — Docker-gateway clients on
+# flixbox_net may skip WebUI password (auth subnet whitelist).
 
 set -euo pipefail
 
@@ -92,6 +98,14 @@ ensure_path() {
 # --- WebUI (always enforce for Docker port maps) ---
 set_section_kv 'Preferences' 'WebUI\HostHeaderValidation' 'false'
 set_section_kv 'Preferences' 'WebUI\LocalHostAuth' 'false'
+# flixbox_net fixed subnet — MUST match compose/network-base.yml (not env-driven).
+# AuthSubnetWhitelist = bypass WebUI password for clients in CIDR (Docker peers).
+# Do not widen to home LAN ranges; keep in sync with network-base or peers get banned.
+set_section_kv 'Preferences' 'WebUI\AuthSubnetWhitelistEnabled' 'true'
+set_section_kv 'Preferences' 'WebUI\AuthSubnetWhitelist' '172.30.42.0/24'
+# Softer lockout if something outside the whitelist still fails auth (first-run)
+set_section_kv 'Preferences' 'WebUI\MaxAuthenticationFailCount' '20'
+set_section_kv 'Preferences' 'WebUI\BanDuration' '300'
 
 # --- Download paths (Flixbox / TRaSH contract) ---
 ensure_path 'Downloads\SavePath' "${SAVE_PATH}"

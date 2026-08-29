@@ -1,5 +1,27 @@
 # Shared Docker network for all non-VPN-netns services.
+#
+# Why a fixed subnet (not Docker’s default / not env-configurable)?
+#
+# Problem: During first-run, Decluttarr often had empty qBit WebUI credentials in
+# `.env`. It fail-logged in a loop and qBittorrent banned the Decluttarr container
+# IP → later “403 Forbidden / IP has been banned” even with correct passwords.
+#
+# Fix (ADR 0008): pin flixbox_net to 172.30.42.0/24 and mirror that CIDR in the
+# qBittorrent cont-init AuthSubnetWhitelist. Stack peers are not banned after
+# auth mistakes; we do NOT whitelist arbitrary home LAN ranges (e.g. 192.168.0.0/16),
+# which would skip WebUI password for browsers on the LAN.
+#
+# Hardcoded on purpose: one CIDR in network-base.yml + cont-init must stay in sync.
+# An env knob risks mismatch (Compose subnet ≠ qBit whitelist) or operators picking
+# their LAN CIDR by mistake. If 172.30.42.0/24 conflicts on a host, change BOTH
+# files together and recreate the network (see docs/user/10-troubleshooting.md).
+#
+# Existing installs that created flixbox_net before this pin: compose down,
+# `docker network rm flixbox_net`, then up.
 networks:
   flixbox_net:
     name: flixbox_net
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.42.0/24

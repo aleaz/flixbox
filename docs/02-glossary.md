@@ -31,6 +31,7 @@ Shared vocabulary for Flixbox docs, ADRs, and AI-assisted development.
 | **`/config`** | Per-app persistent config; must live on local SSD/NVMe, not NFS/SMB. |
 | **VPN mode** | `VPN_ENABLED=true`; qBittorrent uses `network_mode: service:gluetun`. |
 | **Direct mode** | `VPN_ENABLED=false`; qBittorrent attaches to `flixbox_net` without VPN. |
+| **`flixbox_net`** | Docker bridge with fixed subnet `172.30.42.0/24` (not env-configurable) so qBit can whitelist stack peers — ADR 0008. |
 | **Killswitch** | No independent egress for qBit when Gluetun/tunnel is down (shared netns + firewall). |
 | **netns** | Linux network namespace; containers can share one (VPN sidecar pattern). |
 | **Port forwarding (VPN)** | Provider assigns an inbound port; Gluetun can push it into qBittorrent via UP_COMMAND. |

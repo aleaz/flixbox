@@ -2,7 +2,7 @@
 
 | File | Status | Role |
 | --- | --- | --- |
-| `network-base.yml` | active | `flixbox_net` |
+| `network-base.yml` | active | `flixbox_net` — fixed subnet `172.30.42.0/24` (see file header: Decluttarr ban fix / qBit whitelist sync) |
 | `downloaders-direct.yml` | active | qBittorrent (`FLIXBOX_MODE=direct`) |
 | `downloaders-vpn.yml` | active | Gluetun + qBittorrent (`FLIXBOX_MODE=vpn`) |
 | `servarr.yml` | active | Prowlarr, Byparr, Radarr, Sonarr, Bazarr |
