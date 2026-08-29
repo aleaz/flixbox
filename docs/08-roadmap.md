@@ -13,7 +13,7 @@ Versions below are planning labels, not semver promises until the first public t
 - [x] Bash CLI minimum commands (`bin/flixbox`)
 - [x] Hygiene/Recyclarr/Homepage/Caddy templates
 - [ ] Key screenshots in `docs/images/en/`
-- [ ] Spanish user guide (`README.es.md` + `docs/es/user/`) before first public release tag
+- [x] Spanish user guide (`README.es.md` + `docs/es/user/`) — partial (REFERENCE + INDEX); full mirror before v0.1 tag
 - [x] CI phase 1 (gitleaks + validate) — [10-ci-plan.md](10-ci-plan.md)
 - [x] `bin/flixbox configure` + `reload` — API wiring script and safe recreate
 - [ ] Image tag pins before public v0.1 tag
@@ -24,7 +24,7 @@ Follow [06-development-guide.md](06-development-guide.md) phase 7 and remaining 
 
 Deliverables:
 
-- Screenshots + Spanish user guide
+- Screenshots + complete Spanish user guide mirror
 - `bin/flixbox configure` — idempotent API wiring (root folders, download clients, Byparr, Prowlarr apps, Bazarr)
 - Hardlink + VPN/Direct verification documented with operator checklist
 - Image tags pinned before tagging v0.1
