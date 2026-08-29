@@ -25,8 +25,8 @@ Platform defaults when you run `./bin/flixbox init` (new `.env`):
 
 | Variable | Default | Valid values | Notes |
 | --- | --- | --- | --- |
-| `FLIXBOX_MODE` | `direct` | `direct`, `vpn` | Selects `compose/downloaders-*.yml`. See [VPN and Direct](07-vpn-and-direct.md). |
-| `VPN_ENABLED` | `false` | `true`, `false` | Must match mode. `flixbox init` syncs this from `FLIXBOX_MODE`. |
+| `FLIXBOX_MODE` | `direct` | `direct`, `vpn` | **Only switch Compose reads** for downloaders. See [VPN and Direct](07-vpn-and-direct.md). |
+| `VPN_ENABLED` | `false` | `true`, `false` | **Not read by Compose.** Mirror of mode; `init` syncs it. Keep aligned (`direct`↔`false`, `vpn`↔`true`) so docs/CLI stay honest. |
 | `DATA_DIR` | OS-dependent (table above) | Absolute path | Torrents + media on one filesystem for hardlinks. Not NFS/SMB/exFAT; not WSL `/mnt/c`. **If you change this after setup**, see [Day-2 — Changing paths](09-operations.md#changing-paths-and-storage-layout). |
 | `CONFIG_DIR` | OS-dependent (table above) | Absolute path | App configs on local SSD/NVMe only. Changing it is a config migration — same guide. |
 | `COMPOSE_PROJECT_NAME` | `flixbox` | Docker project name | Rarely changed. |
@@ -160,17 +160,20 @@ Defaults match [09-hygiene-defaults.md](../09-hygiene-defaults.md). Protected ta
 
 Ignore when `FLIXBOX_MODE=direct`. Full guide: [VPN and Direct](07-vpn-and-direct.md).
 
+**Mode is not in this table** — set `FLIXBOX_MODE=vpn` and `VPN_ENABLED=true` in the **REQUIRED** section of `.env` (top), then fill the variables below. `flixbox init` syncs `VPN_ENABLED` and `DECLUTTARR_QBIT_URL`.
+
 | Variable | Default | Notes |
 | --- | --- | --- |
-| `VPN_SERVICE_PROVIDER` | `protonvpn` | Gluetun provider id — see [gluetun-wiki](https://github.com/qdm12/gluetun-wiki). |
+| `VPN_SERVICE_PROVIDER` | `protonvpn` | Gluetun provider id, or `custom` for a mounted `.ovpn` — see [gluetun-wiki](https://github.com/qdm12/gluetun-wiki). |
 | `VPN_TYPE` | `wireguard` | `wireguard` or `openvpn`. |
 | `WIREGUARD_PRIVATE_KEY` | (empty) | Required for WireGuard providers. |
 | `WIREGUARD_ADDRESSES` | (empty) | e.g. `10.x.x.x/32` from provider. |
 | `SERVER_COUNTRIES` | (empty) | Optional server filter. |
 | `SERVER_CITIES` | (empty) | Optional server filter. |
 | `SERVER_REGIONS` | (empty) | Optional server filter. |
-| `OPENVPN_USER` | (empty) | OpenVPN username. |
+| `OPENVPN_USER` | (empty) | OpenVPN username (native or custom). |
 | `OPENVPN_PASSWORD` | (empty) | OpenVPN password. |
+| `OPENVPN_CUSTOM_CONFIG` | (empty) | Container path to a custom `.ovpn` (e.g. `/gluetun/custom.conf`). File lives under `${CONFIG_DIR}/gluetun/`. Requires `VPN_SERVICE_PROVIDER=custom`. `remote` in the file must be an IP, not a hostname. |
 | `BLOCK_IPV6` | `on` | Block IPv6 through tunnel (recommended). |
 | `DOT` | `on` | DNS over TLS. |
 | `VPN_PORT_FORWARDING` | `off` | Set `on` only if provider supports it; enable qBit localhost auth bypass. |

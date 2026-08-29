@@ -13,7 +13,16 @@ if [[ -f .env ]]; then
 fi
 
 MODE="${FLIXBOX_MODE:-direct}"
+VPN_ENABLED="${VPN_ENABLED:-false}"
 echo "FLIXBOX_MODE=${MODE}"
+echo "VPN_ENABLED=${VPN_ENABLED}"
+
+expected="false"
+[[ "${MODE}" == "vpn" ]] && expected="true"
+if [[ "${VPN_ENABLED}" != "${expected}" ]]; then
+  echo "Warning: FLIXBOX_MODE and VPN_ENABLED disagree (expected VPN_ENABLED=${expected})." >&2
+  echo "Compose follows FLIXBOX_MODE only. Run: ./bin/flixbox init --non-interactive" >&2
+fi
 
 if [[ "${MODE}" == "vpn" ]]; then
   TARGET=flixbox-gluetun

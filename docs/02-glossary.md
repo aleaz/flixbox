@@ -29,8 +29,9 @@ Shared vocabulary for Flixbox docs, ADRs, and AI-assisted development.
 | **Copy (anti-pattern)** | Import that reads/writes a full duplicate across mounts (`EXDEV` fallback). |
 | **`/data` contract** | Single parent bind mount shared by downloaders and *arr so hardlinks work. |
 | **`/config`** | Per-app persistent config; must live on local SSD/NVMe, not NFS/SMB. |
-| **VPN mode** | `VPN_ENABLED=true`; qBittorrent uses `network_mode: service:gluetun`. |
-| **Direct mode** | `VPN_ENABLED=false`; qBittorrent attaches to `flixbox_net` without VPN. |
+| **VPN mode** | `FLIXBOX_MODE=vpn` (keep `VPN_ENABLED=true`); qBittorrent uses `network_mode: service:gluetun`. |
+| **Direct mode** | `FLIXBOX_MODE=direct` (keep `VPN_ENABLED=false`); qBittorrent on `flixbox_net`; Gluetun not started. |
+| **`VPN_ENABLED`** | Mirror of mode; **not** read by Compose. Synced by `flixbox init` from `FLIXBOX_MODE`. |
 | **`flixbox_net`** | Docker bridge with fixed subnet `172.30.42.0/24` (not env-configurable) so qBit can whitelist stack peers — ADR 0008. |
 | **Killswitch** | No independent egress for qBit when Gluetun/tunnel is down (shared netns + firewall). |
 | **netns** | Linux network namespace; containers can share one (VPN sidecar pattern). |

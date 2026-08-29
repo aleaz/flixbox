@@ -61,10 +61,12 @@ Config databases live separately under `${CONFIG_DIR}` on a **local SSD/NVMe** (
 
 ## VPN mode vs Direct mode
 
+Pick with **`FLIXBOX_MODE`** (`direct` or `vpn`). That is the only Compose switch. Keep **`VPN_ENABLED`** aligned (`false` / `true`) as a label — Compose does not read it. Modes are exclusive (no Direct + Gluetun for qBit). Details: [VPN and Direct](07-vpn-and-direct.md).
+
 | Mode | When to use | What is protected |
 | --- | --- | --- |
-| **VPN** (`VPN_ENABLED=true`) | You want torrent traffic masked | Only **qBittorrent** shares Gluetun’s network |
-| **Direct** (`VPN_ENABLED=false`) | Private trackers / max speed / no VPN | qBittorrent on the normal Docker network |
+| **VPN** (`FLIXBOX_MODE=vpn`) | You want torrent traffic masked | Only **qBittorrent** shares Gluetun’s network |
+| **Direct** (`FLIXBOX_MODE=direct`) | Private trackers / max speed / no VPN | qBittorrent on the normal Docker network; Gluetun not started |
 
 **Important:** Radarr, Sonarr, Seerr, Jellyfin, etc. stay on the normal network. Putting them behind the VPN breaks metadata and LAN access.
 

@@ -62,6 +62,29 @@ warn_unsafe_paths() {
   fi
 }
 
+# Compose reads FLIXBOX_MODE only; VPN_ENABLED is a mirror. Return 0 if aligned.
+mode_vpn_aligned() {
+  local mode="${FLIXBOX_MODE:-direct}"
+  local vpn="${VPN_ENABLED:-false}"
+  if [[ "${mode}" == "vpn" ]]; then
+    [[ "${vpn}" == "true" ]]
+  else
+    [[ "${vpn}" == "false" ]]
+  fi
+}
+
+warn_mode_vpn_mismatch() {
+  mode_vpn_aligned && return 0
+  local mode="${FLIXBOX_MODE:-direct}"
+  local vpn="${VPN_ENABLED:-false}"
+  local expected="false"
+  [[ "${mode}" == "vpn" ]] && expected="true"
+  warn "FLIXBOX_MODE=${mode} and VPN_ENABLED=${vpn} disagree (expected VPN_ENABLED=${expected})."
+  warn "Compose follows FLIXBOX_MODE only — VPN_ENABLED does not start or stop Gluetun."
+  warn "Fix: set VPN_ENABLED=${expected} in .env, or run: ./bin/flixbox init --non-interactive"
+  return 1
+}
+
 apply_platform_path_defaults() {
   apply_platform_env_defaults "${ROOT_DIR}/.env"
   if [[ "$(uname -s)" == Darwin ]]; then
@@ -145,11 +168,17 @@ cmd_init() {
   warn_unsafe_paths "${DATA_DIR}"
   warn_unsafe_paths "${CONFIG_DIR}"
 
+  if ! mode_vpn_aligned; then
+    warn_mode_vpn_mismatch || true
+    warn "Syncing VPN_ENABLED from FLIXBOX_MODE=${FLIXBOX_MODE}..."
+  fi
   if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
     sed_inplace 's/^VPN_ENABLED=.*/VPN_ENABLED=true/' "${ROOT_DIR}/.env" || true
   else
     sed_inplace 's/^VPN_ENABLED=.*/VPN_ENABLED=false/' "${ROOT_DIR}/.env" || true
   fi
+  load_env
+  ok "VPN_ENABLED=${VPN_ENABLED} (aligned with FLIXBOX_MODE=${FLIXBOX_MODE})"
 
   # Align Decluttarr qBit URL with mode
   if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
@@ -202,6 +231,7 @@ cmd_up() {
   if [[ -z "${QBITTORRENT_PASSWORD:-}" || -z "${QBITTORRENT_USERNAME:-}" ]]; then
     warn "QBITTORRENT_USERNAME/PASSWORD incomplete — Decluttarr stays idle until both are set in .env and Decluttarr is recreated."
   fi
+  warn_mode_vpn_mismatch || true
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
   ok "Stack started. ./bin/flixbox status"
@@ -225,6 +255,7 @@ cmd_status() {
   compose ps
   echo
   log "FLIXBOX_MODE=${FLIXBOX_MODE}  VPN_ENABLED=${VPN_ENABLED}"
+  warn_mode_vpn_mismatch || true
   log "DATA_DIR=${DATA_DIR}"
   log "CONFIG_DIR=${CONFIG_DIR}"
   if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then

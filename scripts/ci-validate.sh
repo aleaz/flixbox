@@ -60,6 +60,17 @@ grep -qE 'downloaders-\$\{FLIXBOX_MODE' compose.yaml || \
   fail C-03 'compose.yaml missing downloaders FLIXBOX_MODE include'
 pass C-03
 
+# --- C-28: CLI warns when FLIXBOX_MODE and VPN_ENABLED disagree ---
+grep -q 'warn_mode_vpn_mismatch' bin/flixbox || \
+  fail C-28 'bin/flixbox missing warn_mode_vpn_mismatch'
+grep -A80 '^cmd_up()' bin/flixbox | grep -q 'warn_mode_vpn_mismatch' || \
+  fail C-28 'cmd_up must call warn_mode_vpn_mismatch'
+grep -A40 '^cmd_status()' bin/flixbox | grep -q 'warn_mode_vpn_mismatch' || \
+  fail C-28 'cmd_status must call warn_mode_vpn_mismatch'
+grep -A60 '^cmd_init()' bin/flixbox | grep -q 'mode_vpn_aligned\|warn_mode_vpn_mismatch' || \
+  fail C-28 'cmd_init must check mode/VPN_ENABLED alignment'
+pass C-28
+
 # --- C-10: /data mount on download and *arr services ---
 for f in compose/downloaders-direct.yml compose/downloaders-vpn.yml compose/servarr.yml; do
   grep -qE '\$\{DATA_DIR[^}]*\}:/data' "${f}" || \

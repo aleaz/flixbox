@@ -202,10 +202,12 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-20 | Only qBit uses `network_mode: service:gluetun` | grep across compose; must appear only in `downloaders-vpn.yml` on `qbittorrent` |
 | C-21 | *arr / Seerr / Jellyfin NOT on Gluetun netns | no `network_mode: service:gluetun` in servarr, requests, media-servers |
 | C-22 | Gluetun publishes qBit ports | ports on `gluetun` service in vpn module |
+| C-23 | Gluetun healthy before qBit | healthcheck on `gluetun`; qBit `depends_on` healthy |
 | C-24 | qBit cont-init at `/custom-cont-init.d` | `qbittorrent-cont-init:/custom-cont-init.d` in both downloader modules + template present |
 | C-25 | `flixbox_net` subnet + qBit whitelist | `172.30.42.0/24` in `network-base.yml` + AuthSubnetWhitelist in cont-init template |
 | C-26 | Decluttarr idle entrypoint | `templates/decluttarr/entrypoint.sh` mounted; no password in Compose `command` |
 | C-27 | qBit healthy before peers | healthcheck on both downloader modules; `depends_on` in servarr + optimization |
+| C-28 | CLI warns on `FLIXBOX_MODE` / `VPN_ENABLED` mismatch | `warn_mode_vpn_mismatch` in `bin/flixbox` (`init`/`up`/`status`) |
 
 ### 5.4 Service inventory (ADR 0006)
 
