@@ -50,7 +50,8 @@ Do **not** implement these until the roadmap phase says so:
 - FlareSolverr as the default image (Byparr is default; FlareSolverr remains a documented alternative)
 - PowerShell CLI (`bin/flixbox.ps1`)
 - Vagrant / lab VM packaging
-- Telegram or other bots as first-class Flixbox features (use Seerr/Maintainerr notifications instead)
+- Telegram or other bots as first-class Flixbox features (use Seerr/Maintainerr notifications instead; post-MVP Apprise hub — [ADR 0012](adr/0012-notifications-apprise-hub.md))
+- Automatic Direct fallback when VPN fails (privacy fail-closed — [ADR 0013](adr/0013-vpn-resilience-no-direct-fallback.md))
 - Authelia / Authentik / SSO in front of Caddy
 - Autobrr, cross-seed
 - Profilarr (Recyclarr remains the TRaSH sync tool)
@@ -60,7 +61,7 @@ Do **not** implement these until the roadmap phase says so:
 
 ## Later (post-MVP)
 
-See [08-roadmap.md](08-roadmap.md).
+See [08-roadmap.md](08-roadmap.md) and planning note [11-future-notifications-and-vpn-resilience.md](11-future-notifications-and-vpn-resilience.md).
 
 ## Definition of done (MVP)
 

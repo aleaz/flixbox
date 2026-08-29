@@ -26,6 +26,7 @@
 | [08-roadmap.md](08-roadmap.md) | MVP → later releases |
 | [09-hygiene-defaults.md](09-hygiene-defaults.md) | Decluttarr + Maintainerr thresholds |
 | [10-ci-plan.md](10-ci-plan.md) | GitHub Actions plan and contract checks |
+| [11-future-notifications-and-vpn-resilience.md](11-future-notifications-and-vpn-resilience.md) | Post-MVP planning: Apprise hub + VPN heal (ADRs 0012/0013) |
 
 ## Decisions
 

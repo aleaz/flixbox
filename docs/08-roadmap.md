@@ -33,6 +33,9 @@ Deliverables:
 - Stronger init validation (hardlink probe, config-on-NFS guard, exFAT guard)
 - CI phase 2: Trivy + init smoke — [10-ci-plan.md](10-ci-plan.md)
 - Image tag pinning policy documented and applied
+- **Notifications:** optional Apprise API profile (Telegram via Apprise URL, not a Flixbox bot) — [ADR 0012](adr/0012-notifications-apprise-hub.md)
+- **VPN resilience docs + optional heal:** document Gluetun internal reconnect/killswitch; evaluate optional `vpn-heal` watchdog profile; **never** auto-fallback to Direct — [ADR 0013](adr/0013-vpn-resilience-no-direct-fallback.md)
+- Planning summary: [11-future-notifications-and-vpn-resilience.md](11-future-notifications-and-vpn-resilience.md)
 
 ## v0.3 — Optional media profiles
 
@@ -57,6 +60,7 @@ Deliverables:
 - Replacing Gluetun with VPNGate scrapers
 - Shipping Overseerr or Jellyseerr alongside Seerr
 - Defaulting CF bypass to unmaintained/poorly performing images when Byparr works
+- Automatic Direct (non-VPN) torrent egress when Gluetun is unhealthy (privacy leak)
 
 ## Change control
 

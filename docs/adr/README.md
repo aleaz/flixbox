@@ -26,6 +26,8 @@ Each ADR uses:
 | [0009](0009-byparr-default-cf-bypass.md) | Byparr default CF bypass | Accepted |
 | [0010](0010-mit-and-image-tags.md) | MIT license + image tags | Accepted |
 | [0011](0011-documentation-i18n.md) | Documentation i18n (EN/ES) | Accepted |
+| [0012](0012-notifications-apprise-hub.md) | Notifications via Apprise hub | Accepted |
+| [0013](0013-vpn-resilience-no-direct-fallback.md) | VPN resilience (no Direct fallback) | Proposed |
 
 ## Rules
 
