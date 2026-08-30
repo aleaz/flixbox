@@ -28,6 +28,7 @@ Each ADR uses:
 | [0011](0011-documentation-i18n.md) | Documentation i18n (EN/ES) | Accepted |
 | [0012](0012-notifications-apprise-hub.md) | Notifications via Apprise hub | Accepted |
 | [0013](0013-vpn-resilience-no-direct-fallback.md) | VPN resilience (no Direct fallback) | Proposed |
+| [0014](0014-stable-qbit-download-hostname.md) | Stable `qbittorrent` download host | Accepted |
 
 ## Rules
 

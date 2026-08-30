@@ -51,7 +51,7 @@ When `FLIXBOX_MODE=vpn`:
 5. **`DOT=on`** (default): DNS over TLS inside Gluetun.
 6. **Port-forward hook** sets `upnp: false` when updating qBit listen port — does not punch holes in your home router.
 
-Radarr, Sonarr, Prowlarr, Seerr, Jellyfin, and the rest stay on `flixbox_net`. They talk to qBit at `http://gluetun:8080` but their own traffic does not use the VPN. See [Architecture](../03-architecture.md).
+Radarr, Sonarr, Prowlarr, Seerr, Jellyfin, and the rest stay on `flixbox_net`. They talk to qBit at `http://qbittorrent:8080` (VPN: alias on Gluetun). Their own traffic does not use the VPN. See [Architecture](../03-architecture.md).
 
 Full mode reference: [VPN and Direct](07-vpn-and-direct.md).
 

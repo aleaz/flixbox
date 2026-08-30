@@ -70,8 +70,8 @@ Pick with **`FLIXBOX_MODE`** (`direct` or `vpn`). That is the only Compose switc
 
 **Important:** Radarr, Sonarr, Seerr, Jellyfin, etc. stay on the normal network. Putting them behind the VPN breaks metadata and LAN access.
 
-In VPN mode, other apps talk to qBittorrent at `http://gluetun:8080`.  
-In Direct mode, they use `http://qbittorrent:8080`.
+In VPN mode, stack peers reach qBittorrent at `http://qbittorrent:8080` (Docker alias on Gluetun — same hostname as Direct).
+In Direct mode, they use the same URL on the `qbittorrent` service.
 
 Privacy expectations, qBit settings, and leak checklist: [Torrent privacy and security](12-torrent-privacy-and-security.md).
 When the tunnel drops (heal vs recreate): [Future planning — VPN resilience](../11-future-notifications-and-vpn-resilience.md).

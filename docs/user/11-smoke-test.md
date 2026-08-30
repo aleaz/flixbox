@@ -39,7 +39,7 @@ To tear down:
 | A2 | Data tree | `ls ${DATA_DIR}/torrents/incomplete` | Directory exists |
 | A3 | Templates copied | `ls ${CONFIG_DIR}/homepage/services.yaml` | File exists |
 | A4 | Decluttarr URL (Direct) | `grep DECLUTTARR_QBIT_URL .env` | `http://qbittorrent:8080` |
-| A5 | Decluttarr URL (VPN) | Re-init with `FLIXBOX_MODE=vpn` on a test `.env` | `http://gluetun:8080` |
+| A5 | Decluttarr URL | `grep DECLUTTARR_QBIT_URL .env` | `http://qbittorrent:8080` (VPN and Direct) |
 | A6 | Unsafe path warnings | Set `DATA_DIR=/mnt/c/test` and run `init` | CLI warns (WSL NTFS) |
 
 ## Phase B — Stack up (Direct mode)
@@ -82,7 +82,7 @@ Same leading number ⇒ hardlink OK.
 |---|-------|-----|------|
 | D1 | Switch mode | `FLIXBOX_MODE=vpn` in `.env`, fill Gluetun secrets, `./bin/flixbox up` | `gluetun` + `qbittorrent` healthy |
 | D2 | qBit via Gluetun port | `http://localhost:8080` | WebUI loads |
-| D3 | *arr download client | Radarr/Sonarr client host `gluetun:8080` | Test succeeds |
+| D3 | *arr download client | Radarr/Sonarr host `qbittorrent:8080` | Test succeeds |
 | D4 | Leak test | `./bin/flixbox vpn-test` | Container IP ≠ host public IP |
 | D5 | Port forward (if provider supports) | `VPN_PORT_FORWARDING=on` + localhost bypass in qBit | Listen port updates in qBit logs |
 

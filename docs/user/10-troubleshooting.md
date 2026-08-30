@@ -13,7 +13,7 @@
 | Decluttarr `403` / “IP has been banned” | Fail-login loop before idle gate / old stack | `docker compose restart qbittorrent` (clears in-memory ban), confirm `.env` password, recreate Decluttarr; ensure cont-init whitelist + fixed `flixbox_net` subnet — [ADR 0008](../adr/0008-maintenance-decluttarr-maintainerr.md) |
 | *arr banner: Connection refused to qBit, but **Test** is OK | Health check ran while qBit WebUI was still starting (or stale status) | System → Tasks → **Check Health**, or wait for the next cycle. With current Compose, *arr wait for qBit `healthy` on new boots |
 | Services cannot join `flixbox_net` after upgrade | Old bridge without `172.30.42.0/24` | `docker compose down`, `docker network rm flixbox_net` if it still exists, then `./bin/flixbox up` |
-| Radarr cannot reach qBit (VPN) | Wrong hostname or ports on wrong service | Use `http://gluetun:8080`; publish UI on Gluetun |
+| Radarr cannot reach qBit (VPN) | Missing Gluetun `qbittorrent` alias (pre–ADR 0014) or Gluetun unhealthy | Host **`qbittorrent`**; `compose up -d gluetun` after upgrade |
 | qBit crash-loops at boot (VPN) | Started before Gluetun healthy | Healthcheck `depends_on`; restart qBit after Gluetun is healthy |
 | VPN test shows home IP | Not in VPN mode / tunnel down | Check `VPN_ENABLED`, Gluetun logs, `vpn-test` |
 | Homepage link goes to wrong port after `.env` change | `services.yaml` copied once at init with default ports | Edit `${CONFIG_DIR}/homepage/services.yaml` or regenerate from `.env` |

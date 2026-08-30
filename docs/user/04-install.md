@@ -26,15 +26,14 @@ docker compose up -d
 
 | `FLIXBOX_MODE` | Download client for *arr / Decluttarr |
 | --- | --- |
-| `direct` | `http://qbittorrent:8080` |
-| `vpn` | `http://gluetun:8080` |
+| `direct` or `vpn` | `http://qbittorrent:8080` (VPN: alias on Gluetun — ADR 0014) |
 
 VPN: fill Gluetun secrets in `.env`, then `./scripts/vpn-test.sh` or `./bin/flixbox vpn-test`.
 
 ### qBittorrent paths and ports
 
 - Default host WebUI: port `8080` (`QBITTORRENT_PORT` in `.env`)
-- Inside Docker, WebUI stays on port **8080**; *arr use `qbittorrent:8080` or `gluetun:8080`
+- Inside Docker, WebUI stays on port **8080**; *arr always use host **`qbittorrent`** (ADR 0014).
 - Custom host port example: `QBITTORRENT_PORT=9898` → browser `http://localhost:9898`, *arr still `8080`
 - First-run password: `docker compose logs qbittorrent`
 - VPN port-forward: enable **Bypass authentication for clients on localhost**

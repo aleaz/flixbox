@@ -143,7 +143,7 @@ There is no `SEERR_API_KEY` or `PROWLARR_API_KEY` in `.env` — those apps expos
 
 | Variable | Default | Notes |
 | --- | --- | --- |
-| `DECLUTTARR_QBIT_URL` | mode-dependent | `http://qbittorrent:8080` (direct) or `http://gluetun:8080` (vpn). Set by `flixbox init`. |
+| `DECLUTTARR_QBIT_URL` | `http://qbittorrent:8080` | Always (ADR 0014). Set/normalized by `flixbox init`. |
 | `DECLUTTARR_REMOVE_TIMER` | `10` | Minutes between queue checks. |
 | `DECLUTTARR_STRIKES` | `5` | Strikes before stalled/slow removal. |
 | `DECLUTTARR_MIN_SPEED` | `100` | Minimum KiB/s before "slow" removal. |

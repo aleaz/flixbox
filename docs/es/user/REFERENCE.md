@@ -43,16 +43,16 @@ Reemplazá `localhost` por la IP LAN si entrás desde otro dispositivo.
 
 ## URLs internas (cableado en UIs *arr)
 
-Usá estas **dentro de Docker** (clientes de descarga, apps en Prowlarr, etc.):
+Usá estas **dentro de Docker** (clientes de descarga, apps en Prowlarr, etc.). Host qBit: **`qbittorrent:8080`** en Direct y VPN (ADR 0014).
 
-| Destino | Modo Direct | Modo VPN |
-| --- | --- | --- |
-| qBittorrent WebUI/API | `http://qbittorrent:8080` | `http://gluetun:8080` |
-| Prowlarr | `http://prowlarr:9696` | igual |
-| Proxy Byparr | `http://byparr:8191` | igual |
-| Radarr | `http://radarr:7878` | igual |
-| Sonarr | `http://sonarr:8989` | igual |
-| Jellyfin | `http://jellyfin:8096` | igual |
+| Destino | URL |
+| --- | --- |
+| qBittorrent WebUI/API | `http://qbittorrent:8080` |
+| Prowlarr | `http://prowlarr:9696` |
+| Proxy Byparr | `http://byparr:8191` |
+| Radarr | `http://radarr:7878` |
+| Sonarr | `http://sonarr:8989` |
+| Jellyfin | `http://jellyfin:8096` |
 
 ## Rutas dentro de contenedores
 

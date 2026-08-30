@@ -71,6 +71,12 @@ grep -A60 '^cmd_init()' bin/flixbox | grep -q 'mode_vpn_aligned\|warn_mode_vpn_m
   fail C-28 'cmd_init must check mode/VPN_ENABLED alignment'
 pass C-28
 
+# --- C-29: VPN mode Gluetun alias qbittorrent (ADR 0014) ---
+grep -q 'aliases:' compose/downloaders-vpn.yml || fail C-29 'downloaders-vpn.yml missing network aliases'
+grep -A3 'aliases:' compose/downloaders-vpn.yml | grep -q 'qbittorrent' || \
+  fail C-29 'Gluetun missing qbittorrent network alias'
+pass C-29
+
 # --- C-10: /data mount on download and *arr services ---
 for f in compose/downloaders-direct.yml compose/downloaders-vpn.yml compose/servarr.yml; do
   grep -qE '\$\{DATA_DIR[^}]*\}:/data' "${f}" || \

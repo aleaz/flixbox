@@ -21,7 +21,7 @@ Compose must not interpolate secrets into `command:` / `entrypoint:` shell strin
 - Streamystats remains optional/post-MVP.
 - **Decluttarr idle entrypoint:** `templates/decluttarr/entrypoint.sh` (copied by `flixbox init` to `${CONFIG_DIR}/decluttarr-entrypoint.sh`). If `QBITTORRENT_USERNAME` or `QBITTORRENT_PASSWORD` is empty, sleep with a clear log line — **no** qBit login. Credentials are read from container **environment at runtime** only.
 - **Trusted Docker network:** `flixbox_net` is pinned to `172.30.42.0/24` ([compose/network-base.yml](../../compose/network-base.yml), hardcoded). qBittorrent cont-init enables `WebUI\AuthSubnetWhitelist` for that CIDR. That is an intentional **auth bypass for peers on `flixbox_net`** (and typically the bridge gateway when using published ports from the host). It is **not** “ban exemption only.” Do not publish qBit WebUI to the public internet. Not env-configurable (Compose subnet and whitelist must stay identical).
-- **Startup order:** qBittorrent has a WebUI healthcheck; Radarr, Sonarr, Decluttarr, and Unpackerr `depends_on: qbittorrent: condition: service_healthy` so first health checks are not `Connection refused` races. In VPN mode qBit still waits on Gluetun first; Decluttarr reaches qBit via `gluetun:8080` while its source IP remains on `flixbox_net`.
+- **Startup order:** qBittorrent has a WebUI healthcheck; Radarr, Sonarr, Decluttarr, and Unpackerr `depends_on: qbittorrent: condition: service_healthy` so first health checks are not `Connection refused` races. In VPN mode qBit still waits on Gluetun first; peers reach qBit via `http://qbittorrent:8080` (Gluetun network alias — ADR 0014).
 
 ## Consequences
 

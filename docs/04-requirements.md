@@ -65,7 +65,7 @@
 ### FR-10 Queue hygiene (Decluttarr)
 
 - **FR-10.1** MUST deploy Decluttarr against Radarr, Sonarr, and qBittorrent.
-- **FR-10.2** MUST use `http://gluetun:8080` or `http://qbittorrent:8080` according to VPN mode.
+- **FR-10.2** MUST use `http://qbittorrent:8080` for download-client host in both VPN and Direct (VPN: Gluetun network alias — ADR 0014).
 - **FR-10.3** MUST follow Decluttarr defaults in [09-hygiene-defaults.md](09-hygiene-defaults.md) (including `flixbox-keep` protect tag).
 
 ### FR-11 Library hygiene (Maintainerr)

@@ -208,6 +208,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-26 | Decluttarr idle entrypoint | `templates/decluttarr/entrypoint.sh` mounted; no password in Compose `command` |
 | C-27 | qBit healthy before peers | healthcheck on both downloader modules; `depends_on` in servarr + optimization |
 | C-28 | CLI warns on `FLIXBOX_MODE` / `VPN_ENABLED` mismatch | `warn_mode_vpn_mismatch` in `bin/flixbox` (`init`/`up`/`status`) |
+| C-29 | VPN Gluetun `qbittorrent` network alias | `aliases: qbittorrent` on `gluetun` in `downloaders-vpn.yml` (ADR 0014) |
 
 ### 5.4 Service inventory (ADR 0006)
 
@@ -232,7 +233,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | --- | --- | --- |
 | C-50 | `init --non-interactive` succeeds | temp `.env` with `/tmp/flixbox-ci/*` paths |
 | C-51 | Templates copied | `homepage/services.yaml`, `recyclarr/recyclarr.yml` exist |
-| C-52 | Mode-aware Decluttarr URL | `DECLUTTARR_QBIT_URL` is `qbittorrent` or `gluetun` after init |
+| C-52 | Decluttarr qBit URL | `DECLUTTARR_QBIT_URL` is `http://qbittorrent:8080` after init (ADR 0014) |
 
 ### 5.7 Documentation links (phase 3 — optional)
 

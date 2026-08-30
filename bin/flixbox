@@ -180,19 +180,11 @@ cmd_init() {
   load_env
   ok "VPN_ENABLED=${VPN_ENABLED} (aligned with FLIXBOX_MODE=${FLIXBOX_MODE})"
 
-  # Align Decluttarr qBit URL with mode
-  if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
-    if grep -q '^DECLUTTARR_QBIT_URL=' "${ROOT_DIR}/.env"; then
-      sed_inplace 's|^DECLUTTARR_QBIT_URL=.*|DECLUTTARR_QBIT_URL=http://gluetun:8080|' "${ROOT_DIR}/.env"
-    else
-      printf '\nDECLUTTARR_QBIT_URL=http://gluetun:8080\n' >> "${ROOT_DIR}/.env"
-    fi
+  # Decluttarr qBit URL — same host in VPN and Direct (ADR 0014: alias on Gluetun in VPN mode)
+  if grep -q '^DECLUTTARR_QBIT_URL=' "${ROOT_DIR}/.env"; then
+    sed_inplace 's|^DECLUTTARR_QBIT_URL=.*|DECLUTTARR_QBIT_URL=http://qbittorrent:8080|' "${ROOT_DIR}/.env"
   else
-    if grep -q '^DECLUTTARR_QBIT_URL=' "${ROOT_DIR}/.env"; then
-      sed_inplace 's|^DECLUTTARR_QBIT_URL=.*|DECLUTTARR_QBIT_URL=http://qbittorrent:8080|' "${ROOT_DIR}/.env"
-    else
-      printf '\nDECLUTTARR_QBIT_URL=http://qbittorrent:8080\n' >> "${ROOT_DIR}/.env"
-    fi
+    printf '\nDECLUTTARR_QBIT_URL=http://qbittorrent:8080\n' >> "${ROOT_DIR}/.env"
   fi
 
   validate_flixbox_paths "${DATA_DIR}" "${CONFIG_DIR}" || \
@@ -285,11 +277,7 @@ cmd_status() {
   warn_mode_vpn_mismatch || true
   log "DATA_DIR=${DATA_DIR}"
   log "CONFIG_DIR=${CONFIG_DIR}"
-  if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
-    log "Download client URL for *arr: http://gluetun:8080"
-  else
-    log "Download client URL for *arr: http://qbittorrent:8080"
-  fi
+  log "Download client URL for *arr / Decluttarr: http://qbittorrent:8080 (same in VPN and Direct — ADR 0014)"
 }
 
 cmd_logs() {

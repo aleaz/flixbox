@@ -27,8 +27,7 @@ These are the Flixbox-recommended starting rules. Templates shipped with the pro
 
 **qBittorrent URL**
 
-- VPN mode: `http://gluetun:8080`
-- Direct mode: `http://qbittorrent:8080`
+- Download client: `http://qbittorrent:8080` (VPN and Direct — ADR 0014)
 
 Download client **name** in Decluttarr must match the name configured in Radarr/Sonarr (default suggestion: `qBittorrent`).
 

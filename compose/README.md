@@ -18,7 +18,7 @@ Root: [`../compose.yaml`](../compose.yaml).
 
 ```bash
 FLIXBOX_MODE=direct   # *arr client http://qbittorrent:8080
-FLIXBOX_MODE=vpn      # *arr client http://gluetun:8080
+FLIXBOX_MODE=vpn      # same host; Gluetun carries qbittorrent alias
 ```
 
 Never put *arr / Seerr / Jellyfin on Gluetun’s netns.

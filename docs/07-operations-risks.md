@@ -32,8 +32,8 @@ Use this as an implementation checklist. Mitigations marked **enforce** should b
 
 ### 2.1 qBittorrent hostname and ports in VPN mode
 
-- **Risk:** Using `http://qbittorrent:8080` or publishing ports on the qBit service fails in VPN mode.
-- **Mitigation (enforce/document):** URL `http://gluetun:8080`; publish ports on **Gluetun**. Decluttarr must use the same URL.
+- **Risk:** Using `http://qbittorrent:8080` without the Gluetun **network alias** in VPN mode (DNS does not resolve).
+- **Mitigation (enforce):** ADR 0014 — alias `qbittorrent` on Gluetun in `downloaders-vpn.yml`; publish WebUI/BT ports on **Gluetun**.
 
 ### 2.2 DNS blackhole at boot
 

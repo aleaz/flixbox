@@ -25,7 +25,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 1. `compose/network-base.yml` → `flixbox_net`
 2. `compose/downloaders-vpn.yml` → Gluetun + qBittorrent (ports on Gluetun, healthcheck gate, optional port-forward UP/DOWN commands)
 3. `compose/downloaders-direct.yml` → qBittorrent on bridge
-4. Document client URLs: `http://gluetun:8080` vs `http://qbittorrent:8080`
+4. Document client URL: `http://qbittorrent:8080` in both modes (ADR 0014 alias in VPN).
 5. Explicit doc warning: never attach *arr/Seerr/Jellyfin to Gluetun netns
 
 **Exit criteria:** VPN and Direct modes start separately; manual `vpn-test` via `docker exec` works.

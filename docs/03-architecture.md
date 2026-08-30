@@ -71,7 +71,7 @@ C4Context
 - Gluetun owns the tunnel (`NET_ADMIN`, `/dev/net/tun`).
 - qBittorrent uses `network_mode: "service:gluetun"`.
 - **Publish qBittorrent WebUI (and BT ports as needed) on the Gluetun service**, not on qBittorrent.
-- Servarr / Decluttarr download-client URL: `http://gluetun:8080`.
+- Servarr / Decluttarr download-client URL: `http://qbittorrent:8080` (VPN: network alias on Gluetun — ADR 0014).
 - Start order: Gluetun healthy → then qBittorrent.
 - Killswitch: qBit has no independent netns; egress drops if tunnel/firewall fails.
 - Default: DoT on; `BLOCK_IPV6=on` unless explicit IPv6 VPN is configured.

@@ -123,10 +123,9 @@ if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
     echo "       Wait for VPN connect, then re-run. Check: ./bin/flixbox logs gluetun" >&2
     exit 1
   fi
-  QBIT_ARR_HOST="gluetun"
-else
-  QBIT_ARR_HOST="qbittorrent"
 fi
+# ADR 0014: same logical host in VPN and Direct (alias on Gluetun in VPN mode)
+QBIT_ARR_HOST="qbittorrent"
 
 QBIT_URL="http://127.0.0.1:${QBITTORRENT_PORT}"
 

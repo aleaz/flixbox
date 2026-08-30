@@ -30,7 +30,9 @@ There is no “Direct traffic with VPN still up” design. If you previously ran
 | `.env` | Behavior | *arr download client |
 | --- | --- | --- |
 | `FLIXBOX_MODE=direct` | qBittorrent on `flixbox_net`; Gluetun not started | `http://qbittorrent:8080` |
-| `FLIXBOX_MODE=vpn` | qBittorrent shares Gluetun netns | `http://gluetun:8080` |
+| `FLIXBOX_MODE=vpn` | qBittorrent shares Gluetun netns; **alias** `qbittorrent` on Gluetun | `http://qbittorrent:8080` |
+
+**Same hostname in both modes** (ADR 0014). Radarr/Sonarr download client host is always `qbittorrent` — no UI change when switching modes. `gluetun` still works for debugging.
 
 | Choose **VPN** if… | Choose **Direct** if… |
 | --- | --- |
@@ -43,7 +45,7 @@ Switching to VPN:
 2. Fill Gluetun vars under **[VPN ONLY]** (native provider or `custom` + `OPENVPN_CUSTOM_CONFIG` — see `.env.example`).
 3. `./bin/flixbox init --non-interactive` (updates `DECLUTTARR_QBIT_URL` and syncs `VPN_ENABLED`).
 4. `docker compose down` → `./bin/flixbox up`.
-5. Point Radarr/Sonarr download client at host **`gluetun`**, port **8080**.
+5. Point Radarr/Sonarr download client at host **`qbittorrent`**, port **8080** (same as Direct — no rename on mode switch).
 6. `./bin/flixbox vpn-test`.
 
 ### VPN bring-up (dependency chain)

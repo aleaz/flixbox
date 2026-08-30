@@ -41,18 +41,40 @@ Replace `localhost` with your LAN IP when browsing from another device.
 | Byparr | — | No WebUI; logs via `./bin/flixbox logs byparr` |
 | Caddy | `http://localhost:80` | Profile `proxy` only |
 
+## Internal hostname contract (automation)
+
+Use **Compose service names** on `flixbox_net` — not `container_name` (`flixbox-radarr`, etc.). Scripts (`configure`, Decluttarr env, CI) assume this table.
+
+| Logical role | Hostname | Port | Notes |
+| --- | --- | --- | --- |
+| Download client (qBit API) | `qbittorrent` | `8080` | **Same in VPN and Direct** (ADR 0014). VPN: alias on Gluetun. |
+| Movies | `radarr` | `7878` | |
+| TV | `sonarr` | `8989` | |
+| Indexers | `prowlarr` | `9696` | |
+| Subtitles | `bazarr` | `6767` | |
+| CF bypass | `byparr` | `8191` | |
+| Requests | `seerr` | `5055` | |
+| Streaming | `jellyfin` | `8096` | Plex (`plex`) only with profile `plex` |
+| Queue hygiene | `decluttarr` | — | Env only |
+| Library hygiene | `maintainerr` | `6246` | |
+| VPN engine | `gluetun` | — | VPN mode only; debug, not *arr download host |
+
+**When to use network aliases:** only when topology breaks DNS (today: qBit in Gluetun netns). Do not alias every service — service names are already stable.
+
+**Profiles:** `recyclarr`, `caddy`, `docker-socket-proxy`, `plex` exist only when their profile is enabled — no alias substitutes an offline service.
+
 ## Internal URLs (*arr UI wiring)
 
 Use these **inside Docker** (download clients, Prowlarr apps, etc.):
 
-| Target | Direct mode | VPN mode |
-| --- | --- | --- |
-| qBittorrent WebUI/API | `http://qbittorrent:8080` | `http://gluetun:8080` |
-| Prowlarr | `http://prowlarr:9696` | same |
-| Byparr proxy | `http://byparr:8191` | same |
-| Radarr | `http://radarr:7878` | same |
-| Sonarr | `http://sonarr:8989` | same |
-| Jellyfin | `http://jellyfin:8096` | same |
+| Target | URL (Direct and VPN) |
+| --- | --- |
+| qBittorrent WebUI/API | `http://qbittorrent:8080` |
+| Prowlarr | `http://prowlarr:9696` |
+| Byparr proxy | `http://byparr:8191` |
+| Radarr | `http://radarr:7878` |
+| Sonarr | `http://sonarr:8989` |
+| Jellyfin | `http://jellyfin:8096` |
 
 ## Paths inside containers
 

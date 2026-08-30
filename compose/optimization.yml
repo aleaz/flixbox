@@ -1,5 +1,5 @@
 # Post-process, quality sync, queue hygiene, library hygiene.
-# Decluttarr qBit URL must match FLIXBOX_MODE (DECLUTTARR_QBIT_URL; set by flixbox init).
+# Decluttarr qBit URL — always qbittorrent (ADR 0014; VPN alias on Gluetun).
 
 services:
   unpackerr:

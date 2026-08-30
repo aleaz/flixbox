@@ -1,6 +1,6 @@
 # VPN-mode BitTorrent via Gluetun.
 # Included when FLIXBOX_MODE=vpn (see root compose.yaml).
-# Servarr / Decluttarr download client: http://gluetun:8080
+# Servarr / Decluttarr download client: http://qbittorrent:8080 (alias on Gluetun — ADR 0014)
 #
 # Never attach *arr, Seerr, or Jellyfin to Gluetun's network namespace.
 #
@@ -49,7 +49,9 @@ services:
     restart: unless-stopped
     stop_grace_period: 60s
     networks:
-      - flixbox_net
+      flixbox_net:
+        aliases:
+          - qbittorrent
     healthcheck:
       test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
       interval: 30s
