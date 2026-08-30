@@ -59,8 +59,9 @@
 ### FR-9 CLI (Bash MVP)
 
 - **FR-9.1** MUST ship `bin/flixbox` with `set -euo pipefail`, signal traps, and TTY-aware output (`NO_COLOR` respected).
-- **FR-9.2** MUST implement `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`.
-- **FR-9.3** `init` MUST create directory trees (including `torrents/incomplete`), write local env (untracked), and select VPN or Direct mode.
+- **FR-9.2** MUST implement `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`, `configure`, `reload`.
+- **FR-9.3** `init` MUST create directory trees (including `torrents/incomplete`), write local env (untracked), select VPN or Direct mode, and generate empty Servarr API keys / qBit + admin passwords when missing (ADR 0005).
+- **FR-9.4** `configure` MUST be idempotent and wire deterministic app settings (root folders, download clients, Byparr, Bazarr, secret loop, Jellyfin libraries/Seerr when credentials allow). Indexers stay manual.
 
 ### FR-10 Queue hygiene (Decluttarr)
 
@@ -89,7 +90,7 @@
 | **NFR-3** | Reliability | Stateful services MUST set `stop_grace_period: 60s`. |
 | **NFR-4** | Security | No secrets in git. In VPN mode, qBit MUST not egress outside the Gluetun path when the tunnel is down. |
 | **NFR-5** | Maintainability | Compose MUST use `include:` modules; no single compose YAML > 150 lines. |
-| **NFR-6** | Usability | `flixbox init` MUST bootstrap paths and env with interactive defaults; remaining UI steps MUST be documented. |
+| **NFR-6** | Usability | `flixbox init` + `configure` MUST minimize UI steps; remaining manual steps (indexers, Maintainerr rules) MUST be documented honestly. |
 
 ## 3. Compose module contract (MVP)
 

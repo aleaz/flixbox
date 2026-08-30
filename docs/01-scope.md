@@ -57,7 +57,7 @@ Do **not** implement these until the roadmap phase says so:
 - Profilarr (Recyclarr remains the TRaSH sync tool)
 - Streamystats (optional Maintainerr companion — not required for MVP)
 - Kubernetes / Ansible / Terraform packaging
-- Full zero-touch Servarr API wiring (indexers still need user credentials; document remaining manual steps honestly)
+- Claiming “fully zero-touch” when indexers still need user credentials (API-assisted first-run is in scope; indexers stay manual)
 
 ## Later (post-MVP)
 
@@ -74,7 +74,7 @@ MVP is done when all of the following are true:
 5. Decluttarr reaches Radarr/Sonarr and the correct qBit URL for the active mode (`gluetun` vs `qbittorrent`).
 6. Maintainerr is configured against Jellyfin + Radarr/Sonarr (Plex only if Plex profile enabled).
 7. `bin/flixbox` supports the minimum command set and creates the directory tree with the frozen permissions model.
-8. README describes real setup steps (including remaining UI configuration) without false “fully zero-touch” claims.
+8. README describes real setup steps: `init` → `up` → `configure` covers deterministic wiring; remaining manual steps (indexers, optional Maintainerr rules) are listed honestly — no false “fully zero-touch” claims.
 9. No secrets in git-tracked files; `.gitignore` covers `.env` and local config/data paths.
 10. Operational footguns from [07-operations-risks.md](07-operations-risks.md) are documented and, where feasible, enforced by CLI validation.
 

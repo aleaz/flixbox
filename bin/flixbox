@@ -94,6 +94,50 @@ apply_platform_path_defaults() {
   fi
 }
 
+# Servarr API keys (32 hex). Used by compose AUTH overrides + hygiene (ADR 0005).
+generate_secret_hex() {
+  if command -v openssl >/dev/null 2>&1; then
+    openssl rand -hex 16
+  else
+    python3 -c 'import secrets; print(secrets.token_hex(16))'
+  fi
+}
+
+generate_password() {
+  if command -v openssl >/dev/null 2>&1; then
+    openssl rand -base64 18 | tr -d '/+=' | head -c 20
+  else
+    python3 -c 'import secrets; print(secrets.token_urlsafe(16)[:20])'
+  fi
+}
+
+# Write KEY=value into .env only when missing or empty (never overwrite set secrets).
+env_set_if_empty() {
+  local key="$1" value="$2" env_file="${ROOT_DIR}/.env"
+  [[ -f "$env_file" ]] || return 0
+  local current
+  current=$(grep -E "^${key}=" "$env_file" 2>/dev/null | head -1 | cut -d= -f2- || true)
+  [[ -n "$current" ]] && return 0
+  if grep -q "^${key}=" "$env_file" 2>/dev/null; then
+    sed_inplace "s|^${key}=.*|${key}=${value}|" "$env_file"
+  else
+    printf '\n%s=%s\n' "$key" "$value" >> "$env_file"
+  fi
+  ok "Generated ${key} in .env (was empty)"
+}
+
+ensure_first_run_secrets() {
+  local key
+  for key in RADARR_API_KEY SONARR_API_KEY PROWLARR_API_KEY; do
+    env_set_if_empty "$key" "$(generate_secret_hex)"
+  done
+  env_set_if_empty QBITTORRENT_USERNAME admin
+  env_set_if_empty QBITTORRENT_PASSWORD "$(generate_password)"
+  # Optional shared admin for Jellyfin/Seerr automation (configure)
+  env_set_if_empty FLIXBOX_ADMIN_USER admin
+  env_set_if_empty FLIXBOX_ADMIN_PASSWORD "$(generate_password)"
+}
+
 copy_templates() {
   mkdir -p \
     "${CONFIG_DIR}/recyclarr" \
@@ -125,10 +169,14 @@ copy_templates() {
   [[ -f "${CONFIG_DIR}/maintainerr/README.md" ]] || \
     cp "${ROOT_DIR}/templates/maintainerr/README.md" "${CONFIG_DIR}/maintainerr/README.md"
   # linuxserver runs /custom-cont-init.d (separate mount), not /config/custom-cont-init.d
-  mkdir -p "${CONFIG_DIR}/qbittorrent-cont-init"
+  mkdir -p "${CONFIG_DIR}/qbittorrent-cont-init" \
+    "${CONFIG_DIR}/qbittorrent-custom-services"
   cp -f "${ROOT_DIR}/templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh" \
     "${CONFIG_DIR}/qbittorrent-cont-init/99-flixbox-qbittorrent.sh"
   chmod +x "${CONFIG_DIR}/qbittorrent-cont-init/99-flixbox-qbittorrent.sh"
+  cp -f "${ROOT_DIR}/templates/qbittorrent/custom-services.d/99-flixbox-bind-vpn-interface.sh" \
+    "${CONFIG_DIR}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh"
+  chmod +x "${CONFIG_DIR}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh"
   # Decluttarr idle-gate entrypoint (runtime env; not Compose-interpolated command)
   cp -f "${ROOT_DIR}/templates/decluttarr/entrypoint.sh" \
     "${CONFIG_DIR}/decluttarr-entrypoint.sh"
@@ -193,10 +241,13 @@ cmd_init() {
   "${ROOT_DIR}/scripts/bootstrap-dirs.sh"
   load_env
   copy_templates
+  ensure_first_run_secrets
+  load_env
   chown -R "${PUID}:${PGID}" "${CONFIG_DIR}" 2>/dev/null || warn "Could not chown CONFIG_DIR (may need sudo)."
   ok "Init complete."
   log "Review .env before first up: DATA_DIR, CONFIG_DIR, FLIXBOX_MODE (Gluetun vars if vpn)."
-  log "After *arr login: ./bin/flixbox configure  (or set RADARR_API_KEY, SONARR_API_KEY in .env)"
+  log "API keys + qBit/Jellyfin admin passwords were generated if empty — keep .env private."
+  log "After up: ./bin/flixbox configure  (idempotent wiring; indexers stay manual)"
   log "Reference: docs/user/REFERENCE.md · First-run: docs/user/05-first-run.md"
 }
 
@@ -213,7 +264,7 @@ cmd_up() {
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
   ok "Stack started. ./bin/flixbox status"
-  log "Next: log into each app once, then run ./bin/flixbox configure"
+  log "Next: ./bin/flixbox configure  (then add Prowlarr indexers)"
   log "Guide: docs/user/05-first-run.md · Cheat sheet: docs/user/REFERENCE.md"
 }
 

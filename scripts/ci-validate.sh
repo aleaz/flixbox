@@ -129,6 +129,25 @@ done
   fail C-24 'missing templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh'
 pass C-24
 
+# --- C-24b: VPN-only tun0 bind sidecar (ADR 0002) ---
+grep -q 'qbittorrent-custom-services:/custom-services.d' compose/downloaders-vpn.yml || \
+  fail C-24b 'downloaders-vpn.yml missing qbittorrent-custom-services mount'
+[[ -f templates/qbittorrent/custom-services.d/99-flixbox-bind-vpn-interface.sh ]] || \
+  fail C-24b 'missing VPN bind-vpn-interface custom-services script'
+if grep -q 'qbittorrent-custom-services' compose/downloaders-direct.yml; then
+  fail C-24b 'tun0 sidecar must not mount in Direct mode'
+fi
+pass C-24b
+
+# --- C-24c: Servarr External auth + API key env (ADR 0005) ---
+for app in RADARR SONARR PROWLARR; do
+  grep -q "${app}__AUTH__METHOD: External" compose/servarr.yml || \
+    fail C-24c "servarr.yml missing ${app}__AUTH__METHOD External"
+  grep -q "${app}__AUTH__APIKEY:" compose/servarr.yml || \
+    fail C-24c "servarr.yml missing ${app}__AUTH__APIKEY"
+done
+pass C-24c
+
 # --- C-25: flixbox_net fixed subnet + qBit auth whitelist (ADR 0008) ---
 grep -q '172.30.42.0/24' compose/network-base.yml || \
   fail C-25 'flixbox_net missing fixed subnet 172.30.42.0/24'

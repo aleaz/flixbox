@@ -32,6 +32,6 @@ Each ADR uses:
 
 ## Rules
 
-1. New architectural choices get a new ADR (do not silently edit Accepted decisions into something else without an Updated note).
-2. To reverse an Accepted ADR: write a superseding ADR and mark the old one Superseded.
+1. During pre-public development, Accepted ADRs MAY be updated in place with an **Updated:** date and note (sole maintainer). Prefer that over proliferating ADRs for the same decision.
+2. After a public tag, reversing an Accepted ADR requires a superseding ADR and marking the old one Superseded.
 3. AI agents must follow Accepted ADRs over informal chat decisions.

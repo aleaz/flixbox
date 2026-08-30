@@ -10,8 +10,9 @@ alwaysApply: false
 - Start scripts with `set -euo pipefail`.
 - Trap EXIT/INT/TERM when altering terminal state or temp files.
 - Respect `NO_COLOR` and non-TTY output.
-- MVP commands: `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`.
-- `init` must create data/config trees and write local untracked env — never commit secrets.
+- MVP commands: `init`, `up`, `down`, `restart`, `reload`, `status`, `logs`, `vpn-test`, `configure`.
+- `init` must create data/config trees, generate empty Servarr API keys / passwords when missing, and write local untracked env — never commit secrets.
+- `configure` is idempotent (GET → skip if correct); closes the Decluttarr/Unpackerr secret loop; does not invent indexer credentials.
 - Warn on unsafe layouts: config on NFS/SMB, data on WSL `/mnt/c` / NTFS when detectable.
 - In VPN mode guidance, download client host is `gluetun`; in Direct mode it is `qbittorrent` (same for Decluttarr).
 - Create `torrents/incomplete` under the data tree during `init`.

@@ -4,7 +4,7 @@ Friendly documentation for operators who want to run Flixbox at home.
 
 **Language:** English (canonical). Spanish: [`docs/es/user/INDEX.md`](../es/user/INDEX.md) · [Quick reference (ES)](../es/user/REFERENCE.md) — see [ADR 0011](../adr/0011-documentation-i18n.md).
 
-**Status:** Working Draft. MVP Compose modules and `bin/flixbox` are implemented; complete UI first-run after `up`.
+**Status:** Working Draft. MVP Compose + `bin/flixbox` including API-assisted `configure` (ADR 0005); add Prowlarr indexers after `up`.
 
 ## Contents
 
@@ -14,7 +14,7 @@ Friendly documentation for operators who want to run Flixbox at home.
 | [02 — How it works](02-how-it-works.md) | Mental model: pipeline, `/data`, VPN vs Direct |
 | [03 — Requirements](03-requirements.md) | Hardware, Docker, storage, network |
 | [04 — Install](04-install.md) | Clone, `init`, `up` (~15 min) |
-| [05 — First-run setup](05-first-run.md) | `configure` + remaining UI wiring (~30–45 min) |
+| [05 — First-run setup](05-first-run.md) | `configure` + indexers (~10–15 min) |
 | [REFERENCE — Quick reference](REFERENCE.md) | URLs, ports, CLI cheat sheet |
 | [06 — Configuration](06-configuration.md) | Paths, env, ports, **credentials & API keys**, Compose profiles |
 | [07 — VPN and Direct](07-vpn-and-direct.md) | Gluetun, port forwarding, leak checks |

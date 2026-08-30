@@ -25,7 +25,7 @@ Flixbox is a **docs-first, pre-implementation** open-source Docker media stack. 
 
 ## Current repo state
 
-MVP Compose modules (`compose/`), templates, host scripts, and `bin/flixbox` are implemented. Operators must still complete UI first-run wiring (indexers, API keys, libraries).
+MVP Compose modules (`compose/`), templates, host scripts, and `bin/flixbox` (including `configure` / `reload`) are implemented. First-run is API-assisted (ADR 0005): operators still add Prowlarr indexers and enable Maintainerr rules deliberately.
 
 ## When implementing
 

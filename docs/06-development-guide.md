@@ -65,7 +65,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 
 **Exit criteria:** Jellyfin serves `/data/media`; Seerr points at Radarr/Sonarr/Jellyfin; Homepage loads.
 
-**Status:** Compose modules done; UI wiring is operator first-run.
+**Status:** Compose modules done; first-run wiring via `flixbox configure` (ADR 0005). Indexers remain operator UI.
 
 ## Phase 5 — Bash CLI
 
@@ -99,14 +99,13 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 
 ## Manual wiring still expected (document, don’t fake)
 
-Even after CLI init, users typically must:
+Even after `init` + `configure`, users typically must:
 
-- Add indexer credentials in Prowlarr (+ Byparr proxy where needed)
-- Confirm download client host/port for VPN vs Direct
-- Connect Seerr ↔ Radarr/Sonarr/Jellyfin
-- Sign in to Jellyfin and create libraries under `/data/media/...`
-- Paste API keys into Decluttarr / Maintainerr / Recyclarr configs
+- Add indexer credentials in Prowlarr (+ `cf` tag where Byparr is needed)
 - Enable Maintainerr rules deliberately (cleanup is destructive by nature)
+- Optionally run Recyclarr sync and enable the Caddy profile
+
+Deterministic wiring (root folders, download clients, Byparr, Bazarr, Jellyfin libraries, Seerr, secret loop) is handled by `./bin/flixbox configure` (ADR 0005).
 
 ## Verification checklist
 

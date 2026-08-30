@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-27
-- **Updated:** 2026-08-29 (idle entrypoint, trusted `flixbox_net`, qBit health gate)
+- **Updated:** 2026-08-30 (configure closes Decluttarr/Unpackerr secret loop)
 
 ## Context
 
@@ -30,3 +30,4 @@ Compose must not interpolate secrets into `command:` / `entrypoint:` shell strin
 - Existing installs that created `flixbox_net` without the fixed subnet must recreate the network (`docker compose down`, remove `flixbox_net` if needed, then `up`) for the whitelist to match.
 - Operators must run `flixbox init` (or copy the Decluttarr entrypoint) before Decluttarr can start after upgrades that add the mount.
 - Operators must still put qBit WebUI login in `.env` for Decluttarr; whitelist does not replace the idle gate (Decluttarr always attempts login when active).
+- **`flixbox configure`** SHOULD write `RADARR_API_KEY` / `SONARR_API_KEY` / `QBITTORRENT_*` into `.env` when empty (discovered or operator-supplied) and recreate Decluttarr/Unpackerr so hygiene leaves idle without a manual copy-paste step.
