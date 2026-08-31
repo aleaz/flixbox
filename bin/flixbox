@@ -256,7 +256,10 @@ ensure_access_profile() {
     die "Fix FLIXBOX_ACCESS_PROFILE in .env (trusted or shared)."
   local drift
   drift="$(flixbox_access_profile_drift_message || true)"
-  [[ -n "$drift" ]] && warn "$drift"
+  if [[ -n "$drift" ]]; then
+    warn "$drift"
+  fi
+  return 0
 }
 
 cmd_up() {
