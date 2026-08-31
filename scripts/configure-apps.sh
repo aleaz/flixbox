@@ -172,7 +172,9 @@ wait_for_arr_api "Radarr" "$RADARR_PORT" "$RADARR_API_KEY" "v3" || exit 1
 wait_for_arr_api "Prowlarr" "$PROWLARR_PORT" "$PROWLARR_API_KEY" "v1" || exit 1
 wait_for_bazarr_api "$BAZARR_PORT" "$BAZARR_API_KEY" || exit 1
 wait_for_service "Jellyfin" "http://127.0.0.1:${JELLYFIN_PORT}/System/Info/Public" || exit 1
-container_running flixbox-seerr && wait_for_service "Seerr" "http://127.0.0.1:${SEERR_PORT}/api/v1/status" || true
+if container_running flixbox-seerr; then
+  wait_for_service "Seerr" "http://127.0.0.1:${SEERR_PORT}/api/v1/status" || true
+fi
 echo ""
 
 configure_qbittorrent() {

@@ -39,18 +39,21 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
 unit="$(mktemp)"
 printf 'EXISTING=keep\nEMPTY=\n' >"${unit}"
 chmod 600 "${unit}"
-flixbox_env_file_set "${unit}" SPECIAL 'a|b&c/d$e`f'
+# Literal $ and backticks must not expand when stored/loaded.
+# shellcheck disable=SC2016
+special_val='a|b&c/d$e`f'
+flixbox_env_file_set "${unit}" SPECIAL "${special_val}"
 flixbox_env_file_set_if_empty "${unit}" EMPTY 'filled'
 flixbox_env_file_set_if_empty "${unit}" EXISTING 'should-not-overwrite'
 got="$(flixbox_env_file_get "${unit}" SPECIAL)"
-[[ "$got" == 'a|b&c/d$e`f' ]] || fail "env-file special chars (got: ${got})"
+[[ "$got" == "${special_val}" ]] || fail "env-file special chars (got: ${got})"
 got="$(flixbox_env_file_get "${unit}" EMPTY)"
 [[ "$got" == 'filled' ]] || fail "env-file set_if_empty on empty"
 got="$(flixbox_env_file_get "${unit}" EXISTING)"
 [[ "$got" == 'keep' ]] || fail "env-file set_if_empty must not overwrite"
 # exports must not shell-expand $ or backticks
 eval "$(flixbox_env_file_exports "${unit}")"
-[[ "${SPECIAL}" == 'a|b&c/d$e`f' ]] || fail "env-file exports round-trip (got: ${SPECIAL})"
+[[ "${SPECIAL}" == "${special_val}" ]] || fail "env-file exports round-trip (got: ${SPECIAL})"
 rm -f "${unit}"
 pass "env-file helpers (special chars + safe exports)"
 

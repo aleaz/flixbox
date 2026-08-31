@@ -6,10 +6,13 @@
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/env-file.sh"
 
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034 # read by configure-apps.sh when sourced
 CONFIGURED=0
+# shellcheck disable=SC2034
 SKIPPED=0
+# shellcheck disable=SC2034
 FAILED=0
+# shellcheck disable=SC2034
 ENV_DIRTY=false
 
 json_extract() {
