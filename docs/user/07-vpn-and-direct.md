@@ -62,7 +62,7 @@ If Gluetun is unhealthy, qBit and those peers fail with dependency errors. That 
 
 1. Only **qBittorrent** uses `network_mode: service:gluetun`.
 2. WebUI / BT ports are published on **Gluetun**, not on the qBittorrent service.
-3. Radarr/Sonarr/Decluttarr must use host **`gluetun`**.
+3. Radarr/Sonarr/Decluttarr must use host **`qbittorrent`** (same in Direct — [ADR 0014](../adr/0014-stable-qbit-download-hostname.md)).
 4. IPv6 blocked by default (`BLOCK_IPV6=on`); DNS over TLS on (`DOT=on`).
 5. Optional port forwarding: `VPN_PORT_FORWARDING=on` (supported providers). Enable qBittorrent **Bypass authentication for clients on localhost**.
 6. Put provider credentials only in `.env` or files under `${CONFIG_DIR}/gluetun` — never in git.

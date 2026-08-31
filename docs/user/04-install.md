@@ -10,8 +10,9 @@ Flixbox reads paths from **`.env`** (not shell `export`). With `--non-interactiv
 git clone https://github.com/aleaz/flixbox.git
 cd flixbox
 cp .env.example .env
-# Edit .env: DATA_DIR, CONFIG_DIR, FLIXBOX_MODE, TZ (VPN secrets if vpn)
-./bin/flixbox init --non-interactive   # creates dirs, templates, API keys/passwords
+# Edit .env: DATA_DIR, CONFIG_DIR, FLIXBOX_MODE, TZ, optional FLIXBOX_ACCESS_PROFILE
+# (trusted default; shared on roommate Wi‑Fi — docs/user/13-access-profiles.md)
+./bin/flixbox init --non-interactive   # creates dirs, templates, API keys/passwords; .env mode 600
 ./bin/flixbox up
 ./bin/flixbox status
 ./bin/flixbox configure   # idempotent wiring; then add Prowlarr indexers
@@ -24,14 +25,7 @@ Interactive alternative (pauses after creating `.env` so you can edit paths in a
 # Press Enter only after DATA_DIR and CONFIG_DIR are writable paths in .env
 ```
 
-Or manually:
-
-```bash
-cp .env.example .env
-./scripts/bootstrap-dirs.sh
-docker compose up -d
-```
-
+Prefer `./bin/flixbox init` + `up` over a bare `docker compose up`. Raw Compose skips access-profile sync, secret generation, and path validation.
 ### Storage paths and permissions
 
 On Linux, `init` defaults to **`/srv/flixbox/data`** and **`/srv/flixbox/config`** (FHS). Most desktop installs need you to **create the parent tree and own it** before `init`, or pick another path in `.env`.

@@ -15,7 +15,7 @@ Compose must not interpolate secrets into `command:` / `entrypoint:` shell strin
 ## Decision
 
 - Include **Decluttarr** and **Maintainerr** in the MVP inventory under `compose/optimization.yml`.
-- Decluttarr manages Radarr/Sonarr queues and qBittorrent; must use mode-aware qBit URL (`gluetun` vs `qbittorrent`).
+- Decluttarr manages Radarr/Sonarr queues and qBittorrent; qBit URL is always `http://qbittorrent:8080` ([ADR 0014](0014-stable-qbit-download-hostname.md)).
 - Maintainerr defaults to **Jellyfin** + Radarr/Sonarr. One media server at a time.
 - Default behavior and thresholds are defined in [docs/09-hygiene-defaults.md](../09-hygiene-defaults.md).
 - Streamystats remains optional/post-MVP.

@@ -40,8 +40,9 @@ flixbox_sync_access_profile_env() {
   esac
 }
 
-# Print a drift warning when derived profile keys in .env disagree with the active profile.
-# Empty when coherent. Caller should warn or die as appropriate.
+# Print a drift message when derived profile keys disagree with the active profile.
+# Empty keys count as drift (Compose would otherwise fall back to trusted defaults).
+# Empty string when coherent. Caller should sync (preferred) or die.
 flixbox_access_profile_drift_message() {
   local profile expected_method expected_required expected_bind
   profile="$(flixbox_access_profile)"
@@ -58,15 +59,15 @@ flixbox_access_profile_drift_message() {
       ;;
   esac
   local parts=()
-  if [[ -n "${FLIXBOX_ARR_AUTH_METHOD:-}" && "${FLIXBOX_ARR_AUTH_METHOD}" != "$expected_method" ]]; then
-    parts+=("FLIXBOX_ARR_AUTH_METHOD=${FLIXBOX_ARR_AUTH_METHOD} (expected ${expected_method})")
+  if [[ "${FLIXBOX_ARR_AUTH_METHOD:-}" != "$expected_method" ]]; then
+    parts+=("FLIXBOX_ARR_AUTH_METHOD=${FLIXBOX_ARR_AUTH_METHOD:-<empty>} (expected ${expected_method})")
   fi
-  if [[ -n "${FLIXBOX_ARR_AUTH_REQUIRED:-}" && "${FLIXBOX_ARR_AUTH_REQUIRED}" != "$expected_required" ]]; then
-    parts+=("FLIXBOX_ARR_AUTH_REQUIRED=${FLIXBOX_ARR_AUTH_REQUIRED} (expected ${expected_required})")
+  if [[ "${FLIXBOX_ARR_AUTH_REQUIRED:-}" != "$expected_required" ]]; then
+    parts+=("FLIXBOX_ARR_AUTH_REQUIRED=${FLIXBOX_ARR_AUTH_REQUIRED:-<empty>} (expected ${expected_required})")
   fi
-  if [[ -n "${FLIXBOX_ADMIN_BIND_IP:-}" && "${FLIXBOX_ADMIN_BIND_IP}" != "$expected_bind" ]]; then
-    parts+=("FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP} (expected ${expected_bind})")
+  if [[ "${FLIXBOX_ADMIN_BIND_IP:-}" != "$expected_bind" ]]; then
+    parts+=("FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP:-<empty>} (expected ${expected_bind})")
   fi
   [[ ${#parts[@]} -eq 0 ]] && return 0
-  echo "Access profile ${profile} out of sync: ${parts[*]}. Run: ./bin/flixbox init --non-interactive && ./bin/flixbox reload"
+  echo "Access profile ${profile} out of sync: ${parts[*]}"
 }

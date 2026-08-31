@@ -22,8 +22,11 @@ FLIXBOX_ACCESS_PROFILE=trusted
 After changing profile:
 
 ```bash
-./bin/flixbox init --non-interactive   # syncs derived auth + bind vars
-./bin/flixbox reload                   # or force-recreate affected services
+# up / reload / configure auto-sync derived bind + auth keys into .env
+./bin/flixbox reload
+# Optional: also re-run init so shared UI password placeholders are generated if empty
+./bin/flixbox init --non-interactive
+./bin/flixbox reload
 ```
 
 `./bin/flixbox configure` uses **API keys** on `127.0.0.1` — it does not create *arr Forms users or need UI passwords.

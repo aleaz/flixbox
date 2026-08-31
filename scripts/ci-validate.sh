@@ -155,8 +155,18 @@ grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/servarr.yml || \
   fail C-24c 'servarr.yml missing FLIXBOX_ADMIN_BIND_IP on admin ports'
 grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/downloaders-direct.yml || \
   fail C-24c 'downloaders-direct.yml missing FLIXBOX_ADMIN_BIND_IP on qBit WebUI'
+grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/downloaders-vpn.yml || \
+  fail C-24c 'downloaders-vpn.yml missing FLIXBOX_ADMIN_BIND_IP on Gluetun WebUI publish'
+grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/optimization.yml || \
+  fail C-24c 'optimization.yml missing FLIXBOX_ADMIN_BIND_IP on Maintainerr'
 grep -q 'FLIXBOX_ADMIN_BIND_IP' scripts/lib/access-profile.sh || \
   fail C-24c 'access-profile.sh missing FLIXBOX_ADMIN_BIND_IP sync'
+grep -q 'flixbox_env_file_exports' scripts/lib/env-file.sh || \
+  fail C-24c 'env-file.sh missing flixbox_env_file_exports (safe .env load)'
+grep -q 'ensure_access_profile' bin/flixbox || \
+  fail C-24c 'bin/flixbox missing ensure_access_profile'
+grep -A20 'cmd_reload' bin/flixbox | grep -q 'ensure_access_profile' || \
+  fail C-24c 'cmd_reload must call ensure_access_profile'
 pass C-24c
 
 # --- C-25: flixbox_net fixed subnet + qBit auth whitelist (ADR 0008) ---

@@ -30,10 +30,8 @@ die() { printf '%b%s%b\n' "${C_ERR}" "$*" "${C_RST}" >&2; exit 1; }
 
 load_env() {
   if [[ -f "${ROOT_DIR}/.env" ]]; then
-    set -a
-    # shellcheck disable=SC1090
-    source <(grep -E '^[A-Z_][A-Z0-9_]*=' "${ROOT_DIR}/.env" | sed 's/\r$//')
-    set +a
+    # Parse without shell-evaluating values (passwords may contain $ ` etc.).
+    eval "$(flixbox_env_file_exports "${ROOT_DIR}/.env")"
   fi
   DATA_DIR="${DATA_DIR:-$(flixbox_default_data_dir)}"
   CONFIG_DIR="${CONFIG_DIR:-$(flixbox_default_config_dir)}"
@@ -196,9 +194,11 @@ cmd_init() {
 
   if [[ -f "${ROOT_DIR}/.env" && "${force}" -ne 1 ]]; then
     warn ".env already exists (use --force to overwrite from .env.example)."
+    flixbox_env_file_chmod "${ROOT_DIR}/.env"
   else
     cp -f "${ROOT_DIR}/.env.example" "${ROOT_DIR}/.env"
-    ok "Wrote .env from .env.example"
+    chmod 600 "${ROOT_DIR}/.env"
+    ok "Wrote .env from .env.example (mode 600)"
     apply_platform_path_defaults
   fi
 
@@ -257,7 +257,10 @@ ensure_access_profile() {
   local drift
   drift="$(flixbox_access_profile_drift_message || true)"
   if [[ -n "$drift" ]]; then
-    warn "$drift"
+    warn "${drift} — syncing derived keys into .env"
+    flixbox_sync_access_profile_env "${ROOT_DIR}/.env"
+    load_env
+    ok "Access profile $(flixbox_access_profile) synced (FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP})"
   fi
   return 0
 }
@@ -316,6 +319,7 @@ cmd_restart() {
 
 cmd_reload() {
   load_env
+  ensure_access_profile
   local profiles=()
   parse_profiles profiles "$@"
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
@@ -339,6 +343,7 @@ cmd_status() {
   echo
   log "FLIXBOX_MODE=${FLIXBOX_MODE}  VPN_ENABLED=${VPN_ENABLED}"
   warn_mode_vpn_mismatch || true
+  log "Access profile: $(flixbox_access_profile)  FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP:-(unset)}"
   log "DATA_DIR=${DATA_DIR}"
   log "CONFIG_DIR=${CONFIG_DIR}"
   log "Download client URL for *arr / Decluttarr: http://qbittorrent:8080 (same in VPN and Direct — ADR 0014)"

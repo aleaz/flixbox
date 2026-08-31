@@ -25,14 +25,14 @@ No hace falta Pi-hole ni reverse proxy para arrancar.
 - **Un solo CLI** — `bin/flixbox`: `init`, `up`, `configure`, `reload`, `status`, `vpn-test`
 - **Higiene incluida** — Decluttarr y Maintainerr con defaults conservadores (sin borrados sorpresa)
 - **Compose modular** — YAML chico y perfiles opcionales (`plex`, `proxy`, `recyclarr`), no un monolito
-- **Contratos explícitos** — un solo `/data` con hardlinks, URLs de descarga según modo, documentados en [ADRs](docs/adr/)
+- **Contratos explícitos** — un solo `/data` con hardlinks, host de descarga `qbittorrent` en Direct y VPN ([ADRs](docs/adr/))
 
 ## Elegí tu setup
 
 | Setup | Cuándo | Empezá acá |
 | --- | --- | --- |
 | **Core (Direct)** | Primera prueba, solo LAN | [Install (EN)](docs/user/04-install.md) |
-| **Wi‑Fi compartido** | Convivientes en la misma LAN | `FLIXBOX_ACCESS_PROFILE=shared` — [Access profiles (EN)](docs/user/13-access-profiles.md) |
+| **Wi‑Fi compartido** | Convivientes en la misma LAN | `FLIXBOX_ACCESS_PROFILE=shared` + `init`/`up` — guía en inglés: [Access profiles](docs/user/13-access-profiles.md) (aún sin mirror ES) |
 | **+ VPN** | Torrents en producción | [VPN and Direct (EN)](docs/user/07-vpn-and-direct.md) |
 | **+ HTTPS** | Reverse proxy | Perfil Caddy en [Configuration (EN)](docs/user/06-configuration.md) |
 | **+ Plex** | Junto a Jellyfin o en su lugar | `./bin/flixbox up plex` |

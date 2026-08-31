@@ -7,12 +7,11 @@ cd "${ROOT_DIR}"
 
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/paths.sh"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/env-file.sh"
 
 if [[ -f .env ]]; then
-  set -a
-  # shellcheck disable=SC1090
-  source <(grep -E '^[A-Z_][A-Z0-9_]*=' .env | sed 's/\r$//')
-  set +a
+  eval "$(flixbox_env_file_exports "${ROOT_DIR}/.env")"
 fi
 
 CONFIG_DIR="${CONFIG_DIR:-$(flixbox_default_config_dir)}"

@@ -5,11 +5,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/env-file.sh"
+
 if [[ -f .env ]]; then
-  set -a
-  # shellcheck disable=SC1090
-  source <(grep -E '^[A-Z_]+=.*' .env | sed 's/\r$//')
-  set +a
+  eval "$(flixbox_env_file_exports "${ROOT_DIR}/.env")"
 fi
 
 MODE="${FLIXBOX_MODE:-direct}"

@@ -38,17 +38,21 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
 # --- D2 unit: special characters in .env values ---
 unit="$(mktemp)"
 printf 'EXISTING=keep\nEMPTY=\n' >"${unit}"
-flixbox_env_file_set "${unit}" SPECIAL 'a|b&c/d\$e'
+chmod 600 "${unit}"
+flixbox_env_file_set "${unit}" SPECIAL 'a|b&c/d$e`f'
 flixbox_env_file_set_if_empty "${unit}" EMPTY 'filled'
 flixbox_env_file_set_if_empty "${unit}" EXISTING 'should-not-overwrite'
 got="$(flixbox_env_file_get "${unit}" SPECIAL)"
-[[ "$got" == 'a|b&c/d\$e' ]] || fail "env-file special chars (got: ${got})"
+[[ "$got" == 'a|b&c/d$e`f' ]] || fail "env-file special chars (got: ${got})"
 got="$(flixbox_env_file_get "${unit}" EMPTY)"
 [[ "$got" == 'filled' ]] || fail "env-file set_if_empty on empty"
 got="$(flixbox_env_file_get "${unit}" EXISTING)"
 [[ "$got" == 'keep' ]] || fail "env-file set_if_empty must not overwrite"
+# exports must not shell-expand $ or backticks
+eval "$(flixbox_env_file_exports "${unit}")"
+[[ "${SPECIAL}" == 'a|b&c/d$e`f' ]] || fail "env-file exports round-trip (got: ${SPECIAL})"
 rm -f "${unit}"
-pass "env-file helpers (special chars)"
+pass "env-file helpers (special chars + safe exports)"
 
 # --- C-50: init --non-interactive ---
 cp -f "${ROOT_DIR}/.env.example" "${ROOT_DIR}/.env"
@@ -59,6 +63,11 @@ flixbox_env_file_set "${ROOT_DIR}/.env" VPN_ENABLED false
 
 "${ROOT_DIR}/bin/flixbox" init --non-interactive
 pass "C-50 init --non-interactive"
+
+# .env must be owner-only
+mode="$(stat -c '%a' "${ROOT_DIR}/.env" 2>/dev/null || stat -f '%OLp' "${ROOT_DIR}/.env")"
+[[ "$mode" == "600" ]] || fail "expected .env mode 600 (got ${mode})"
+pass ".env mode 600"
 
 # --- C-51: templates ---
 [[ -f "${SMOKE_CONFIG}/homepage/services.yaml" ]] || fail "C-51 missing homepage/services.yaml"
@@ -71,11 +80,35 @@ qbit_url="$(flixbox_env_file_get "${ROOT_DIR}/.env" DECLUTTARR_QBIT_URL)"
 [[ "$qbit_url" == "http://qbittorrent:8080" ]] || fail "C-52 DECLUTTARR_QBIT_URL=${qbit_url}"
 pass "C-52 DECLUTTARR_QBIT_URL"
 
-# Profile-derived keys present after init
+# Profile-derived keys present after init (trusted default)
 bind_ip="$(flixbox_env_file_get "${ROOT_DIR}/.env" FLIXBOX_ADMIN_BIND_IP)"
 [[ "$bind_ip" == "0.0.0.0" ]] || fail "expected FLIXBOX_ADMIN_BIND_IP=0.0.0.0 (got ${bind_ip})"
-pass "access profile derived bind IP"
+pass "access profile derived bind IP (trusted)"
 
+# shared profile sync
+flixbox_env_file_set "${ROOT_DIR}/.env" FLIXBOX_ACCESS_PROFILE shared
+# clear derived keys to simulate empty drift
+flixbox_env_file_set "${ROOT_DIR}/.env" FLIXBOX_ADMIN_BIND_IP ""
+flixbox_env_file_set "${ROOT_DIR}/.env" FLIXBOX_ARR_AUTH_METHOD ""
+flixbox_env_file_set "${ROOT_DIR}/.env" FLIXBOX_ARR_AUTH_REQUIRED ""
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/access-profile.sh"
+export FLIXBOX_ACCESS_PROFILE=shared
+unset FLIXBOX_ADMIN_BIND_IP FLIXBOX_ARR_AUTH_METHOD FLIXBOX_ARR_AUTH_REQUIRED
+drift="$(flixbox_access_profile_drift_message || true)"
+[[ -n "$drift" ]] || fail "expected drift when shared derived keys empty"
+flixbox_sync_access_profile_env "${ROOT_DIR}/.env"
+bind_ip="$(flixbox_env_file_get "${ROOT_DIR}/.env" FLIXBOX_ADMIN_BIND_IP)"
+method="$(flixbox_env_file_get "${ROOT_DIR}/.env" FLIXBOX_ARR_AUTH_METHOD)"
+required="$(flixbox_env_file_get "${ROOT_DIR}/.env" FLIXBOX_ARR_AUTH_REQUIRED)"
+[[ "$bind_ip" == "127.0.0.1" ]] || fail "shared bind (got ${bind_ip})"
+[[ "$method" == "Forms" ]] || fail "shared auth method (got ${method})"
+[[ "$required" == "Enabled" ]] || fail "shared auth required (got ${required})"
+pass "access profile shared sync (empty → 127.0.0.1/Forms)"
+
+# restore trusted for leftover .env if backup absent
+flixbox_env_file_set "${ROOT_DIR}/.env" FLIXBOX_ACCESS_PROFILE trusted
+flixbox_sync_access_profile_env "${ROOT_DIR}/.env"
 # --- D4: configure fails cleanly without stack ---
 set +e
 out="$("${ROOT_DIR}/scripts/configure-apps.sh" --dry-run 2>&1)"

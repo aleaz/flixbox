@@ -48,7 +48,8 @@ Flixbox targets home LAN Docker installs. ADR 0005 defaulted *arr to `Authentica
 
 - ADR 0005 default auth wording applies to profile **`trusted`** only; superseded in part by this ADR for `shared`.
 - ADR 0008 qBit whitelist semantics unchanged; inter-container automation only.
-- Changing `FLIXBOX_ACCESS_PROFILE` requires `./bin/flixbox init --non-interactive` and recreating affected containers (`./bin/flixbox reload` or force-recreate).
+- Changing `FLIXBOX_ACCESS_PROFILE` is applied by `./bin/flixbox up` / `reload` / `configure` (auto-sync derived bind/auth keys into `.env`). Prefer also running `init --non-interactive` when switching profiles so UI password placeholders and docs stay aligned, then recreate containers.
+- Empty derived keys count as drift (Compose must not silently fall back to trusted defaults under a `shared` label).
 - **`configure` remains valid** for both profiles (API key to `127.0.0.1`).
 - IPv6 global clients on LAN may still see *arr login prompts even in `trusted` (Servarr limitation).
 - In **`shared`**, open admin UIs on the host (`http://127.0.0.1:…`) or via SSH tunnel — not from a phone on Wi‑Fi unless you tunnel.

@@ -14,9 +14,9 @@ alwaysApply: false
 - Never attach *arr, Seerr, Jellyfin, or Bazarr to Gluetun netns.
 - All download/library services mount the same `${DATA_DIR}:/data` parent.
 - Dual-mode via exclusive include: `downloaders-${FLIXBOX_MODE}.yml` (`direct`|`vpn`) — do not define two `qbittorrent` services in one project.
-- Early development may use `:latest` (ADR 0010); **v0.1+ must pin** — see `docs/user/14-image-pins.md`.
+- Early development may have used `:latest` (ADR 0010); **v0.1+ must pin** — see `docs/user/14-image-pins.md` (CI fails on `:latest`).
 - `servarr.yml`: Prowlarr, Radarr, Sonarr, Bazarr, Byparr (not FlareSolverr by default).
 - `requests.yml`: Seerr with `init: true` (`ghcr.io/seerr-team/seerr`).
 - `optimization.yml`: Unpackerr, Recyclarr, Decluttarr, Maintainerr — follow `docs/09-hygiene-defaults.md`.
-- Decluttarr qBit URL must be mode-aware (`gluetun` vs `qbittorrent`).
+- Decluttarr qBit URL is always `http://qbittorrent:8080` (ADR 0014 — Gluetun aliases `qbittorrent` in VPN mode).
 - Do not add Lidarr/Readarr/SABnzbd/Whisper/Autobrr during MVP.

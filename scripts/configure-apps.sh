@@ -53,10 +53,7 @@ done
 
 load_env() {
   if [[ -f "${ROOT_DIR}/.env" ]]; then
-    set -a
-    # shellcheck disable=SC1090
-    source <(grep -E '^[A-Z_][A-Z0-9_]*=' "${ROOT_DIR}/.env" | sed 's/\r$//')
-    set +a
+    eval "$(flixbox_env_file_exports "${ROOT_DIR}/.env")"
   fi
   FLIXBOX_MODE="${FLIXBOX_MODE:-direct}"
   CONFIG_DIR="${CONFIG_DIR:-/srv/flixbox/config}"
@@ -211,6 +208,7 @@ configure_qbittorrent() {
         fi
       else
         fail "qBittorrent: set WebUI password (HTTP ${http_code})"
+        return
       fi
     else
       env_set_if_empty QBITTORRENT_PASSWORD "$QBIT_TEMP_PASSWORD"
@@ -240,6 +238,7 @@ configure_qbittorrent() {
       ENV_DIRTY=true
     else
       fail "qBittorrent: sync password from .env (HTTP ${sync_pw_code})"
+      return
     fi
   fi
 

@@ -50,30 +50,11 @@ The following was checked against the tree at commit `30a51fc` and local tooling
 | `socket-proxy` | `docker-socket-proxy` |
 | `recyclarr` | `recyclarr` |
 
-### 2.3 Third-party images referenced (17)
+### 2.3 Third-party images
 
-| Image | Module |
-| --- | --- |
-| `lscr.io/linuxserver/qbittorrent:latest` | downloaders |
-| `qmcgaw/gluetun:latest` | downloaders-vpn |
-| `lscr.io/linuxserver/prowlarr:latest` | servarr |
-| `ghcr.io/thephaseless/byparr:latest` | servarr |
-| `lscr.io/linuxserver/radarr:latest` | servarr |
-| `lscr.io/linuxserver/sonarr:latest` | servarr |
-| `lscr.io/linuxserver/bazarr:latest` | servarr |
-| `ghcr.io/unpackerr/unpackerr:latest` | optimization |
-| `ghcr.io/recyclarr/recyclarr:latest` | optimization (profile) |
-| `ghcr.io/manimatter/decluttarr:latest` | optimization |
-| `ghcr.io/maintainerr/maintainerr:latest` | optimization |
-| `lscr.io/linuxserver/jellyfin:latest` | media-servers |
-| `lscr.io/linuxserver/plex:latest` | media-servers (profile) |
-| `ghcr.io/seerr-team/seerr:latest` | requests |
-| `ghcr.io/gethomepage/homepage:latest` | dashboard |
-| `tecnativa/docker-socket-proxy:latest` | dashboard (profile) |
-| `caddy:latest` | proxy (profile) |
+Compose modules pin **explicit version tags** (no `:latest`). Canonical inventory: [docs/user/14-image-pins.md](user/14-image-pins.md) ([ADR 0010](adr/0010-mit-and-image-tags.md)). CI contract `C-43` fails if any `image: …:latest` remains under `compose/`.
 
-Tags are `:latest` today ([ADR 0010](adr/0010-mit-and-image-tags.md)). Trivy results will be **informational** until pins land before `v0.1`.
-
+Trivy image scans use the pinned tags from that inventory.
 ### 2.4 Tooling on GitHub-hosted runners
 
 | Tool | Ubuntu runner | Notes |
