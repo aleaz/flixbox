@@ -521,15 +521,21 @@ print(ids[0] if ids else '')")
 QBIT_JSON
 )
     if [[ -n "$existing_id" ]]; then
-      local existing_client
+      local existing_client force_client_sync=false
+      [[ "${SYNC_QBIT_AUTH:-false}" == "true" ]] && force_client_sync=true
       existing_client=$(api_get "${base}/api/v3/downloadclient/${existing_id}" "$auth") || true
-      if [[ -n "$existing_client" ]] && api_post "${base}/api/v3/downloadclient/test" "application/json" "$existing_client" "$auth" >/dev/null 2>&1; then
+      if ! $force_client_sync && [[ -n "$existing_client" ]] \
+        && api_post "${base}/api/v3/downloadclient/test" "application/json" "$existing_client" "$auth" >/dev/null 2>&1; then
         skip "${name}: qBittorrent download client"
       else
         qbit_payload=$(json_extract "$qbit_payload" "data['id'] = ${existing_id}; print(json.dumps(data))")
         if api_put "${base}/api/v3/downloadclient/${existing_id}" "application/json" "$qbit_payload" "$auth" >/dev/null 2>&1 \
           && api_post "${base}/api/v3/downloadclient/test" "application/json" "$qbit_payload" "$auth" >/dev/null 2>&1; then
-          ok "${name}: updated qBittorrent download client (${qbit_host}:8080)"
+          if $force_client_sync; then
+            ok "${name}: synced qBittorrent download client from .env (--sync-qbit-auth)"
+          else
+            ok "${name}: updated qBittorrent download client (${qbit_host}:8080)"
+          fi
         else
           fail "${name}: update qBittorrent download client (Test failed — check QBITTORRENT_PASSWORD / ban)"
         fi

@@ -3,12 +3,17 @@
 # Idempotent API wiring for Flixbox after first container start (ADR 0005).
 #
 # Usage:
-#   ./scripts/configure-apps.sh [--dry-run] [--verbose]
-#   ./bin/flixbox configure [--dry-run] [--verbose]
+#   ./scripts/configure-apps.sh [--dry-run] [--verbose] [--sync-qbit-auth]
+#   ./bin/flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth]
 #
 # Prerequisites:
 #   - ./bin/flixbox init (generates *arr API keys + qBit/admin passwords)
 #   - ./bin/flixbox up (stack healthy; Gluetun healthy in VPN mode)
+#
+# --sync-qbit-auth:
+#   Force .env QBITTORRENT_* (and qBit API key from config) onto qBit WebUI,
+#   Radarr/Sonarr download clients, and recreate Decluttarr. Use after changing
+#   the password in the qBit UI (update .env first) or after rotating credentials.
 #
 # Still manual after this script:
 #   - Prowlarr indexers (your credentials)
@@ -25,19 +30,21 @@ source "${ROOT_DIR}/scripts/lib/configure-helpers.sh"
 
 DRY_RUN=false
 VERBOSE=false
+SYNC_QBIT_AUTH=false
 QBIT_COOKIE="/tmp/flixbox_qbit_configure_cookie.txt"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dry-run) DRY_RUN=true; shift ;;
     --verbose|-v) VERBOSE=true; shift ;;
+    --sync-qbit-auth) SYNC_QBIT_AUTH=true; shift ;;
     --help|-h)
-      sed -n '2,20p' "$0"
+      sed -n '2,22p' "$0"
       exit 0
       ;;
     *)
       echo "Unknown option: $1" >&2
-      echo "Usage: $0 [--dry-run] [--verbose]" >&2
+      echo "Usage: $0 [--dry-run] [--verbose] [--sync-qbit-auth]" >&2
       exit 1
       ;;
   esac
@@ -182,6 +189,7 @@ configure_qbittorrent() {
     dry "Apply WebUI host-header fix for remapped QBITTORRENT_PORT"
     dry "Create categories tv/movies under /data/torrents/{tv,movies}"
     dry "Prefs: auto TMM, UPnP off, encryption, limits; tun0 bind if VPN"
+    $SYNC_QBIT_AUTH && dry "Force-push .env password to qBit + *arr download clients + Decluttarr"
     return
   fi
 
@@ -212,12 +220,31 @@ configure_qbittorrent() {
   fi
 
   if ! $authed; then
-    fail "qBittorrent: authentication failed — set QBITTORRENT_PASSWORD in .env to your WebUI password, or check temp password in: docker compose logs qbittorrent"
+    fail "qBittorrent: authentication failed — set QBITTORRENT_PASSWORD in .env to the current WebUI password (or check temp password in: docker compose logs qbittorrent)"
     return
   fi
 
   env_set_if_empty QBITTORRENT_USERNAME "$QBIT_USERNAME"
   env_set_if_empty QBITTORRENT_PASSWORD "$QBIT_PASSWORD"
+
+  # --sync-qbit-auth: always re-apply .env password (source of truth for Decluttarr/*arr).
+  if $SYNC_QBIT_AUTH && [[ -n "$QBIT_PASSWORD" ]]; then
+    local sync_pw_code
+    sync_pw_code=$(qbit_curl_authed_code -X POST \
+      --data-urlencode "json={\"web_ui_password\":\"${QBIT_PASSWORD}\"}" \
+      "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/setPreferences")
+    if [[ "$sync_pw_code" == "200" ]]; then
+      ok "qBittorrent: WebUI password synced from .env (--sync-qbit-auth)"
+      docker exec "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}" rm -f "${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}" 2>/dev/null || true
+      if ! qbit_auth "$QBIT_URL" "$QBIT_USERNAME" "$QBIT_PASSWORD" "$QBIT_COOKIE"; then
+        fail "qBittorrent: re-auth after --sync-qbit-auth failed"
+        return
+      fi
+      ENV_DIRTY=true
+    else
+      fail "qBittorrent: sync password from .env (HTTP ${sync_pw_code})"
+    fi
+  fi
 
   # cont-init WebUI keys can be overwritten when qBit first starts — apply via API.
   local webui_code
@@ -766,7 +793,7 @@ EOF
 }
 
 reload_hygiene_if_needed() {
-  if ! $ENV_DIRTY; then
+  if ! $ENV_DIRTY && ! $SYNC_QBIT_AUTH; then
     return
   fi
   if $DRY_RUN; then

@@ -11,7 +11,7 @@ Cheat sheet for operators. Defaults assume a local install with `./bin/flixbox i
 | `./bin/flixbox init [--non-interactive]` | Create `.env`, dirs, templates; generate API keys/passwords. **Linux:** set writable `DATA_DIR`/`CONFIG_DIR` in `.env` before `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
 | `./bin/flixbox up [profiles...]` | Start stack (`plex`, `proxy`, `socket-proxy`, `recyclarr`) |
 | `./bin/flixbox reload [profiles...]` | Recreate containers after `.env` / compose changes |
-| `./bin/flixbox configure [--dry-run]` | Idempotent wiring: *arr, Byparr, Bazarr, Jellyfin, Seerr, secrets |
+| `./bin/flixbox configure [--dry-run] [--sync-qbit-auth]` | Idempotent wiring; `--sync-qbit-auth` forces qBit password/API key from `.env`/config into qBit + *arr + Decluttarr |
 | `./bin/flixbox status` | Container status + mode + download-client URL |
 | `./bin/flixbox logs [service]` | Tail logs |
 | `./bin/flixbox vpn-test` | VPN egress check (VPN mode only) |

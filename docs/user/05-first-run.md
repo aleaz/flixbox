@@ -21,6 +21,8 @@ Cheat sheet: [Quick reference](REFERENCE.md).
 
 ```bash
 ./bin/flixbox configure
+./bin/flixbox configure --dry-run
+./bin/flixbox configure --sync-qbit-auth   # after changing qBit password/API key — see [Credentials](06-configuration.md#qbit-password--api-key-changes-source-of-truth)
 ```
 
 Preview without changes:
@@ -111,9 +113,9 @@ If `VPN_PORT_FORWARDING=on`: enable **Bypass authentication for clients on local
 
 ## 3. Radarr / Sonarr / hygiene
 
-`configure` adds root folders and the qBittorrent download client (`host: qbittorrent`, port `8080`). On later runs it **re-tests** that client and updates username/password/API key from `.env` if Test fails (common after recreating qBit). Use **Test** in each app to confirm.
+`configure` adds root folders and the qBittorrent download client (`host: qbittorrent`, port `8080`). On later runs it **re-tests** that client and updates username/password/API key from `.env` if Test fails (common after recreating qBit). To **force** a full push from `.env` (and the current qBit API key) into qBit + *arr + Decluttarr after a manual WebUI change, use `./bin/flixbox configure --sync-qbit-auth` — [Credentials — qBit changes](06-configuration.md#qbit-password--api-key-changes-source-of-truth).
 
-Decluttarr/Unpackerr pick up `RADARR_API_KEY` / `SONARR_API_KEY` / `QBITTORRENT_*` from `.env`. Configure recreates them when it writes those keys; otherwise `./bin/flixbox reload`.
+Decluttarr/Unpackerr pick up `RADARR_API_KEY` / `SONARR_API_KEY` / `QBITTORRENT_*` from `.env`. Configure recreates them when it writes those keys or when you pass `--sync-qbit-auth`; otherwise `./bin/flixbox reload`.
 
 ---
 

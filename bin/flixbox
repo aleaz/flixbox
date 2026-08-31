@@ -368,7 +368,7 @@ Usage:
   flixbox down [--volumes]
   flixbox restart <service>
   flixbox reload [plex|proxy|socket-proxy|recyclarr]...
-  flixbox configure [--dry-run] [--verbose]
+  flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth]
   flixbox status
   flixbox logs [service] [-f]
   flixbox vpn-test

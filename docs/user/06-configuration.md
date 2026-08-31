@@ -116,15 +116,29 @@ Flixbox uses **five credential types** for inter-app wiring (plus per-indexer tr
 
 | Credential | Used by | Where to configure | Notes |
 | --- | --- | --- | --- |
-| qBittorrent **WebUI login** (username + password) | You (browser), **Decluttarr**, and optionally *arr | qBit WebUI; `.env` as `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` | `init` generates a password; `configure` applies it when qBit still has a temporary one. Decluttarr does **not** use qBit’s API key. |
-| qBittorrent **API key** | **Radarr**, **Sonarr** (download client) | qBit → **Options → Web UI → API access**; also set by `configure` when present | **Recommended for *arr:** API key (username/password may also be set). After recreating qBit, re-run `configure` so *arr clients stay in sync. |
+| qBittorrent **WebUI login** (username + password) | You (browser), **Decluttarr**, and optionally *arr | **`.env` is the Flixbox source of truth** (`QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD`) | `init` generates a password; `configure` applies it when qBit still has a temporary one. Decluttarr does **not** use qBit’s API key. |
+| qBittorrent **API key** | **Radarr**, **Sonarr** (download client) | Read from qBit config by `configure`; also visible in qBit → **Options → Web UI → API access** | After recreating qBit or rotating the key in the UI, run `configure --sync-qbit-auth` so *arr clients stay in sync. |
 | **Radarr** API key | Unpackerr, Decluttarr; also Prowlarr Apps, Seerr, Bazarr, Maintainerr, Recyclarr | Radarr → Settings → General | Same key everywhere — `.env` for Compose services; each app’s UI or `recyclarr.yml` for the rest. See [App-to-app connections](#app-to-app-connections). |
 | **Sonarr** API key | Unpackerr, Decluttarr; also Prowlarr Apps, Seerr, Bazarr, Maintainerr, Recyclarr | Sonarr → Settings → General | Same as Radarr — per-app key. |
-| **Jellyfin** API key | Seerr, Maintainerr | Jellyfin → Dashboard → **API Keys** | Created after the Jellyfin admin account exists. Not stored in `.env`. |
+| **Jellyfin** API key | Seerr, Maintainerr | Jellyfin → Dashboard → **API Keys** | Created after the Jellyfin admin account exists. |
+
+### qBit password / API key changes (source of truth)
+
+Changing credentials **only in the qBittorrent WebUI** does **not** update `.env`, Decluttarr, or *arr by itself.
+
+| You changed… | Do this |
+| --- | --- |
+| Password in qBit UI | Put the **same** value in `.env` as `QBITTORRENT_PASSWORD`, then `./bin/flixbox configure --sync-qbit-auth` |
+| Password only in `.env` (want qBit + stack to match) | `./bin/flixbox configure --sync-qbit-auth` (must still be able to log into qBit with the old password or a temporary one from the logs) |
+| API key regenerated in qBit UI | `./bin/flixbox configure --sync-qbit-auth` (pushes the key from qBit config into Radarr/Sonarr and recreates Decluttarr) |
+
+`--sync-qbit-auth` forces: apply `.env` password to qBit → update *arr download clients → recreate Decluttarr/Unpackerr.
+
+**Not supported:** inventing a new password when you no longer know the current WebUI password and there is no temporary password in the logs — set the password in the UI (or wipe qBit config), align `.env`, then sync.
 
 **Recyclarr** uses Radarr/Sonarr API keys in `${CONFIG_DIR}/recyclarr/recyclarr.yml` (template copied by `init`), not in `.env`.
 
-The stack **starts** without after-first-run keys. Unpackerr cannot talk to *arr until `RADARR_API_KEY` and `SONARR_API_KEY` are set. Decluttarr **idles** (no qBit login) until both `QBITTORRENT_USERNAME` and `QBITTORRENT_PASSWORD` are set — see [ADR 0008](../adr/0008-maintenance-decluttarr-maintainerr.md). After editing `.env`, run `./bin/flixbox up` to recreate affected containers.
+The stack **starts** without after-first-run keys. Unpackerr cannot talk to *arr until `RADARR_API_KEY` and `SONARR_API_KEY` are set. Decluttarr **idles** (no qBit login) until both `QBITTORRENT_USERNAME` and `QBITTORRENT_PASSWORD` are set — see [ADR 0008](../adr/0008-maintenance-decluttarr-maintainerr.md). After editing `.env`, run `./bin/flixbox configure --sync-qbit-auth` (or `reload` for Compose-only consumers).
 
 ### `.env` variables (after first-run)
 
