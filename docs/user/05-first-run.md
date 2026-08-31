@@ -111,7 +111,7 @@ If `VPN_PORT_FORWARDING=on`: enable **Bypass authentication for clients on local
 
 ## 3. Radarr / Sonarr / hygiene
 
-`configure` adds root folders and the qBittorrent download client (`host: qbittorrent`, port `8080`). Use **Test** in each app.
+`configure` adds root folders and the qBittorrent download client (`host: qbittorrent`, port `8080`). On later runs it **re-tests** that client and updates username/password/API key from `.env` if Test fails (common after recreating qBit). Use **Test** in each app to confirm.
 
 Decluttarr/Unpackerr pick up `RADARR_API_KEY` / `SONARR_API_KEY` / `QBITTORRENT_*` from `.env`. Configure recreates them when it writes those keys; otherwise `./bin/flixbox reload`.
 

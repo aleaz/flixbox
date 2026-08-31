@@ -34,7 +34,7 @@ Flixbox is an open-source, Docker-based home media suite. You request a movie or
 Flixbox automates plumbing and sane defaults. You will still:
 
 - Add indexer credentials in Prowlarr
-- Confirm the download client URL (`gluetun` vs `qbittorrent`)
+- Confirm the download client host is **`qbittorrent`** (same in VPN and Direct)
 - Connect Seerr to Jellyfin / Radarr / Sonarr
 - Review Maintainerr cleanup rules before they delete library items
 

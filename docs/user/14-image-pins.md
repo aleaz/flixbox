@@ -1,8 +1,8 @@
 # Image pins
 
-Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010). Do not use `:latest` in `compose/` for releases.
+Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010). Do not use `:latest` in `compose/`.
 
-**Pin set date:** 2026-08-31 (for upcoming `v0.1.0`)
+**Pin set date:** 2026-08-31
 
 | Service | Image | Tag |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010
 
 1. Pick a newer **stable** tag from the vendor (avoid `nightly` / `develop`).
 2. `docker pull <image>:<tag>` to confirm the manifest exists for amd64 and arm64 when you care about both.
-3. Edit `compose/*.yml`, update this table and [release notes](../releases/v0.1.0-notes.md).
+3. Edit `compose/*.yml`, update this table (and release notes when you cut a release).
 4. Run `./scripts/ci-validate.sh` (fails if any `image: …:latest` remains).
 5. Smoke: [11 — Smoke test](11-smoke-test.md).
 

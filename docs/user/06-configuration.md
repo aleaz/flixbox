@@ -116,8 +116,8 @@ Flixbox uses **five credential types** for inter-app wiring (plus per-indexer tr
 
 | Credential | Used by | Where to configure | Notes |
 | --- | --- | --- | --- |
-| qBittorrent **WebUI login** (username + password) | You (browser), **Decluttarr** | qBit WebUI; `.env` as `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` | Default user is `admin`. Change the temporary password after first login. Decluttarr does **not** use qBit’s API key. |
-| qBittorrent **API key** | **Radarr**, **Sonarr** (download client) | qBit → **Options → Web UI → API access**; paste in *arr → **Settings → Download Clients → qBittorrent** | **Recommended:** use API key only; leave username/password empty in *arr. See [First-run §3b](05-first-run.md#3b-download-client-qbittorrent). |
+| qBittorrent **WebUI login** (username + password) | You (browser), **Decluttarr**, and optionally *arr | qBit WebUI; `.env` as `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` | `init` generates a password; `configure` applies it when qBit still has a temporary one. Decluttarr does **not** use qBit’s API key. |
+| qBittorrent **API key** | **Radarr**, **Sonarr** (download client) | qBit → **Options → Web UI → API access**; also set by `configure` when present | **Recommended for *arr:** API key (username/password may also be set). After recreating qBit, re-run `configure` so *arr clients stay in sync. |
 | **Radarr** API key | Unpackerr, Decluttarr; also Prowlarr Apps, Seerr, Bazarr, Maintainerr, Recyclarr | Radarr → Settings → General | Same key everywhere — `.env` for Compose services; each app’s UI or `recyclarr.yml` for the rest. See [App-to-app connections](#app-to-app-connections). |
 | **Sonarr** API key | Unpackerr, Decluttarr; also Prowlarr Apps, Seerr, Bazarr, Maintainerr, Recyclarr | Sonarr → Settings → General | Same as Radarr — per-app key. |
 | **Jellyfin** API key | Seerr, Maintainerr | Jellyfin → Dashboard → **API Keys** | Created after the Jellyfin admin account exists. Not stored in `.env`. |

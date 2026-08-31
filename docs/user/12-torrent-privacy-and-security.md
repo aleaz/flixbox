@@ -172,7 +172,7 @@ Run after first `up`, after switching VPN provider or server, after changing `.e
 - [ ] Gluetun credentials set; `docker compose ps` shows `gluetun` healthy
 - [ ] `BLOCK_IPV6=on` (default in `.env.example`)
 - [ ] `DOT=on` (default)
-- [ ] Radarr/Sonarr download client host is `gluetun` (VPN) or `qbittorrent` (Direct)
+- [ ] Radarr/Sonarr download client host is **`qbittorrent`** (port `8080`) in VPN and Direct — [ADR 0014](../adr/0014-stable-qbit-download-hostname.md)
 - [ ] `DECLUTTARR_QBIT_URL` matches mode — `grep DECLUTTARR_QBIT_URL .env`
 - [ ] `./bin/flixbox vpn-test` — VPN mode: IP **≠** your ISP; Direct: IP **is** your ISP
 - [ ] qBittorrent WebUI reachable on LAN only (not port-forwarded on home router to WAN)
@@ -282,7 +282,7 @@ Engineering notes: [Operations risks §3](../07-operations-risks.md#3-security--
 | | VPN mode | Direct mode |
 | --- | --- | --- |
 | `.env` | `FLIXBOX_MODE=vpn` | `FLIXBOX_MODE=direct` |
-| qBit download client host | `gluetun` | `qbittorrent` |
+| qBit download client host | `qbittorrent` | `qbittorrent` |
 | IP seen by peers | VPN exit | Home ISP |
 | Gluetun running | Yes | No |
 | Leak test | IP ≠ ISP | IP = ISP |

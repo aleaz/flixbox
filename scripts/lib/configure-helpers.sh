@@ -486,12 +486,14 @@ configure_arr_service() {
     fi
   fi
 
-  local clients
+  local clients existing_id
   clients=$(api_get "${base}/api/v3/downloadclient" "$auth") || true
-  if json_extract "$clients" "sys.exit(0 if any(c.get('name','').lower() == 'qbittorrent' for c in data) else 1)"; then
-    skip "${name}: qBittorrent download client"
-  elif [[ -z "$qbit_api_key" && -z "$qbit_pass" ]]; then
-    fail "${name}: add qBittorrent (need API key or QBITTORRENT_PASSWORD)"
+  existing_id=$(json_extract "$clients" "
+ids = [c['id'] for c in data if c.get('name','').lower() == 'qbittorrent' or c.get('implementation') == 'QBittorrent']
+print(ids[0] if ids else '')")
+
+  if [[ -z "$qbit_api_key" && -z "$qbit_pass" ]]; then
+    fail "${name}: add/update qBittorrent (need API key or QBITTORRENT_PASSWORD)"
   else
     local qbit_payload
     qbit_payload=$(cat <<QBIT_JSON
@@ -518,10 +520,26 @@ configure_arr_service() {
 }
 QBIT_JSON
 )
-    if api_post "${base}/api/v3/downloadclient" "application/json" "$qbit_payload" "$auth" >/dev/null 2>&1; then
-      ok "${name}: added qBittorrent download client (${qbit_host}:8080)"
+    if [[ -n "$existing_id" ]]; then
+      local existing_client
+      existing_client=$(api_get "${base}/api/v3/downloadclient/${existing_id}" "$auth") || true
+      if [[ -n "$existing_client" ]] && api_post "${base}/api/v3/downloadclient/test" "application/json" "$existing_client" "$auth" >/dev/null 2>&1; then
+        skip "${name}: qBittorrent download client"
+      else
+        qbit_payload=$(json_extract "$qbit_payload" "data['id'] = ${existing_id}; print(json.dumps(data))")
+        if api_put "${base}/api/v3/downloadclient/${existing_id}" "application/json" "$qbit_payload" "$auth" >/dev/null 2>&1 \
+          && api_post "${base}/api/v3/downloadclient/test" "application/json" "$qbit_payload" "$auth" >/dev/null 2>&1; then
+          ok "${name}: updated qBittorrent download client (${qbit_host}:8080)"
+        else
+          fail "${name}: update qBittorrent download client (Test failed — check QBITTORRENT_PASSWORD / ban)"
+        fi
+      fi
     else
-      fail "${name}: add qBittorrent download client"
+      if api_post "${base}/api/v3/downloadclient" "application/json" "$qbit_payload" "$auth" >/dev/null 2>&1; then
+        ok "${name}: added qBittorrent download client (${qbit_host}:8080)"
+      else
+        fail "${name}: add qBittorrent download client"
+      fi
     fi
   fi
 

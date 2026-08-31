@@ -12,7 +12,7 @@ Default idea:
 - Tag **`flixbox-keep`** on a torrent → never auto-remove
 - Do **not** remove “unmonitored” items by default
 
-Use the correct qBit URL for your mode (`gluetun` vs `qbittorrent`). Decluttarr auth uses qBit **username/password** in `.env`, not the qBit API key — [Credentials](06-configuration.md#credentials-and-api-keys). Until `QBITTORRENT_PASSWORD` is set, Decluttarr stays idle on purpose.
+Use the download client host **`qbittorrent`** (port `8080`) in both modes ([ADR 0014](../adr/0014-stable-qbit-download-hostname.md)). Decluttarr auth uses qBit **username/password** in `.env`, not the qBit API key — [Credentials](06-configuration.md#credentials-and-api-keys). Until `QBITTORRENT_PASSWORD` is set, Decluttarr stays idle on purpose.
 
 ## Maintainerr — library cleanup
 
