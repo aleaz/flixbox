@@ -2,16 +2,11 @@
 # Shared path validation and platform defaults for Flixbox CLI/scripts.
 # Source from bin/flixbox or scripts/*.sh — do not execute directly.
 
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/env-file.sh"
+
 _paths_hint() {
   printf 'hint: %s\n' "$*" >&2
-}
-
-_paths_sed_inplace() {
-  if [[ "$(uname -s)" == Darwin ]]; then
-    sed -i '' "$@"
-  else
-    sed -i "$@"
-  fi
 }
 
 # Linux reference default (FHS /srv). Used for hints and .env.example.
@@ -49,8 +44,8 @@ apply_platform_env_paths() {
   data_dir="$(flixbox_default_data_dir)"
   config_dir="$(flixbox_default_config_dir)"
 
-  _paths_sed_inplace "s|^DATA_DIR=.*|DATA_DIR=${data_dir}|" "${env_file}"
-  _paths_sed_inplace "s|^CONFIG_DIR=.*|CONFIG_DIR=${config_dir}|" "${env_file}"
+  flixbox_env_file_set "${env_file}" DATA_DIR "${data_dir}"
+  flixbox_env_file_set "${env_file}" CONFIG_DIR "${config_dir}"
 }
 
 # Paths plus macOS PUID/PGID (linuxserver images need the host user on Docker Desktop).
@@ -59,8 +54,8 @@ apply_platform_env_defaults() {
 
   apply_platform_env_paths "${env_file}"
   if [[ "$(uname -s)" == Darwin ]]; then
-    _paths_sed_inplace "s|^PUID=.*|PUID=$(id -u)|" "${env_file}"
-    _paths_sed_inplace "s|^PGID=.*|PGID=$(id -g)|" "${env_file}"
+    flixbox_env_file_set "${env_file}" PUID "$(id -u)"
+    flixbox_env_file_set "${env_file}" PGID "$(id -g)"
   fi
 }
 

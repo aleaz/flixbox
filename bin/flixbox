@@ -8,6 +8,8 @@ cd "${ROOT_DIR}"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/paths.sh"
 # shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/env-file.sh"
+# shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/access-profile.sh"
 
 NO_COLOR="${NO_COLOR:-}"
@@ -25,15 +27,6 @@ log() { printf '%b%s%b\n' "${C_INFO}" "$*" "${C_RST}"; }
 ok() { printf '%b%s%b\n' "${C_OK}" "$*" "${C_RST}"; }
 warn() { printf '%b%s%b\n' "${C_WARN}" "$*" "${C_RST}" >&2; }
 die() { printf '%b%s%b\n' "${C_ERR}" "$*" "${C_RST}" >&2; exit 1; }
-
-# BSD sed (macOS) requires '' after -i; GNU sed does not.
-sed_inplace() {
-  if [[ "$(uname -s)" == Darwin ]]; then
-    sed -i '' "$@"
-  else
-    sed -i "$@"
-  fi
-}
 
 load_env() {
   if [[ -f "${ROOT_DIR}/.env" ]]; then
@@ -116,16 +109,13 @@ generate_password() {
 # Write KEY=value into .env only when missing or empty (never overwrite set secrets).
 env_set_if_empty() {
   local key="$1" value="$2" env_file="${ROOT_DIR}/.env"
+  local before after
   [[ -f "$env_file" ]] || return 0
-  local current
-  current=$(grep -E "^${key}=" "$env_file" 2>/dev/null | head -1 | cut -d= -f2- || true)
-  [[ -n "$current" ]] && return 0
-  if grep -q "^${key}=" "$env_file" 2>/dev/null; then
-    sed_inplace "s|^${key}=.*|${key}=${value}|" "$env_file"
-  else
-    printf '\n%s=%s\n' "$key" "$value" >> "$env_file"
-  fi
-  ok "Generated ${key} in .env (was empty)"
+  before="$(flixbox_env_file_get "$env_file" "$key")"
+  [[ -n "$before" ]] && return 0
+  flixbox_env_file_set_if_empty "$env_file" "$key" "$value" || return 1
+  after="$(flixbox_env_file_get "$env_file" "$key")"
+  [[ -n "$after" ]] && ok "Generated ${key} in .env (was empty)"
 }
 
 ensure_first_run_secrets() {
@@ -227,19 +217,15 @@ cmd_init() {
     warn "Syncing VPN_ENABLED from FLIXBOX_MODE=${FLIXBOX_MODE}..."
   fi
   if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
-    sed_inplace 's/^VPN_ENABLED=.*/VPN_ENABLED=true/' "${ROOT_DIR}/.env" || true
+    flixbox_env_file_set "${ROOT_DIR}/.env" VPN_ENABLED true
   else
-    sed_inplace 's/^VPN_ENABLED=.*/VPN_ENABLED=false/' "${ROOT_DIR}/.env" || true
+    flixbox_env_file_set "${ROOT_DIR}/.env" VPN_ENABLED false
   fi
   load_env
   ok "VPN_ENABLED=${VPN_ENABLED} (aligned with FLIXBOX_MODE=${FLIXBOX_MODE})"
 
   # Decluttarr qBit URL — same host in VPN and Direct (ADR 0014: alias on Gluetun in VPN mode)
-  if grep -q '^DECLUTTARR_QBIT_URL=' "${ROOT_DIR}/.env"; then
-    sed_inplace 's|^DECLUTTARR_QBIT_URL=.*|DECLUTTARR_QBIT_URL=http://qbittorrent:8080|' "${ROOT_DIR}/.env"
-  else
-    printf '\nDECLUTTARR_QBIT_URL=http://qbittorrent:8080\n' >> "${ROOT_DIR}/.env"
-  fi
+  flixbox_env_file_set "${ROOT_DIR}/.env" DECLUTTARR_QBIT_URL "http://qbittorrent:8080"
 
   validate_flixbox_paths "${DATA_DIR}" "${CONFIG_DIR}" || \
     die "Path validation failed. Fix DATA_DIR and CONFIG_DIR in .env, then re-run init."

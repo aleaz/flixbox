@@ -2,6 +2,9 @@
 #
 # Access profile helpers (ADR 0015). Sourced by bin/flixbox — not executed directly.
 
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/env-file.sh"
+
 # Valid: trusted | shared
 flixbox_access_profile() {
   echo "${FLIXBOX_ACCESS_PROFILE:-trusted}"
@@ -25,14 +28,14 @@ flixbox_sync_access_profile_env() {
 
   case "$profile" in
     trusted)
-      flixbox_env_set "$env_file" FLIXBOX_ARR_AUTH_METHOD External
-      flixbox_env_set "$env_file" FLIXBOX_ARR_AUTH_REQUIRED DisabledForLocalAddresses
-      flixbox_env_set "$env_file" FLIXBOX_ADMIN_BIND_IP 0.0.0.0
+      flixbox_env_file_set "$env_file" FLIXBOX_ARR_AUTH_METHOD External
+      flixbox_env_file_set "$env_file" FLIXBOX_ARR_AUTH_REQUIRED DisabledForLocalAddresses
+      flixbox_env_file_set "$env_file" FLIXBOX_ADMIN_BIND_IP 0.0.0.0
       ;;
     shared)
-      flixbox_env_set "$env_file" FLIXBOX_ARR_AUTH_METHOD Forms
-      flixbox_env_set "$env_file" FLIXBOX_ARR_AUTH_REQUIRED Enabled
-      flixbox_env_set "$env_file" FLIXBOX_ADMIN_BIND_IP 127.0.0.1
+      flixbox_env_file_set "$env_file" FLIXBOX_ARR_AUTH_METHOD Forms
+      flixbox_env_file_set "$env_file" FLIXBOX_ARR_AUTH_REQUIRED Enabled
+      flixbox_env_file_set "$env_file" FLIXBOX_ADMIN_BIND_IP 127.0.0.1
       ;;
   esac
 }
@@ -66,18 +69,4 @@ flixbox_access_profile_drift_message() {
   fi
   [[ ${#parts[@]} -eq 0 ]] && return 0
   echo "Access profile ${profile} out of sync: ${parts[*]}. Run: ./bin/flixbox init --non-interactive && ./bin/flixbox reload"
-}
-
-# Set KEY=value in .env (always overwrite — for derived profile keys).
-flixbox_env_set() {
-  local env_file="$1" key="$2" value="$3"
-  if grep -q "^${key}=" "$env_file" 2>/dev/null; then
-    if [[ "$(uname -s)" == Darwin ]]; then
-      sed -i '' "s|^${key}=.*|${key}=${value}|" "$env_file"
-    else
-      sed -i "s|^${key}=.*|${key}=${value}|" "$env_file"
-    fi
-  else
-    printf '\n%s=%s\n' "$key" "$value" >> "$env_file"
-  fi
 }

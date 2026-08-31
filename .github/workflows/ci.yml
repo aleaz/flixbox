@@ -48,3 +48,6 @@ jobs:
 
       - name: Contract validation
         run: ./scripts/ci-validate.sh
+
+      - name: Init smoke (C-50–52 + env-file)
+        run: ./scripts/ci-smoke-init.sh

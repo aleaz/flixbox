@@ -149,6 +149,7 @@ for app in RADARR SONARR PROWLARR; do
     fail C-24c "servarr.yml missing profile-driven ${app}__AUTH__REQUIRED"
 done
 [[ -f scripts/lib/access-profile.sh ]] || fail C-24c 'missing scripts/lib/access-profile.sh'
+[[ -f scripts/lib/env-file.sh ]] || fail C-24c 'missing scripts/lib/env-file.sh'
 grep -q 'FLIXBOX_ACCESS_PROFILE' .env.example || fail C-24c '.env.example missing FLIXBOX_ACCESS_PROFILE'
 grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/servarr.yml || \
   fail C-24c 'servarr.yml missing FLIXBOX_ADMIN_BIND_IP on admin ports'

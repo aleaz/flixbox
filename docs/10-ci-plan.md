@@ -227,12 +227,12 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-41 | Decluttarr unmonitored off | `REMOVE_UNMONITORED: "False"` |
 | C-42 | Stateful `stop_grace_period` | grep count ≥ expected minimum on long-running services |
 
-### 5.6 CLI smoke (phase 2)
+### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 
 | ID | Rule | Validation |
 | --- | --- | --- |
-| C-50 | `init --non-interactive` succeeds | temp `.env` with `/tmp/flixbox-ci/*` paths |
-| C-51 | Templates copied | `homepage/services.yaml`, `recyclarr/recyclarr.yml` exist |
+| C-50 | `init --non-interactive` succeeds | temp `.env` with `/tmp/flixbox-ci-smoke/*` paths |
+| C-51 | Templates copied | `homepage/services.yaml`, `recyclarr/recyclarr.yml`, `torrents/incomplete` |
 | C-52 | Decluttarr qBit URL | `DECLUTTARR_QBIT_URL` is `http://qbittorrent:8080` after init (ADR 0014) |
 
 ### 5.7 Documentation links (phase 3 — optional)
@@ -250,16 +250,18 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 **Deliverables:**
 
 ```
-.github/workflows/ci.yml          # jobs: secrets, validate
+.github/workflows/ci.yml          # jobs: secrets, validate (+ init smoke C-50–52)
 scripts/ci-validate.sh            # C-01 through C-42
+scripts/ci-smoke-init.sh          # C-50–52 + env-file unit + configure dry-run gate
 ```
 
-**Estimated runner time:** ~2–4 minutes per PR.
+**Estimated runner time:** ~2–5 minutes per PR.
 
 **Exit criteria:**
 
 - [x] Both jobs green on `main`
 - [x] Intentionally broken compose fails `validate` (manual spot-check)
+- [x] Init smoke (C-50–52) in validate job
 - [ ] Branch protection requires `secrets` + `validate` (GitHub repo settings)
 
 ### Phase 2 — Security visibility (before `v0.1` tag)
@@ -267,17 +269,16 @@ scripts/ci-validate.sh            # C-01 through C-42
 **Deliverables:**
 
 ```
-.github/workflows/ci.yml          # add job: security
-scripts/ci-validate.sh            # add C-50..C-52
+.github/workflows/ci.yml          # add job: security (Trivy)
 .github/dependabot.yml            # GitHub Actions ecosystem
 ```
 
 **Exit criteria:**
 
 - [ ] Trivy config scan runs without error
-- [ ] Image scan lists all 17 images
+- [ ] Image scan lists all MVP images
 - [ ] Policy documented: warn-only until pins
-
+- [x] C-50–52 init smoke (moved into phase 1 validate job)
 ### Phase 3 — Docs and release hygiene (v0.2)
 
 **Deliverables:**

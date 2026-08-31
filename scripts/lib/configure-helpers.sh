@@ -3,6 +3,9 @@
 # Shared helpers for scripts/configure-apps.sh (sourced, not executed).
 # Requires python3 for JSON parsing.
 
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/env-file.sh"
+
 # shellcheck disable=SC2034
 CONFIGURED=0
 SKIPPED=0
@@ -135,15 +138,7 @@ env_set_key() {
     dry "Set ${key} in .env"
     return 0
   fi
-  if grep -q "^${key}=" "$env_file" 2>/dev/null; then
-    if [[ "$(uname -s)" == Darwin ]]; then
-      sed -i '' "s|^${key}=.*|${key}=${value}|" "$env_file"
-    else
-      sed -i "s|^${key}=.*|${key}=${value}|" "$env_file"
-    fi
-  else
-    printf '\n%s=%s\n' "$key" "$value" >> "$env_file"
-  fi
+  flixbox_env_file_set "$env_file" "$key" "$value"
   ENV_DIRTY=true
 }
 
@@ -338,26 +333,21 @@ bazarr_settings_post() {
 # Write KEY=value into ROOT .env when missing or empty. Sets ENV_DIRTY=true on write.
 env_set_if_empty() {
   local key="$1" value="$2" env_file="${ROOT_DIR}/.env"
+  local before after
   [[ -f "$env_file" ]] || return 0
   [[ -n "$value" ]] || return 0
-  local current
-  current=$(grep -E "^${key}=" "$env_file" 2>/dev/null | head -1 | cut -d= -f2- || true)
-  [[ -n "$current" ]] && return 0
+  before="$(flixbox_env_file_get "$env_file" "$key")"
+  [[ -n "$before" ]] && return 0
   if $DRY_RUN; then
     dry "Write ${key} to .env (was empty)"
     return 0
   fi
-  if grep -q "^${key}=" "$env_file" 2>/dev/null; then
-    if [[ "$(uname -s)" == Darwin ]]; then
-      sed -i '' "s|^${key}=.*|${key}=${value}|" "$env_file"
-    else
-      sed -i "s|^${key}=.*|${key}=${value}|" "$env_file"
-    fi
-  else
-    printf '\n%s=%s\n' "$key" "$value" >> "$env_file"
+  flixbox_env_file_set_if_empty "$env_file" "$key" "$value"
+  after="$(flixbox_env_file_get "$env_file" "$key")"
+  if [[ -n "$after" ]]; then
+    ENV_DIRTY=true
+    info "Wrote ${key} to .env (was empty)"
   fi
-  ENV_DIRTY=true
-  info "Wrote ${key} to .env (was empty)"
 }
 
 # Replace REPLACE_* placeholders in recyclarr.yml only (never overwrite real keys).
