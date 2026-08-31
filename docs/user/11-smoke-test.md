@@ -10,10 +10,11 @@ From the repo root:
 
 ```bash
 ./scripts/ci-validate.sh          # contract checks (no containers)
+./scripts/ci-smoke-init.sh        # C-50–52 init smoke + env-file unit (restores .env)
 ./scripts/smoke-test.sh preflight   # docker + compose config
 ```
 
-## Full automated smoke (Direct mode)
+## Full automated smoke (Direct mode, `trusted`)
 
 Uses `/tmp/flixbox-smoke` for data/config so you do not need `/srv/flixbox`:
 
@@ -38,25 +39,50 @@ To tear down:
 | A1 | `init` completes | `./bin/flixbox init --non-interactive` | No errors; dirs + templates exist |
 | A2 | Data tree | `ls ${DATA_DIR}/torrents/incomplete` | Directory exists |
 | A3 | Templates copied | `ls ${CONFIG_DIR}/homepage/services.yaml` | File exists |
-| A4 | Decluttarr URL (Direct) | `grep DECLUTTARR_QBIT_URL .env` | `http://qbittorrent:8080` |
-| A5 | Decluttarr URL | `grep DECLUTTARR_QBIT_URL .env` | `http://qbittorrent:8080` (VPN and Direct) |
+| A4 | Decluttarr URL | `grep DECLUTTARR_QBIT_URL .env` | `http://qbittorrent:8080` (VPN and Direct) |
+| A5 | Access profile defaults | `grep FLIXBOX_ACCESS_PROFILE .env` | `trusted`; `FLIXBOX_ADMIN_BIND_IP=0.0.0.0` |
 | A6 | Unsafe path warnings | Set `DATA_DIR=/mnt/c/test` and run `init` | CLI warns (WSL NTFS) |
 
-## Phase B — Stack up (Direct mode)
+## Phase B — Stack up (Direct mode, `trusted`)
 
 | # | Check | How | Pass |
 |---|-------|-----|------|
 | B1 | All core containers running | `./bin/flixbox status` | 12 services up (no gluetun) |
 | B2 | qBittorrent WebUI | `http://localhost:8080` | Login page loads |
 | B3 | Prowlarr | `:9696` | UI loads |
-| B4 | Radarr / Sonarr | `:7878` / `:8989` | UI loads |
+| B4 | Radarr / Sonarr | `:7878` / `:8989` | UI loads (no Forms login on LAN) |
 | B5 | Jellyfin | `:8096` | Setup or dashboard loads |
 | B6 | Seerr | `:5055` | UI loads |
 | B7 | Homepage | `:3000` | Dashboard loads |
 | B8 | Maintainerr | `:6246` | UI loads |
 | B9 | Byparr | `:8191` | Health/status responds |
+| B10 | `configure` | `./bin/flixbox configure` | Exit 0 after wait; re-run idempotent |
 
 Expected Direct services: `bazarr`, `byparr`, `decluttarr`, `homepage`, `jellyfin`, `maintainerr`, `prowlarr`, `qbittorrent`, `radarr`, `seerr`, `sonarr`, `unpackerr`.
+
+## Phase Bʹ — Access profile `shared` (manual, before v0.1)
+
+Fresh paths recommended (or recreate *arr + admin-bound services after profile change).
+
+```bash
+# In .env:
+FLIXBOX_ACCESS_PROFILE=shared
+./bin/flixbox init --non-interactive
+./bin/flixbox reload
+./bin/flixbox configure
+```
+
+| # | Check | How | Pass |
+|---|-------|-----|------|
+| S1 | Derived env | `grep -E 'FLIXBOX_ARR_AUTH_|FLIXBOX_ADMIN_BIND' .env` | `Forms` + `Enabled` + `127.0.0.1` |
+| S2 | Host bind | `ss -lntp \| grep -E '7878\|8989\|9696\|8191\|8080'` (or `docker port`) | Listen on `127.0.0.1`, not `0.0.0.0` |
+| S3 | LAN blocked | From another LAN device, open `http://<host>:7878` | Connection refused / timeout |
+| S4 | Host OK | On the server: `http://127.0.0.1:7878` | Forms / create-account UI |
+| S5 | Manual Forms users | Create admin in Radarr, Sonarr, Prowlarr with `FLIXBOX_ARR_UI_*` | Login works; `configure` still OK via API keys |
+| S6 | Consumers on LAN | Jellyfin `:8096`, Seerr `:5055`, Homepage `:3000` from LAN | Still reachable |
+| S7 | Byparr | LAN `:8191` | Unreachable; Prowlarr indexer proxy still works |
+
+See [Access profiles](13-access-profiles.md).
 
 ## Phase C — Storage contract (manual)
 
@@ -81,7 +107,7 @@ Same leading number ⇒ hardlink OK.
 | # | Check | How | Pass |
 |---|-------|-----|------|
 | D1 | Switch mode | `FLIXBOX_MODE=vpn` in `.env`, fill Gluetun secrets, `./bin/flixbox up` | `gluetun` + `qbittorrent` healthy |
-| D2 | qBit via Gluetun port | `http://localhost:8080` | WebUI loads |
+| D2 | qBit via Gluetun port | `http://localhost:8080` (or `127.0.0.1` if `shared`) | WebUI loads |
 | D3 | *arr download client | Radarr/Sonarr host `qbittorrent:8080` | Test succeeds |
 | D4 | Leak test | `./bin/flixbox vpn-test` | Container IP ≠ host public IP |
 | D5 | Port forward (if provider supports) | `VPN_PORT_FORWARDING=on` + localhost bypass in qBit | Listen port updates in qBit logs |
@@ -94,8 +120,8 @@ Reference: [Credentials and API keys](06-configuration.md#credentials-and-api-ke
 
 | # | Check | How | Pass |
 |---|-------|-----|------|
-| E1 | *arr API keys in `.env` | Radarr/Sonarr → Settings → General → `RADARR_API_KEY` / `SONARR_API_KEY` → `./bin/flixbox up` | Unpackerr/Decluttarr logs show no *arr auth errors |
-| E1b | qBit creds for Decluttarr | If qBit auth on: `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` in `.env` (WebUI login, not API key) | Decluttarr logs connect to qBit (not `idle — set QBITTORRENT_…`) |
+| E1 | *arr API keys in `.env` | Prefer `./bin/flixbox configure` (syncs keys) | Unpackerr/Decluttarr logs show no *arr auth errors |
+| E1b | qBit creds for Decluttarr | `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` in `.env` (WebUI login, not API key) | Decluttarr logs connect to qBit (not `idle — set QBITTORRENT_…`) |
 | E1c | Recreate after `.env` | `docker compose up -d --force-recreate decluttarr` | New env applied (restart alone is not enough) |
 | E2 | Decluttarr | Logs | Connects to Radarr, Sonarr, qBit |
 | E3 | Maintainerr | UI → Jellyfin + Radarr + Sonarr (each **API key**) | Connection test OK |
@@ -121,19 +147,24 @@ Copy this block into your release notes or a local log:
 ```
 Date:
 Host OS:
+Commit / image pin set:
 FLIXBOX_MODE:
+FLIXBOX_ACCESS_PROFILE: trusted / shared
 DATA_DIR filesystem (df -T):
 
-Phase A: [ ] pass  [ ] fail  notes:
-Phase B: [ ] pass  [ ] fail  notes:
-Phase C: [ ] pass  [ ] fail  [ ] skipped (macOS)
-Phase D: [ ] pass  [ ] fail  [ ] skipped (no VPN)
-Phase E: [ ] pass  [ ] fail  notes:
-Phase F: [ ] pass  [ ] fail  notes:
+Phase A:  [ ] pass  [ ] fail  notes:
+Phase B:  [ ] pass  [ ] fail  notes:
+Phase Bʹ: [ ] pass  [ ] fail  [ ] skipped (trusted-only RC)
+Phase C:  [ ] pass  [ ] fail  [ ] skipped (macOS)
+Phase D:  [ ] pass  [ ] fail  [ ] skipped (no VPN)
+Phase E:  [ ] pass  [ ] fail  notes:
+Phase F:  [ ] pass  [ ] fail  notes:
 ```
+
+**v0.1 gate:** Phases A–C and B pass on Linux (`trusted`). Phase Bʹ (`shared`) recommended before advertising the shared Wi‑Fi setup in the README.
 
 When Phases A–C and at least B pass on Linux, update the verification checklist in [06-development-guide.md](../06-development-guide.md).
 
 ## Next
 
-[First-run setup](05-first-run.md) · [Day-2 operations](09-operations.md) · [Troubleshooting](10-troubleshooting.md)
+[First-run setup](05-first-run.md) · [Access profiles](13-access-profiles.md) · [Image pins](14-image-pins.md) · [Day-2 operations](09-operations.md) · [Troubleshooting](10-troubleshooting.md)

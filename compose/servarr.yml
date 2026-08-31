@@ -5,7 +5,7 @@ services:
   # Servarr AUTH: API keys + profile (trusted vs shared). LAN Docker —
   # do not publish *arr to WAN without reverse-proxy auth (see docs/user/13-access-profiles.md).
   prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
+    image: lscr.io/linuxserver/prowlarr:2.5.2
     container_name: flixbox-prowlarr
     environment:
       PUID: ${PUID:-1000}
@@ -25,7 +25,7 @@ services:
       - flixbox_net
 
   byparr:
-    image: ghcr.io/thephaseless/byparr:latest
+    image: ghcr.io/thephaseless/byparr:3.0.4
     container_name: flixbox-byparr
     environment:
       TZ: ${TZ:-UTC}
@@ -38,7 +38,7 @@ services:
       - flixbox_net
 
   radarr:
-    image: lscr.io/linuxserver/radarr:latest
+    image: lscr.io/linuxserver/radarr:6.3.0
     container_name: flixbox-radarr
     environment:
       PUID: ${PUID:-1000}
@@ -62,7 +62,7 @@ services:
       - flixbox_net
 
   sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
+    image: lscr.io/linuxserver/sonarr:4.0.19
     container_name: flixbox-sonarr
     environment:
       PUID: ${PUID:-1000}
@@ -86,7 +86,7 @@ services:
       - flixbox_net
 
   bazarr:
-    image: lscr.io/linuxserver/bazarr:latest
+    image: lscr.io/linuxserver/bazarr:1.6.0
     container_name: flixbox-bazarr
     environment:
       PUID: ${PUID:-1000}

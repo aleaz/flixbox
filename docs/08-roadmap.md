@@ -16,7 +16,7 @@ Versions below are planning labels, not semver promises until the first public t
 - [x] Spanish user guide (`README.es.md` + `docs/es/user/`) — partial (REFERENCE + INDEX); full mirror before v0.1 tag
 - [x] CI phase 1 (gitleaks + validate) — [10-ci-plan.md](10-ci-plan.md)
 - [x] `bin/flixbox configure` + `reload` — API wiring (roots, clients, Byparr, Bazarr, Jellyfin/Seerr, secret loop)
-- [ ] Image tag pins before public v0.1 tag
+- [x] Image tag pins before public v0.1 tag — [14-image-pins.md](user/14-image-pins.md)
 
 ## Next — Public v0.1 polish
 
@@ -26,16 +26,16 @@ Deliverables:
 
 - Screenshots + complete Spanish user guide mirror
 - `bin/flixbox configure` — idempotent API wiring (ADR 0005); indexers remain manual
-- Hardlink + VPN/Direct verification documented with operator checklist
-- Image tags pinned before tagging v0.1
+- Image tags pinned before tagging v0.1 — [14-image-pins.md](user/14-image-pins.md); draft notes [releases/v0.1.0-notes.md](releases/v0.1.0-notes.md)
+- Hardlink + VPN/Direct + access-profile verification — [11-smoke-test.md](user/11-smoke-test.md)
 - VPN `tun0` bind sidecar verified on a live Gluetun install
 
 ## After MVP — v0.2
 
 - CLI: `sync-profiles`, `backup`, `restore`, `update`
 - Stronger init validation (hardlink probe, config-on-NFS guard, exFAT guard)
-- CI phase 2: Trivy + init smoke — [10-ci-plan.md](10-ci-plan.md)
-- Image tag pinning policy documented and applied
+- CI phase 2: Trivy — [10-ci-plan.md](10-ci-plan.md)
+- Optional digest pins (`@sha256:`) for stricter supply chain
 - **Notifications:** optional Apprise API profile (Telegram via Apprise URL, not a Flixbox bot) — [ADR 0012](adr/0012-notifications-apprise-hub.md)
 - **VPN resilience docs + optional heal:** document Gluetun internal reconnect/killswitch; evaluate optional `vpn-heal` watchdog profile; **never** auto-fallback to Direct — [ADR 0013](adr/0013-vpn-resilience-no-direct-fallback.md)
 - Planning summary: [11-future-notifications-and-vpn-resilience.md](11-future-notifications-and-vpn-resilience.md)

@@ -24,6 +24,7 @@ Friendly documentation for operators who want to run Flixbox at home.
 | [11 — Smoke test](11-smoke-test.md) | MVP validation checklist before v0.1 |
 | [12 — Torrent privacy and security](12-torrent-privacy-and-security.md) | VPN privacy, qBit settings, leak prevention, audit checklist |
 | [13 — Access profiles](13-access-profiles.md) | LAN profiles (`trusted` / `shared`) |
+| [14 — Image pins](14-image-pins.md) | Pinned Compose image tags (ADR 0010) |
 
 ## Screenshots
 

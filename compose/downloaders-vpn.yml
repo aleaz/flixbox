@@ -9,7 +9,7 @@
 
 services:
   gluetun:
-    image: qmcgaw/gluetun:latest
+    image: qmcgaw/gluetun:v3.41.3
     container_name: flixbox-gluetun
     cap_add:
       - NET_ADMIN
@@ -62,7 +62,7 @@ services:
       start_period: 40s
 
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
+    image: lscr.io/linuxserver/qbittorrent:5.2.3
     container_name: flixbox-qbittorrent
     network_mode: service:gluetun
     depends_on:

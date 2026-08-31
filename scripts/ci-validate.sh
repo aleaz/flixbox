@@ -245,6 +245,13 @@ if [[ "${grace_count}" -lt 10 ]]; then
 fi
 pass C-42
 
+# --- C-43: no :latest image tags (ADR 0010 — v0.1 pin set) ---
+if grep -R --include='*.yml' -E '^\s*image:.*:latest\s*$' compose/; then
+  fail C-43 'compose image tags must be pinned (no :latest) — see docs/user/14-image-pins.md'
+fi
+[[ -f docs/user/14-image-pins.md ]] || fail C-43 'missing docs/user/14-image-pins.md'
+pass C-43
+
 # --- Compose quiet config (direct + vpn + profiles) ---
 "${COMPOSE[@]}" config --quiet
 FLIXBOX_MODE=vpn "${COMPOSE[@]}" config --quiet

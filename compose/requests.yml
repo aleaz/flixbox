@@ -2,7 +2,7 @@
 
 services:
   seerr:
-    image: ghcr.io/seerr-team/seerr:latest
+    image: ghcr.io/seerr-team/seerr:v3.4.1
     container_name: flixbox-seerr
     init: true
     environment:

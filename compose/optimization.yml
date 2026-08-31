@@ -3,7 +3,7 @@
 
 services:
   unpackerr:
-    image: ghcr.io/unpackerr/unpackerr:latest
+    image: ghcr.io/unpackerr/unpackerr:v0.16.1
     container_name: flixbox-unpackerr
     user: "${PUID:-1000}:${PGID:-1000}"
     environment:
@@ -27,7 +27,7 @@ services:
       - flixbox_net
 
   recyclarr:
-    image: ghcr.io/recyclarr/recyclarr:latest
+    image: ghcr.io/recyclarr/recyclarr:8.7.1
     container_name: flixbox-recyclarr
     profiles: ["recyclarr"]
     user: "${PUID:-1000}:${PGID:-1000}"
@@ -40,7 +40,7 @@ services:
       - flixbox_net
 
   decluttarr:
-    image: ghcr.io/manimatter/decluttarr:latest
+    image: ghcr.io/manimatter/decluttarr:v2.1.0
     container_name: flixbox-decluttarr
     # Idle gate: templates/decluttarr/entrypoint.sh → ${CONFIG_DIR}/decluttarr-entrypoint.sh
     # (copied by flixbox init). Checks env at runtime — do not put secrets in Compose command.
@@ -86,7 +86,7 @@ services:
       - flixbox_net
 
   maintainerr:
-    image: ghcr.io/maintainerr/maintainerr:latest
+    image: ghcr.io/maintainerr/maintainerr:3.26.0
     container_name: flixbox-maintainerr
     user: "${PUID:-1000}:${PGID:-1000}"
     environment:
