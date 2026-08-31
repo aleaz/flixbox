@@ -25,7 +25,7 @@ No Pi-hole or reverse proxy required to get started.
 - **One CLI** — `bin/flixbox` for `init`, `up`, `configure`, `reload`, `status`, `vpn-test`
 - **Built-in hygiene** — Decluttarr and Maintainerr with conservative defaults (no surprise deletes)
 - **Modular Compose** — small YAML modules and optional profiles (`plex`, `proxy`, `recyclarr`), not a monolith
-- **Explicit contracts** — single `/data` hardlink tree, mode-aware download URLs, documented in [ADRs](docs/adr/)
+- **Explicit contracts** — single `/data` hardlink tree, download host always `qbittorrent` (VPN and Direct), documented in [ADRs](docs/adr/)
 
 ## Choose your setup
 

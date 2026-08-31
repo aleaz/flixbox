@@ -141,7 +141,7 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 | Recyclarr | Upstream schema drift | Pin versions; explicit sync; dry-run |
 | Prowlarr | HTTP 429 | Respect rate limits / backoff |
 | Decluttarr | Over-aggressive removals | Conservative default strikes; protect tags; document |
-| Decluttarr | Wrong qBit URL in VPN mode | Mode-aware `gluetun` hostname |
+| Decluttarr | Wrong qBit URL after mode switch | Always `qbittorrent:8080` (ADR 0014 Gluetun alias) |
 | Maintainerr | Accidental mass delete | Ship with rules disabled / dry examples; require explicit enable |
 | Maintainerr | Wrong media server | Default Jellyfin; one server at a time |
 | Seerr | Permission errors on config | UID 1000 ownership + `init: true` |
@@ -153,7 +153,7 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 1. Hardlink mount contract + incomplete path + hostname/ports rules for VPN/Direct  
 2. Gluetun healthcheck + IPv6 block + grace period + port-forward hooks  
 3. Byparr + Seerr compose defaults  
-4. Decluttarr mode-aware qBit URL + Maintainerr Jellyfin default  
+4. Decluttarr stable qBit URL (`qbittorrent`) + Maintainerr Jellyfin default  
 5. Local `/config` warning + `/dev/shm` + exFAT warning  
 6. Host tuning + socket proxy profile  
 7. MergerFS/WSL warnings in CLI/docs  

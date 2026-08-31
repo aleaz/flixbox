@@ -51,7 +51,7 @@ Full guide: [13 — Access profiles](13-access-profiles.md).
 
 Servarr has no env var for Forms username/password — see [13 — Create *arr login](13-access-profiles.md#create-arr-login-shared).
 
-After changing `FLIXBOX_ACCESS_PROFILE`: `./bin/flixbox init --non-interactive` then `./bin/flixbox reload`.
+After changing `FLIXBOX_ACCESS_PROFILE`: `./bin/flixbox up` or `reload` (auto-syncs derived keys). Optionally `./bin/flixbox init --non-interactive` so shared UI password placeholders are generated if empty.
 
 ## File ownership and timezone
 

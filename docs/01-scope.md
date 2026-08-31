@@ -1,7 +1,7 @@
 # Scope
 
 **Status:** Working Draft — frozen for MVP implementation  
-**Related ADRs:** [0004](adr/0004-jellyfin-first.md), [0005](adr/0005-cli-bash-first.md), [0006](adr/0006-mvp-service-inventory.md), [0007](adr/0007-platform-support-tiers.md), [0008](adr/0008-maintenance-decluttarr-maintainerr.md)
+**Related ADRs:** [0004](adr/0004-jellyfin-first.md), [0005](adr/0005-cli-bash-first.md), [0006](adr/0006-mvp-service-inventory.md), [0007](adr/0007-platform-support-tiers.md), [0008](adr/0008-maintenance-decluttarr-maintainerr.md), [0014](adr/0014-stable-qbit-download-hostname.md), [0015](adr/0015-access-profiles.md)
 
 ## In scope (MVP)
 
@@ -28,12 +28,11 @@
 
 ### Tooling
 
-- Bash CLI `bin/flixbox` with at least: `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`
+- Bash CLI `bin/flixbox` with at least: `init`, `up`, `down`, `restart`, `reload`, `status`, `logs`, `vpn-test`, `configure`
 - Host helpers: `scripts/host-tuning.sh`, `scripts/backup.sh` (as needed by phases)
 - Modular Compose under `compose/`
 - `.env.example` with no real secrets
 - English docs in `docs/`
-
 ### Platforms (MVP)
 
 - **First-class:** Linux x86_64 and ARM64 (Docker Engine + Compose v2 plugin)
@@ -71,9 +70,9 @@ MVP is done when all of the following are true:
 2. All download/media containers mount the same `${DATA_DIR}:/data` parent; hardlinks work on a single local filesystem (including `torrents/incomplete`).
 3. VPN mode: qBittorrent shares Gluetun netns; ports published on Gluetun; healthcheck gates start; killswitch drops egress if tunnel is down; port-forward hook documented/wired when provider supports it; `vpn-test` reports masked IP.
 4. Direct mode: qBittorrent on `flixbox_net` without Gluetun.
-5. Decluttarr reaches Radarr/Sonarr and the correct qBit URL for the active mode (`gluetun` vs `qbittorrent`).
+5. Decluttarr reaches Radarr/Sonarr and qBittorrent at `http://qbittorrent:8080` in both VPN and Direct ([ADR 0014](adr/0014-stable-qbit-download-hostname.md)).
 6. Maintainerr is configured against Jellyfin + Radarr/Sonarr (Plex only if Plex profile enabled).
-7. `bin/flixbox` supports the minimum command set and creates the directory tree with the frozen permissions model.
+7. `bin/flixbox` supports the minimum command set (`init`, `up`, `down`, `restart`, `reload`, `status`, `logs`, `vpn-test`, `configure`) and creates the directory tree with the frozen permissions model.
 8. README describes real setup steps: `init` → `up` → `configure` covers deterministic wiring; remaining manual steps (indexers, optional Maintainerr rules) are listed honestly — no false “fully zero-touch” claims.
 9. No secrets in git-tracked files; `.gitignore` covers `.env` and local config/data paths.
 10. Operational footguns from [07-operations-risks.md](07-operations-risks.md) are documented and, where feasible, enforced by CLI validation.

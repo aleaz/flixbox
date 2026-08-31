@@ -46,7 +46,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 ## Phase 3 — Optimization + hygiene
 
 1. `compose/optimization.yml` → Unpackerr, Recyclarr, Decluttarr, Maintainerr
-2. Decluttarr templates use mode-aware qBit URL
+2. Decluttarr templates use stable qBit URL `http://qbittorrent:8080` (ADR 0014)
 3. Maintainerr defaults to Jellyfin; example rules documented as opt-in (non-destructive defaults)
 4. Recyclarr config template pinned; sync is explicit (later CLI `sync-profiles`)
 5. Unpackerr free-space threshold documented/configured
@@ -115,6 +115,6 @@ Operator smoke test: [docs/user/11-smoke-test.md](user/11-smoke-test.md) and `./
 - [ ] Hardlink inodes match for a test import
 - [ ] VPN mode: public IP differs from host; qBit UI via Gluetun published port
 - [x] Direct mode: qBittorrent reachable by service name (compose config)
-- [x] Decluttarr qBit URL mode-aware via `DECLUTTARR_QBIT_URL` / `flixbox init`
+- [x] Decluttarr qBit URL always `http://qbittorrent:8080` via `DECLUTTARR_QBIT_URL` / `flixbox init` (ADR 0014)
 - [ ] Maintainerr connects to Jellyfin (operator UI)
 - [x] `git status` shows no `.env` or secrets (`.env` gitignored)

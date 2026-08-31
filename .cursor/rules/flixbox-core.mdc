@@ -11,7 +11,8 @@ alwaysApply: true
 - Out of MVP unless user expands scope: Lidarr, Readarr, SABnzbd, Whisper, Overseerr, Jellyseerr, Autobrr, Profilarr, Authelia, PowerShell CLI.
 - Use Seerr (not Jellyseerr/Overseerr). Use Byparr as default CF bypass.
 - Preserve `${DATA_DIR}:/data` hardlink contract including `torrents/incomplete`.
-- Preserve VPN dual-mode: only qBit in Gluetun netns; publish qBit ports on Gluetun; mode-aware client URLs.
+- Preserve VPN dual-mode: only qBit in Gluetun netns; publish qBit ports on Gluetun; *arr / Decluttarr host always `qbittorrent:8080` (ADR 0014).
+- Access profiles (`trusted` / `shared`): follow ADR 0015; `up`/`reload` sync derived bind/auth keys.
 - Maintainerr defaults to Jellyfin; do not enable destructive cleanup rules by default.
 - No secrets in git-tracked files.
 - Do not commit unless the user explicitly asks.

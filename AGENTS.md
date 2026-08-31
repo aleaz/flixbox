@@ -1,6 +1,6 @@
 # AGENTS.md — guidance for AI coding agents
 
-Flixbox is a **docs-first, pre-implementation** open-source Docker media stack. Read this before editing anything.
+Flixbox is a **docs-first** open-source Docker media stack (MVP Compose + CLI are implemented). Read this before editing anything.
 
 ## Mandatory reading order
 
@@ -16,7 +16,8 @@ Flixbox is a **docs-first, pre-implementation** open-source Docker media stack. 
 - **MVP inventory only** — see ADR 0006. Includes Seerr, Byparr, Decluttarr, Maintainerr.
 - **Do not** add Lidarr, Readarr, SABnzbd, Whisper, Overseerr, Jellyseerr, Autobrr, Profilarr, Authelia, PowerShell CLI unless scope changes.
 - **Never break** the `/data` hardlink contract (include `torrents/incomplete`).
-- **Never break** VPN dual-mode; only qBit uses Gluetun netns; publish qBit ports on Gluetun; mode-aware client URLs for *arr and Decluttarr.
+- **Never break** VPN dual-mode; only qBit uses Gluetun netns; publish qBit ports on Gluetun; *arr / Decluttarr download host is always `qbittorrent:8080` ([ADR 0014](docs/adr/0014-stable-qbit-download-hostname.md)).
+- **Access profiles** (`trusted` / `shared`): follow [ADR 0015](docs/adr/0015-access-profiles.md); do not leave derived bind/auth keys empty under `shared`.
 - **Maintainerr**: default Jellyfin; no destructive rules enabled by default.
 - **No git commits** unless the user explicitly asks.
 - **Commit messages:** public-facing only — see [docs/05-standards.md](docs/05-standards.md) §8. No phase/MVP/agent-session wording in subjects or bodies.
