@@ -32,6 +32,7 @@ No hace falta Pi-hole ni reverse proxy para arrancar.
 | Setup | Cuándo | Empezá acá |
 | --- | --- | --- |
 | **Core (Direct)** | Primera prueba, solo LAN | [Install (EN)](docs/user/04-install.md) |
+| **Wi‑Fi compartido** | Convivientes en la misma LAN | `FLIXBOX_ACCESS_PROFILE=shared` — [Access profiles (EN)](docs/user/13-access-profiles.md) |
 | **+ VPN** | Torrents en producción | [VPN and Direct (EN)](docs/user/07-vpn-and-direct.md) |
 | **+ HTTPS** | Reverse proxy | Perfil Caddy en [Configuration (EN)](docs/user/06-configuration.md) |
 | **+ Plex** | Junto a Jellyfin o en su lugar | `./bin/flixbox up plex` |

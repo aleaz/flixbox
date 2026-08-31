@@ -68,7 +68,7 @@ container_running() {
 load_env
 
 if [[ "${FLIXBOX_ACCESS_PROFILE:-trusted}" == "shared" ]]; then
-  info "Access profile: shared — *arr WebUI uses FLIXBOX_ARR_UI_USER/PASSWORD (configure uses API keys)"
+  info "Access profile: shared — after configure, create Forms users in Radarr/Sonarr/Prowlarr UI with FLIXBOX_ARR_UI_* from .env (see docs/user/13-access-profiles.md#create-arr-login-shared)"
 fi
 
 echo "=== Flixbox app configuration ==="

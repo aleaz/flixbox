@@ -33,6 +33,12 @@
 | Maintainerr deleted too much | Rules too aggressive | Tighten thresholds; use Keep list; review Leaving Soon first |
 | Decluttarr removes wanted torrent | No protect tag | Add `flixbox-keep`; raise strikes |
 | Permission denied on media | UID/GID mismatch | Align `PUID`/`PGID`; SGID on data dirs |
+| `./bin/flixbox configure` fails on first run (API not ready) | *arr/Jellyfin still initializing SQLite | Wait 1–3 min after `up`, re-run `configure`. Script waits up to 180s per service — [First-run §0](05-first-run.md#0-script-assisted-wiring-recommended) |
+| `configure` / *arr auth errors after wiping `${CONFIG_DIR}` | `.env` API keys stale vs new container `config.xml` | Re-run `./bin/flixbox configure` (syncs keys from container). Or `./bin/flixbox init --non-interactive` if keys were empty |
+| `Invalid FLIXBOX_ACCESS_PROFILE=…` on `up` / `configure` | Typo in `.env` | Set `trusted` or `shared`; run `./bin/flixbox init --non-interactive` |
+| Warn: Access profile out of sync (`FLIXBOX_ARR_AUTH_*`) | Changed profile without `init` | `./bin/flixbox init --non-interactive` then `docker compose up -d --force-recreate prowlarr radarr sonarr` — [§13](13-access-profiles.md) |
+| `shared` profile: *arr login fails with `.env` password | Forms user never created in that app | Servarr does not read `FLIXBOX_ARR_UI_*` from env — create account manually in each *arr UI — [§13 — Create login](13-access-profiles.md#create-arr-login-shared) |
+| `trusted` profile but *arr asks for login from LAN (IPv6) | Servarr RFC1918 bypass does not cover all IPv6 LAN clients | Use `shared`, or access *arr from IPv4 / localhost |
 | Scripts fail with `\r` errors | CRLF line endings on Windows clone | Ensure LF via `.gitattributes` |
 
 ## Still stuck?

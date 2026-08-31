@@ -255,7 +255,8 @@ cmd_init() {
   ok "Init complete."
   log "Access profile: $(flixbox_access_profile) (*arr UI auth — ADR 0015)"
   if [[ "$(flixbox_access_profile)" == "shared" ]]; then
-    log "shared: *arr WebUI login uses FLIXBOX_ARR_UI_USER/PASSWORD; configure still uses API keys."
+    log "shared: after configure, create each *arr Forms user in the browser with FLIXBOX_ARR_UI_USER/PASSWORD from .env (not applied automatically)."
+    log "shared: docs/user/13-access-profiles.md#create-arr-login-shared"
   fi
   log "Review .env before first up: DATA_DIR, CONFIG_DIR, FLIXBOX_MODE (Gluetun vars if vpn)."
   log "API keys + qBit/Jellyfin admin passwords were generated if empty — keep .env private."
@@ -263,8 +264,17 @@ cmd_init() {
   log "Reference: docs/user/REFERENCE.md · First-run: docs/user/05-first-run.md"
 }
 
+ensure_access_profile() {
+  flixbox_validate_access_profile || \
+    die "Fix FLIXBOX_ACCESS_PROFILE in .env (trusted or shared)."
+  local drift
+  drift="$(flixbox_access_profile_drift_message || true)"
+  [[ -n "$drift" ]] && warn "$drift"
+}
+
 cmd_up() {
   load_env
+  ensure_access_profile
   local profiles=()
   parse_profiles profiles "$@"
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
@@ -329,6 +339,7 @@ cmd_reload() {
 
 cmd_configure() {
   load_env
+  ensure_access_profile
   exec "${ROOT_DIR}/scripts/configure-apps.sh" "$@"
 }
 

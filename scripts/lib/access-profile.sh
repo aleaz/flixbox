@@ -35,6 +35,32 @@ flixbox_sync_access_profile_env() {
   esac
 }
 
+# Print a drift warning when FLIXBOX_ARR_AUTH_* in .env disagrees with the active profile.
+# Empty when coherent. Caller should warn or die as appropriate.
+flixbox_access_profile_drift_message() {
+  local profile expected_method expected_required
+  profile="$(flixbox_access_profile)"
+  case "$profile" in
+    trusted)
+      expected_method=External
+      expected_required=DisabledForLocalAddresses
+      ;;
+    shared)
+      expected_method=Forms
+      expected_required=Enabled
+      ;;
+  esac
+  local parts=()
+  if [[ -n "${FLIXBOX_ARR_AUTH_METHOD:-}" && "${FLIXBOX_ARR_AUTH_METHOD}" != "$expected_method" ]]; then
+    parts+=("FLIXBOX_ARR_AUTH_METHOD=${FLIXBOX_ARR_AUTH_METHOD} (expected ${expected_method})")
+  fi
+  if [[ -n "${FLIXBOX_ARR_AUTH_REQUIRED:-}" && "${FLIXBOX_ARR_AUTH_REQUIRED}" != "$expected_required" ]]; then
+    parts+=("FLIXBOX_ARR_AUTH_REQUIRED=${FLIXBOX_ARR_AUTH_REQUIRED} (expected ${expected_required})")
+  fi
+  [[ ${#parts[@]} -eq 0 ]] && return 0
+  echo "Access profile ${profile} out of sync: ${parts[*]}. Run: ./bin/flixbox init --non-interactive && docker compose up -d --force-recreate prowlarr radarr sonarr"
+}
+
 # Set KEY=value in .env (always overwrite — for derived profile keys).
 flixbox_env_set() {
   local env_file="$1" key="$2" value="$3"

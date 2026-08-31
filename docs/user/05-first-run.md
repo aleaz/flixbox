@@ -9,6 +9,7 @@ Do this **once** after `./bin/flixbox init` and `./bin/flixbox up`.
 - [ ] `./bin/flixbox init` (generates API keys + passwords into `.env`)
 - [ ] `./bin/flixbox up` (VPN mode: wait until Gluetun is healthy)
 - [ ] `./bin/flixbox configure` (or `--dry-run` first)
+- [ ] **`shared` profile only:** create Forms login in Radarr, Sonarr, Prowlarr UI with `FLIXBOX_ARR_UI_*` from `.env` — [§13 — Create *arr login](13-access-profiles.md#create-arr-login-shared)
 - [ ] Add indexers in Prowlarr (tag `cf` on Cloudflare indexers)
 - [ ] Optional: Maintainerr rules, Recyclarr sync, Caddy
 
@@ -44,9 +45,9 @@ Preview without changes:
 
 1. `./bin/flixbox init` (API keys + `QBITTORRENT_*` + `FLIXBOX_ADMIN_*` generated when empty).
 2. Stack running (`./bin/flixbox status`). VPN mode: Gluetun **healthy**.
-3. *arr auth follows **`FLIXBOX_ACCESS_PROFILE`** ([ADR 0015](../adr/0015-access-profiles-and-remote-transport.md)): default **`trusted`** (no *arr UI login on LAN); **`shared`** if roommates share Wi‑Fi. `configure` always uses API keys. See [13 — Access profiles](13-access-profiles.md).
+3. *arr auth follows **`FLIXBOX_ACCESS_PROFILE`** ([ADR 0015](../adr/0015-access-profiles-and-remote-transport.md)): default **`trusted`** (no *arr UI login on LAN); **`shared`** if roommates share Wi‑Fi. `configure` always uses API keys. With **`shared`**, you must **create Forms users manually** in each *arr UI after `configure` — see [13 — Create *arr login](13-access-profiles.md#create-arr-login-shared).
 
-**Stays manual:** Prowlarr indexers; Maintainerr rule enablement; optional Recyclarr sync.
+**Stays manual:** Prowlarr indexers; *arr Forms users (`shared`); Maintainerr rule enablement; optional Recyclarr sync.
 
 ---
 
