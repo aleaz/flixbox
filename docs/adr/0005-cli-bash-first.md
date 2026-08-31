@@ -10,7 +10,7 @@ A dual Bash + PowerShell CLI from day one delays the Compose MVP. Linux is the r
 
 After Compose MVP landed, the remaining operator pain is deterministic UI wiring (root folders, download clients, Byparr, Bazarr, secret copy-paste into `.env` / Recyclarr / Homepage, Jellyfin libraries, Seerr). Indexer credentials stay user-specific and cannot be invented by Flixbox.
 
-Servarr v4+ requires authentication; there is no stable public “create first admin” API. For a LAN Docker stack the practical automation path is **pre-seeded API keys** plus profile-driven UI auth ([ADR 0015](0015-access-profiles-and-remote-transport.md)). Profile **`trusted`** uses **`AuthenticationMethod=External`** and **`DisabledForLocalAddresses`** so `configure` avoids browser wizards on a trusted LAN. Profile **`shared`** uses **`Forms` + `Enabled`** so roommates on the same network cannot open *arr UIs without credentials; **`configure` still uses API keys only**.
+Servarr v4+ requires authentication; there is no stable public “create first admin” API. For a LAN Docker stack the practical automation path is **pre-seeded API keys** plus profile-driven UI auth ([ADR 0015](0015-access-profiles.md)). Profile **`trusted`** uses **`AuthenticationMethod=External`** and **`DisabledForLocalAddresses`** so `configure` avoids browser wizards on a trusted LAN. Profile **`shared`** uses **`Forms` + `Enabled`** so roommates on the same network cannot open *arr UIs without credentials; **`configure` still uses API keys only**.
 
 ## Decision
 

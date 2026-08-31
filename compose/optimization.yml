@@ -95,7 +95,7 @@ services:
       - ${CONFIG_DIR}/maintainerr:/opt/data
       - ${DATA_DIR}/media:/data/media
     ports:
-      - ${MAINTAINERR_PORT:-6246}:6246
+      - ${FLIXBOX_ADMIN_BIND_IP:-0.0.0.0}:${MAINTAINERR_PORT:-6246}:6246
     restart: unless-stopped
     stop_grace_period: 60s
     networks:

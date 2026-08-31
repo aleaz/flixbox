@@ -17,7 +17,7 @@ flixbox_validate_access_profile() {
   esac
 }
 
-# Write derived *arr auth env keys into .env from FLIXBOX_ACCESS_PROFILE.
+# Write derived auth + publish-bind env keys into .env from FLIXBOX_ACCESS_PROFILE.
 flixbox_sync_access_profile_env() {
   local env_file="$1" profile
   profile="$(flixbox_access_profile)"
@@ -27,27 +27,31 @@ flixbox_sync_access_profile_env() {
     trusted)
       flixbox_env_set "$env_file" FLIXBOX_ARR_AUTH_METHOD External
       flixbox_env_set "$env_file" FLIXBOX_ARR_AUTH_REQUIRED DisabledForLocalAddresses
+      flixbox_env_set "$env_file" FLIXBOX_ADMIN_BIND_IP 0.0.0.0
       ;;
     shared)
       flixbox_env_set "$env_file" FLIXBOX_ARR_AUTH_METHOD Forms
       flixbox_env_set "$env_file" FLIXBOX_ARR_AUTH_REQUIRED Enabled
+      flixbox_env_set "$env_file" FLIXBOX_ADMIN_BIND_IP 127.0.0.1
       ;;
   esac
 }
 
-# Print a drift warning when FLIXBOX_ARR_AUTH_* in .env disagrees with the active profile.
+# Print a drift warning when derived profile keys in .env disagree with the active profile.
 # Empty when coherent. Caller should warn or die as appropriate.
 flixbox_access_profile_drift_message() {
-  local profile expected_method expected_required
+  local profile expected_method expected_required expected_bind
   profile="$(flixbox_access_profile)"
   case "$profile" in
     trusted)
       expected_method=External
       expected_required=DisabledForLocalAddresses
+      expected_bind=0.0.0.0
       ;;
     shared)
       expected_method=Forms
       expected_required=Enabled
+      expected_bind=127.0.0.1
       ;;
   esac
   local parts=()
@@ -57,8 +61,11 @@ flixbox_access_profile_drift_message() {
   if [[ -n "${FLIXBOX_ARR_AUTH_REQUIRED:-}" && "${FLIXBOX_ARR_AUTH_REQUIRED}" != "$expected_required" ]]; then
     parts+=("FLIXBOX_ARR_AUTH_REQUIRED=${FLIXBOX_ARR_AUTH_REQUIRED} (expected ${expected_required})")
   fi
+  if [[ -n "${FLIXBOX_ADMIN_BIND_IP:-}" && "${FLIXBOX_ADMIN_BIND_IP}" != "$expected_bind" ]]; then
+    parts+=("FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP} (expected ${expected_bind})")
+  fi
   [[ ${#parts[@]} -eq 0 ]] && return 0
-  echo "Access profile ${profile} out of sync: ${parts[*]}. Run: ./bin/flixbox init --non-interactive && docker compose up -d --force-recreate prowlarr radarr sonarr"
+  echo "Access profile ${profile} out of sync: ${parts[*]}. Run: ./bin/flixbox init --non-interactive && ./bin/flixbox reload"
 }
 
 # Set KEY=value in .env (always overwrite — for derived profile keys).

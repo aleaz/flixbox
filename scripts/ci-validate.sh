@@ -150,6 +150,12 @@ for app in RADARR SONARR PROWLARR; do
 done
 [[ -f scripts/lib/access-profile.sh ]] || fail C-24c 'missing scripts/lib/access-profile.sh'
 grep -q 'FLIXBOX_ACCESS_PROFILE' .env.example || fail C-24c '.env.example missing FLIXBOX_ACCESS_PROFILE'
+grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/servarr.yml || \
+  fail C-24c 'servarr.yml missing FLIXBOX_ADMIN_BIND_IP on admin ports'
+grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/downloaders-direct.yml || \
+  fail C-24c 'downloaders-direct.yml missing FLIXBOX_ADMIN_BIND_IP on qBit WebUI'
+grep -q 'FLIXBOX_ADMIN_BIND_IP' scripts/lib/access-profile.sh || \
+  fail C-24c 'access-profile.sh missing FLIXBOX_ADMIN_BIND_IP sync'
 pass C-24c
 
 # --- C-25: flixbox_net fixed subnet + qBit auth whitelist (ADR 0008) ---

@@ -114,7 +114,7 @@ Preview configure without changes:
 | `FLIXBOX_ADMIN_*` | Jellyfin startup, Seerr login | `.env` (init) |
 | Jellyfin API key | Seerr, Maintainerr | Created by configure → `.env` |
 
-*arr auth follows `FLIXBOX_ACCESS_PROFILE` (ADR 0015): default **`trusted`** = no UI login on LAN; **`shared`** = Forms login — create users manually with `FLIXBOX_ARR_UI_*` after `configure`. See [13 — Access profiles](13-access-profiles.md). Do not publish *arr ports to the WAN.
+*arr auth follows `FLIXBOX_ACCESS_PROFILE` (ADR 0015): default **`trusted`** = no UI login on LAN; **`shared`** = Forms login + admin ports on `127.0.0.1` — create users manually with `FLIXBOX_ARR_UI_*` after `configure`. See [13 — Access profiles](13-access-profiles.md). Do not publish *arr ports to the WAN.
 
 Full detail: [Configuration — Credentials](06-configuration.md#credentials-and-api-keys).
 

@@ -45,7 +45,7 @@ services:
     volumes:
       - ${CONFIG_DIR:?set CONFIG_DIR}/gluetun:/gluetun
     ports:
-      - ${QBITTORRENT_PORT:-8080}:8080
+      - ${FLIXBOX_ADMIN_BIND_IP:-0.0.0.0}:${QBITTORRENT_PORT:-8080}:8080
       - ${QBITTORRENT_BT_PORT:-6881}:${QBITTORRENT_BT_PORT:-6881}
       - ${QBITTORRENT_BT_PORT:-6881}:${QBITTORRENT_BT_PORT:-6881}/udp
     restart: unless-stopped

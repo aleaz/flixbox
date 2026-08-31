@@ -255,6 +255,7 @@ cmd_init() {
   ok "Init complete."
   log "Access profile: $(flixbox_access_profile) (*arr UI auth — ADR 0015)"
   if [[ "$(flixbox_access_profile)" == "shared" ]]; then
+    log "shared: admin WebUIs bind to 127.0.0.1 (FLIXBOX_ADMIN_BIND_IP); open them on the host or via SSH tunnel."
     log "shared: after configure, create each *arr Forms user in the browser with FLIXBOX_ARR_UI_USER/PASSWORD from .env (not applied automatically)."
     log "shared: docs/user/13-access-profiles.md#create-arr-login-shared"
   fi

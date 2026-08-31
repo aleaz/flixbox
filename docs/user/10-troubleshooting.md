@@ -38,6 +38,7 @@
 | `Invalid FLIXBOX_ACCESS_PROFILE=…` on `up` / `configure` | Typo in `.env` | Set `trusted` or `shared`; run `./bin/flixbox init --non-interactive` |
 | Warn: Access profile out of sync (`FLIXBOX_ARR_AUTH_*`) | Changed profile without `init` | `./bin/flixbox init --non-interactive` then `docker compose up -d --force-recreate prowlarr radarr sonarr` — [§13](13-access-profiles.md) |
 | `shared` profile: *arr login fails with `.env` password | Forms user never created in that app | Servarr does not read `FLIXBOX_ARR_UI_*` from env — create account manually in each *arr UI — [§13 — Create login](13-access-profiles.md#create-arr-login-shared) |
+| `shared` profile: cannot open Radarr from phone on Wi‑Fi | Admin ports bind to `127.0.0.1` | Expected — use host browser or SSH tunnel; Jellyfin/Seerr stay on LAN — [§13](13-access-profiles.md) |
 | `trusted` profile but *arr asks for login from LAN (IPv6) | Servarr RFC1918 bypass does not cover all IPv6 LAN clients | Use `shared`, or access *arr from IPv4 / localhost |
 | Scripts fail with `\r` errors | CRLF line endings on Windows clone | Ensure LF via `.gitattributes` |
 

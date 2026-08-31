@@ -68,7 +68,7 @@ container_running() {
 load_env
 
 if [[ "${FLIXBOX_ACCESS_PROFILE:-trusted}" == "shared" ]]; then
-  info "Access profile: shared — after configure, create Forms users in Radarr/Sonarr/Prowlarr UI with FLIXBOX_ARR_UI_* from .env (see docs/user/13-access-profiles.md#create-arr-login-shared)"
+  info "Access profile: shared — admin ports on 127.0.0.1; after configure, create Forms users with FLIXBOX_ARR_UI_* (docs/user/13-access-profiles.md#create-arr-login-shared)"
 fi
 
 echo "=== Flixbox app configuration ==="

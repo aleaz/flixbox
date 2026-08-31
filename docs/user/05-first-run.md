@@ -45,7 +45,7 @@ Preview without changes:
 
 1. `./bin/flixbox init` (API keys + `QBITTORRENT_*` + `FLIXBOX_ADMIN_*` generated when empty).
 2. Stack running (`./bin/flixbox status`). VPN mode: Gluetun **healthy**.
-3. *arr auth follows **`FLIXBOX_ACCESS_PROFILE`** ([ADR 0015](../adr/0015-access-profiles-and-remote-transport.md)): default **`trusted`** (no *arr UI login on LAN); **`shared`** if roommates share Wi‑Fi. `configure` always uses API keys. With **`shared`**, you must **create Forms users manually** in each *arr UI after `configure` — see [13 — Create *arr login](13-access-profiles.md#create-arr-login-shared).
+3. *arr auth follows **`FLIXBOX_ACCESS_PROFILE`** ([ADR 0015](../adr/0015-access-profiles.md)): default **`trusted`** (no *arr UI login on LAN); **`shared`** if roommates share Wi‑Fi. `configure` always uses API keys. With **`shared`**, you must **create Forms users manually** in each *arr UI after `configure` — see [13 — Create *arr login](13-access-profiles.md#create-arr-login-shared).
 
 **Stays manual:** Prowlarr indexers; *arr Forms users (`shared`); Maintainerr rule enablement; optional Recyclarr sync.
 

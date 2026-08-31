@@ -42,15 +42,16 @@ Full guide: [13 — Access profiles](13-access-profiles.md).
 
 | Variable | Default | Values | Effect |
 | --- | --- | --- | --- |
-| `FLIXBOX_ACCESS_PROFILE` | `trusted` | `trusted`, `shared` | `trusted`: *arr WebUI open on LAN (RFC1918). `shared`: *arr require login (`Forms`). |
+| `FLIXBOX_ACCESS_PROFILE` | `trusted` | `trusted`, `shared` | `trusted`: *arr WebUI open on LAN (RFC1918). `shared`: *arr require login (`Forms`) + admin ports on localhost. |
 | `FLIXBOX_ARR_AUTH_METHOD` | *(from profile)* | `External`, `Forms` | Set by `init` — do not hand-edit unless you know Servarr auth. |
 | `FLIXBOX_ARR_AUTH_REQUIRED` | *(from profile)* | `DisabledForLocalAddresses`, `Enabled` | `Enabled` in `shared`. |
+| `FLIXBOX_ADMIN_BIND_IP` | *(from profile)* | `0.0.0.0`, `127.0.0.1` | Host bind for admin WebUIs (*arr, Byparr, Bazarr, Maintainerr, qBit WebUI). Set by `init`. |
 | `FLIXBOX_ARR_UI_USER` | `admin` | string | **Reference** for manual Forms signup (`shared` only). Not applied by Compose or `configure`. |
 | `FLIXBOX_ARR_UI_PASSWORD` | *(generated)* | string | **Reference** for manual Forms signup; **`configure` uses API keys, not this.** |
 
 Servarr has no env var for Forms username/password — see [13 — Create *arr login](13-access-profiles.md#create-arr-login-shared).
 
-After changing `FLIXBOX_ACCESS_PROFILE`: `./bin/flixbox init --non-interactive` then recreate *arr containers.
+After changing `FLIXBOX_ACCESS_PROFILE`: `./bin/flixbox init --non-interactive` then `./bin/flixbox reload`.
 
 ## File ownership and timezone
 
