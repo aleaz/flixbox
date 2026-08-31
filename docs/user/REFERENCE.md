@@ -8,7 +8,7 @@ Cheat sheet for operators. Defaults assume a local install with `./bin/flixbox i
 
 | Command | Purpose |
 | --- | --- |
-| `./bin/flixbox init [--non-interactive]` | Create `.env`, dirs, templates; generate empty API keys/passwords |
+| `./bin/flixbox init [--non-interactive]` | Create `.env`, dirs, templates; generate API keys/passwords. **Linux:** set writable `DATA_DIR`/`CONFIG_DIR` in `.env` before `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
 | `./bin/flixbox up [profiles...]` | Start stack (`plex`, `proxy`, `socket-proxy`, `recyclarr`) |
 | `./bin/flixbox reload [profiles...]` | Recreate containers after `.env` / compose changes |
 | `./bin/flixbox configure [--dry-run]` | Idempotent wiring: *arr, Byparr, Bazarr, Jellyfin, Seerr, secrets |

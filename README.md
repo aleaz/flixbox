@@ -43,15 +43,17 @@ No Pi-hole or reverse proxy required to get started.
 ```bash
 git clone https://github.com/aleaz/flixbox.git
 cd flixbox
+cp .env.example .env
+# Edit .env: DATA_DIR, CONFIG_DIR (writable paths), FLIXBOX_MODE, TZ
 ./bin/flixbox init --non-interactive
-# Edit .env: DATA_DIR, FLIXBOX_MODE=direct|vpn, TZ (VPN secrets if vpn)
 ./bin/flixbox up
 ./bin/flixbox status
-# Log into qBit + each *arr app once, then:
 ./bin/flixbox configure
 ```
 
-**Then (~15–20 min):** add indexers, Jellyfin libraries, Seerr — [First-run guide](docs/user/05-first-run.md).
+Linux: default paths use `/srv/flixbox/…` — create and `chown` them first, or set paths like `/data/flixbox/data` in `.env`. See [Install — storage paths](docs/user/04-install.md#storage-paths-and-permissions).
+
+**Then (~10–15 min):** add Prowlarr indexers — [First-run guide](docs/user/05-first-run.md).
 
 | Service | Default URL |
 | --- | --- |

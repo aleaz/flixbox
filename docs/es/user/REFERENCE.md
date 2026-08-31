@@ -8,7 +8,7 @@ Hoja de consulta para operadores. Valores por defecto tras `./bin/flixbox init`.
 
 | Comando | Para qué |
 | --- | --- |
-| `./bin/flixbox init [--non-interactive]` | Crear `.env`, carpetas, plantillas |
+| `./bin/flixbox init [--non-interactive]` | Crear `.env`, carpetas, plantillas. **Linux:** paths escribibles en `.env` antes de `--non-interactive` — [Install § paths (EN)](../../user/04-install.md#storage-paths-and-permissions) |
 | `./bin/flixbox up [perfiles...]` | Levantar stack (`plex`, `proxy`, `socket-proxy`, `recyclarr`) |
 | `./bin/flixbox reload [perfiles...]` | Recrear contenedores tras cambios en `.env` o compose |
 | `./bin/flixbox configure [--dry-run]` | Cablear carpetas raíz, clientes de descarga, Byparr, apps Prowlarr, Bazarr |

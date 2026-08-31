@@ -26,6 +26,8 @@ Platform defaults when you run `./bin/flixbox init` (new `.env`):
 
 `.env.example` shows the Linux reference paths. `init` rewrites them on macOS.
 
+On Linux, `/srv/flixbox/…` is not writable until you create it (usually with `sudo`) or you choose another path — see [Install — Storage paths and permissions](04-install.md#storage-paths-and-permissions). Flixbox reads paths from `.env` only; shell `export DATA_DIR=…` does not affect `init` or `up` unless you also write that value into `.env`.
+
 | Variable | Default | Valid values | Notes |
 | --- | --- | --- | --- |
 | `FLIXBOX_MODE` | `direct` | `direct`, `vpn` | **Only switch Compose reads** for downloaders. See [VPN and Direct](07-vpn-and-direct.md). |
