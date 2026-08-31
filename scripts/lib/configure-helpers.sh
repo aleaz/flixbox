@@ -12,8 +12,8 @@ CONFIGURED=0
 SKIPPED=0
 # shellcheck disable=SC2034
 FAILED=0
-# shellcheck disable=SC2034
-ENV_DIRTY=false
+# Exported so ShellCheck treats later assignments as used by the caller script.
+export ENV_DIRTY=false
 
 json_extract() {
   local json="$1" expr="$2"
