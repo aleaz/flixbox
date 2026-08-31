@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-27
-- **Updated:** 2026-08-30 (configure closes Decluttarr/Unpackerr secret loop)
+- **Updated:** 2026-08-31 (whitelist scope clarified — ADR 0015)
 
 ## Context
 
@@ -20,7 +20,7 @@ Compose must not interpolate secrets into `command:` / `entrypoint:` shell strin
 - Default behavior and thresholds are defined in [docs/09-hygiene-defaults.md](../09-hygiene-defaults.md).
 - Streamystats remains optional/post-MVP.
 - **Decluttarr idle entrypoint:** `templates/decluttarr/entrypoint.sh` (copied by `flixbox init` to `${CONFIG_DIR}/decluttarr-entrypoint.sh`). If `QBITTORRENT_USERNAME` or `QBITTORRENT_PASSWORD` is empty, sleep with a clear log line — **no** qBit login. Credentials are read from container **environment at runtime** only.
-- **Trusted Docker network:** `flixbox_net` is pinned to `172.30.42.0/24` ([compose/network-base.yml](../../compose/network-base.yml), hardcoded). qBittorrent cont-init enables `WebUI\AuthSubnetWhitelist` for that CIDR. That is an intentional **auth bypass for peers on `flixbox_net`** (and typically the bridge gateway when using published ports from the host). It is **not** “ban exemption only.” Do not publish qBit WebUI to the public internet. Not env-configurable (Compose subnet and whitelist must stay identical).
+- **Trusted Docker network:** `flixbox_net` is pinned to `172.30.42.0/24` ([compose/network-base.yml](../../compose/network-base.yml), hardcoded). qBittorrent cont-init enables `WebUI\AuthSubnetWhitelist` for that CIDR. That bypasses WebUI password **only for clients on `flixbox_net`** (stack peers) and often the host path via the Docker bridge gateway — **not** for arbitrary home LAN `192.168.x.x` clients ([ADR 0015](0015-access-profiles-and-remote-transport.md)). Do not publish qBit WebUI to the public internet. Not env-configurable (Compose subnet and whitelist must stay identical).
 - **Startup order:** qBittorrent has a WebUI healthcheck; Radarr, Sonarr, Decluttarr, and Unpackerr `depends_on: qbittorrent: condition: service_healthy` so first health checks are not `Connection refused` races. In VPN mode qBit still waits on Gluetun first; peers reach qBit via `http://qbittorrent:8080` (Gluetun network alias — ADR 0014).
 
 ## Consequences

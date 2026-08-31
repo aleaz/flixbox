@@ -139,13 +139,17 @@ if grep -q 'qbittorrent-custom-services' compose/downloaders-direct.yml; then
 fi
 pass C-24b
 
-# --- C-24c: Servarr External auth + API key env (ADR 0005) ---
+# --- C-24c: Servarr External auth + API key env (ADR 0005 / 0015) ---
 for app in RADARR SONARR PROWLARR; do
-  grep -q "${app}__AUTH__METHOD: External" compose/servarr.yml || \
-    fail C-24c "servarr.yml missing ${app}__AUTH__METHOD External"
   grep -q "${app}__AUTH__APIKEY:" compose/servarr.yml || \
     fail C-24c "servarr.yml missing ${app}__AUTH__APIKEY"
+  grep -q "${app}__AUTH__METHOD: \${FLIXBOX_ARR_AUTH_METHOD" compose/servarr.yml || \
+    fail C-24c "servarr.yml missing profile-driven ${app}__AUTH__METHOD"
+  grep -q "${app}__AUTH__REQUIRED: \${FLIXBOX_ARR_AUTH_REQUIRED" compose/servarr.yml || \
+    fail C-24c "servarr.yml missing profile-driven ${app}__AUTH__REQUIRED"
 done
+[[ -f scripts/lib/access-profile.sh ]] || fail C-24c 'missing scripts/lib/access-profile.sh'
+grep -q 'FLIXBOX_ACCESS_PROFILE' .env.example || fail C-24c '.env.example missing FLIXBOX_ACCESS_PROFILE'
 pass C-24c
 
 # --- C-25: flixbox_net fixed subnet + qBit auth whitelist (ADR 0008) ---
@@ -177,7 +181,7 @@ pass C-26
 # --- C-27: qBit WebUI healthcheck + consumers wait ---
 for f in compose/downloaders-direct.yml compose/downloaders-vpn.yml; do
   grep -q 'healthcheck:' "${f}" || fail C-27 "${f} missing qBittorrent healthcheck"
-  grep -q 'api/v2/app/version' "${f}" || fail C-27 "${f} healthcheck must probe WebUI API"
+  grep -qE '127\.0\.0\.1:8080' "${f}" || fail C-27 "${f} healthcheck must probe qBit WebUI on 127.0.0.1:8080"
 done
 for f in compose/servarr.yml compose/optimization.yml; do
   grep -q 'condition: service_healthy' "${f}" || \

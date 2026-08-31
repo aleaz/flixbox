@@ -36,6 +36,20 @@ On Linux, `/srv/flixbox/…` is not writable until you create it (usually with `
 | `CONFIG_DIR` | OS-dependent (table above) | Absolute path | App configs on local SSD/NVMe only. Changing it is a config migration — same guide. |
 | `COMPOSE_PROJECT_NAME` | `flixbox` | Docker project name | Rarely changed. |
 
+## Access profile (ADR 0015)
+
+Full guide: [13 — Access profiles](13-access-profiles.md).
+
+| Variable | Default | Values | Effect |
+| --- | --- | --- | --- |
+| `FLIXBOX_ACCESS_PROFILE` | `trusted` | `trusted`, `shared` | `trusted`: *arr WebUI open on LAN (RFC1918). `shared`: *arr require login (`Forms`). |
+| `FLIXBOX_ARR_AUTH_METHOD` | *(from profile)* | `External`, `Forms` | Set by `init` — do not hand-edit unless you know Servarr auth. |
+| `FLIXBOX_ARR_AUTH_REQUIRED` | *(from profile)* | `DisabledForLocalAddresses`, `Enabled` | `Enabled` in `shared`. |
+| `FLIXBOX_ARR_UI_USER` | `admin` | string | *arr browser login (`shared` only). |
+| `FLIXBOX_ARR_UI_PASSWORD` | *(generated)* | string | *arr browser login; **`configure` uses API keys, not this.** |
+
+After changing `FLIXBOX_ACCESS_PROFILE`: `./bin/flixbox init --non-interactive` then recreate *arr containers.
+
 ## File ownership and timezone
 
 | Variable | Default | Notes |

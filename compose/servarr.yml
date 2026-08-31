@@ -1,9 +1,9 @@
 # Servarr core + Byparr. Download client host: qbittorrent (ADR 0014).
-# Auth: External + API keys from .env (ADR 0005) — LAN only; do not expose *arr to WAN.
+# Auth: profile-driven (ADR 0015) — FLIXBOX_ARR_AUTH_* from .env; API keys for configure.
 
 services:
-  # Servarr AUTH: External + pre-seeded API keys (ADR 0005). LAN Docker only —
-  # do not publish these ports to the public internet without reverse-proxy auth.
+  # Servarr AUTH: API keys + profile (trusted vs shared). LAN Docker —
+  # do not publish *arr to WAN without reverse-proxy auth (see docs/user/13-access-profiles.md).
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: flixbox-prowlarr
@@ -13,8 +13,8 @@ services:
       TZ: ${TZ:-UTC}
       UMASK: ${UMASK:-002}
       PROWLARR__AUTH__APIKEY: ${PROWLARR_API_KEY:-}
-      PROWLARR__AUTH__METHOD: External
-      PROWLARR__AUTH__REQUIRED: DisabledForLocalAddresses
+      PROWLARR__AUTH__METHOD: ${FLIXBOX_ARR_AUTH_METHOD:-External}
+      PROWLARR__AUTH__REQUIRED: ${FLIXBOX_ARR_AUTH_REQUIRED:-DisabledForLocalAddresses}
     volumes:
       - ${CONFIG_DIR}/prowlarr:/config
     ports:
@@ -45,8 +45,8 @@ services:
       TZ: ${TZ:-UTC}
       UMASK: ${UMASK:-002}
       RADARR__AUTH__APIKEY: ${RADARR_API_KEY:-}
-      RADARR__AUTH__METHOD: External
-      RADARR__AUTH__REQUIRED: DisabledForLocalAddresses
+      RADARR__AUTH__METHOD: ${FLIXBOX_ARR_AUTH_METHOD:-External}
+      RADARR__AUTH__REQUIRED: ${FLIXBOX_ARR_AUTH_REQUIRED:-DisabledForLocalAddresses}
     volumes:
       - ${CONFIG_DIR}/radarr:/config
       - ${DATA_DIR}:/data
@@ -69,8 +69,8 @@ services:
       TZ: ${TZ:-UTC}
       UMASK: ${UMASK:-002}
       SONARR__AUTH__APIKEY: ${SONARR_API_KEY:-}
-      SONARR__AUTH__METHOD: External
-      SONARR__AUTH__REQUIRED: DisabledForLocalAddresses
+      SONARR__AUTH__METHOD: ${FLIXBOX_ARR_AUTH_METHOD:-External}
+      SONARR__AUTH__REQUIRED: ${FLIXBOX_ARR_AUTH_REQUIRED:-DisabledForLocalAddresses}
     volumes:
       - ${CONFIG_DIR}/sonarr:/config
       - ${DATA_DIR}:/data

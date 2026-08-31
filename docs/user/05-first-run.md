@@ -44,7 +44,7 @@ Preview without changes:
 
 1. `./bin/flixbox init` (API keys + `QBITTORRENT_*` + `FLIXBOX_ADMIN_*` generated when empty).
 2. Stack running (`./bin/flixbox status`). VPN mode: Gluetun **healthy**.
-3. *arr use **External** auth with pre-seeded API keys (LAN Docker — do not publish *arr ports to the WAN without reverse-proxy auth). ADR 0005.
+3. *arr auth follows **`FLIXBOX_ACCESS_PROFILE`** ([ADR 0015](../adr/0015-access-profiles-and-remote-transport.md)): default **`trusted`** (no *arr UI login on LAN); **`shared`** if roommates share Wi‑Fi. `configure` always uses API keys. See [13 — Access profiles](13-access-profiles.md).
 
 **Stays manual:** Prowlarr indexers; Maintainerr rule enablement; optional Recyclarr sync.
 

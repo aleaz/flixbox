@@ -7,6 +7,8 @@ cd "${ROOT_DIR}"
 
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/paths.sh"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/access-profile.sh"
 
 NO_COLOR="${NO_COLOR:-}"
 if [[ -t 1 && -z "${NO_COLOR}" ]]; then
@@ -136,6 +138,10 @@ ensure_first_run_secrets() {
   # Optional shared admin for Jellyfin/Seerr automation (configure)
   env_set_if_empty FLIXBOX_ADMIN_USER admin
   env_set_if_empty FLIXBOX_ADMIN_PASSWORD "$(generate_password)"
+  if [[ "$(flixbox_access_profile)" == "shared" ]]; then
+    env_set_if_empty FLIXBOX_ARR_UI_USER admin
+    env_set_if_empty FLIXBOX_ARR_UI_PASSWORD "$(generate_password)"
+  fi
 }
 
 copy_templates() {
@@ -241,10 +247,16 @@ cmd_init() {
   "${ROOT_DIR}/scripts/bootstrap-dirs.sh"
   load_env
   copy_templates
+  flixbox_validate_access_profile || die "Fix FLIXBOX_ACCESS_PROFILE in .env (trusted or shared)."
+  flixbox_sync_access_profile_env "${ROOT_DIR}/.env"
   ensure_first_run_secrets
   load_env
   chown -R "${PUID}:${PGID}" "${CONFIG_DIR}" 2>/dev/null || warn "Could not chown CONFIG_DIR (may need sudo)."
   ok "Init complete."
+  log "Access profile: $(flixbox_access_profile) (*arr UI auth — ADR 0015)"
+  if [[ "$(flixbox_access_profile)" == "shared" ]]; then
+    log "shared: *arr WebUI login uses FLIXBOX_ARR_UI_USER/PASSWORD; configure still uses API keys."
+  fi
   log "Review .env before first up: DATA_DIR, CONFIG_DIR, FLIXBOX_MODE (Gluetun vars if vpn)."
   log "API keys + qBit/Jellyfin admin passwords were generated if empty — keep .env private."
   log "After up: ./bin/flixbox configure  (idempotent wiring; indexers stay manual)"

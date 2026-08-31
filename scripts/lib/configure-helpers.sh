@@ -81,11 +81,170 @@ wait_for_service() {
   return 1
 }
 
+# Wait until an authenticated *arr/Prowlarr API responds (DB + config ready).
+wait_for_arr_api() {
+  local name="$1" port="$2" api_key="$3" api_version="${4:-v3}"
+  local timeout="${WAIT_TIMEOUT:-180}"
+  local start=$SECONDS deadline=$((SECONDS + timeout)) last_heartbeat=$SECONDS code=""
+  local base="http://127.0.0.1:${port}"
+  local status_path="/api/${api_version}/system/status"
+  [[ "$api_version" == "v1" ]] && status_path="/api/v1/system/status"
+  while (( SECONDS < deadline )); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 --connect-timeout 2 \
+      -H "X-Api-Key: ${api_key}" "${base}${status_path}" 2>/dev/null || true)
+    if [[ "$code" == "200" ]]; then
+      return 0
+    fi
+    if (( SECONDS - last_heartbeat >= 10 )); then
+      info "Still waiting for ${name} API ($((SECONDS - start))s/${timeout}s, last HTTP: ${code:-none})..."
+      last_heartbeat=$SECONDS
+    fi
+    sleep 2
+  done
+  fail "${name} API not ready after ${timeout}s (last HTTP: ${code:-none})"
+  return 1
+}
+
+wait_for_bazarr_api() {
+  local port="$1" api_key="$2"
+  local timeout="${WAIT_TIMEOUT:-180}"
+  local start=$SECONDS deadline=$((SECONDS + timeout)) last_heartbeat=$SECONDS code=""
+  local base="http://127.0.0.1:${port}"
+  while (( SECONDS < deadline )); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 --connect-timeout 2 \
+      -H "X-API-KEY: ${api_key}" "${base}/api/system/status" 2>/dev/null || true)
+    if [[ "$code" == "200" ]]; then
+      return 0
+    fi
+    if (( SECONDS - last_heartbeat >= 10 )); then
+      info "Still waiting for Bazarr API ($((SECONDS - start))s/${timeout}s, last HTTP: ${code:-none})..."
+      last_heartbeat=$SECONDS
+    fi
+    sleep 2
+  done
+  fail "Bazarr API not ready after ${timeout}s (last HTTP: ${code:-none})"
+  return 1
+}
+
+# Write KEY=value into ROOT .env (always overwrite). Sets ENV_DIRTY=true on write.
+env_set_key() {
+  local key="$1" value="$2" env_file="${ROOT_DIR}/.env"
+  [[ -f "$env_file" ]] || return 0
+  [[ -n "$value" ]] || return 0
+  if $DRY_RUN; then
+    dry "Set ${key} in .env"
+    return 0
+  fi
+  if grep -q "^${key}=" "$env_file" 2>/dev/null; then
+    if [[ "$(uname -s)" == Darwin ]]; then
+      sed -i '' "s|^${key}=.*|${key}=${value}|" "$env_file"
+    else
+      sed -i "s|^${key}=.*|${key}=${value}|" "$env_file"
+    fi
+  else
+    printf '\n%s=%s\n' "$key" "$value" >> "$env_file"
+  fi
+  ENV_DIRTY=true
+}
+
+# Prefer live config.xml key; sync .env when wiped config was recreated on first up.
+resolve_arr_api_key() {
+  local env_name="$1" container="$2" env_value="$3"
+  local config_key app_label="${container#flixbox-}"
+  config_key=$(api_key_from_config_xml "$container")
+  if [[ -z "$config_key" ]]; then
+    echo "$env_value"
+    return
+  fi
+  if [[ -n "$env_value" && "$env_value" != "$config_key" ]]; then
+    info "${app_label}: ${env_name} in .env out of sync with container — updating .env"
+    env_set_key "$env_name" "$config_key"
+  elif [[ -z "$env_value" ]]; then
+    env_set_key "$env_name" "$config_key"
+  fi
+  echo "$config_key"
+}
+
+prowlarr_ensure_tag_id() {
+  local base="$1" auth_header="$2" label="$3"
+  local tags tag_id result
+  tags=$(api_get "${base}/api/v1/tag" "$auth_header") || return 1
+  tag_id=$(json_extract "$tags" "
+ids = [t['id'] for t in data if t.get('label', '').lower() == '''${label}'''.lower()]
+print(ids[0] if ids else '')")
+  if [[ -n "$tag_id" ]]; then
+    echo "$tag_id"
+    return 0
+  fi
+  result=$(api_post "${base}/api/v1/tag" "application/json" "{\"label\":\"${label}\"}" "$auth_header") || return 1
+  tag_id=$(json_extract "$result" "print(data.get('id', ''))")
+  if [[ -n "$tag_id" ]]; then
+    echo "$tag_id"
+    return 0
+  fi
+  return 1
+}
+
+jellyfin_startup_wizard_pending() {
+  local base="$1" pub
+  pub=$(curl -s --max-time 5 "${base}/System/Info/Public" 2>/dev/null || true)
+  echo "$pub" | grep -qiE '"StartupWizardCompleted"[[:space:]]*:[[:space:]]*false'
+}
+
+seerr_login_json() {
+  local bootstrap="$1" admin_user="$2" admin_pass="$3"
+  SEERR_BOOTSTRAP="$([[ "$bootstrap" == "true" ]] && echo 1 || echo 0)" \
+  SEERR_ADMIN_USER="$admin_user" SEERR_ADMIN_PASS="$admin_pass" python3 <<'PY'
+import json, os
+payload = {
+    "username": os.environ["SEERR_ADMIN_USER"],
+    "password": os.environ["SEERR_ADMIN_PASS"],
+}
+if os.environ.get("SEERR_BOOTSTRAP") == "1":
+    payload.update({
+        "hostname": "jellyfin",
+        "port": 8096,
+        "useSsl": False,
+        "urlBase": "",
+        "email": f"{os.environ['SEERR_ADMIN_USER']}@localhost",
+        "serverType": 2,
+    })
+print(json.dumps(payload))
+PY
+}
+
 qbit_auth() {
   local url="$1" username="$2" password="$3" cookie_file="$4"
-  local response http_code body
+  local container="${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}"
+  local api_url="${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}"
+  local cookie_path="${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}"
+  local response http_code body verify_code
+
+  # Prefer in-container API (port 8080). Host-published QBITTORRENT_PORT sends a
+  # Host header qBit 5.x rejects remapped ports unless web_ui_host_header_validation_enabled=false.
+  if docker ps --format '{{.Names}}' | grep -qx "$container"; then
+    docker exec "$container" rm -f "$cookie_path" 2>/dev/null || true
+    response=$(docker exec "$container" curl -s -m 20 -w '\n%{http_code}' \
+      -c "$cookie_path" \
+      --data-urlencode "username=${username}" \
+      --data-urlencode "password=${password}" \
+      "${api_url}/api/v2/auth/login")
+    http_code=$(echo "$response" | tail -1)
+    body=$(echo "$response" | head -1)
+    case "$http_code" in
+      200) [[ "$body" == "Ok." ]] || return 1 ;;
+      204) ;;
+      *) return 1 ;;
+    esac
+    verify_code=$(docker exec "$container" curl -s -m 20 -o /dev/null -w '%{http_code}' \
+      -b "$cookie_path" "${api_url}/api/v2/app/version")
+    [[ "$verify_code" == "200" ]]
+    return
+  fi
+
   response=$(curl -s -m 20 -w '\n%{http_code}' \
     -c "$cookie_file" \
+    -H 'Host: localhost:8080' \
     --data-urlencode "username=${username}" \
     --data-urlencode "password=${password}" \
     "${url}/api/v2/auth/login")
@@ -96,10 +255,52 @@ qbit_auth() {
     204) ;;
     *) return 1 ;;
   esac
-  local verify_code
   verify_code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' \
-    -b "$cookie_file" "${url}/api/v2/app/version")
+    -b "$cookie_file" -H 'Host: localhost:8080' "${url}/api/v2/app/version")
   [[ "$verify_code" == "200" ]]
+}
+
+qbit_curl_authed() {
+  local container="${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}"
+  local api_url="${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}"
+  local cookie_path="${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}"
+  if docker ps --format '{{.Names}}' | grep -qx "$container"; then
+    docker exec "$container" curl -s -b "$cookie_path" "$@"
+    return
+  fi
+  curl -s -H 'Host: localhost:8080' "$@"
+}
+
+qbit_curl_authed_code() {
+  local container="${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}"
+  local api_url="${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}"
+  local cookie_path="${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}"
+  if docker ps --format '{{.Names}}' | grep -qx "$container"; then
+    docker exec "$container" curl -s -o /dev/null -w '%{http_code}' -b "$cookie_path" "$@"
+    return
+  fi
+  curl -s -o /dev/null -w '%{http_code}' -H 'Host: localhost:8080' "$@"
+}
+
+wait_for_qbittorrent() {
+  local container="${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}"
+  local api_url="${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}"
+  local timeout="${WAIT_TIMEOUT:-180}"
+  local start=$SECONDS deadline=$((SECONDS + timeout)) last_heartbeat=$SECONDS code=""
+  while (( SECONDS < deadline )); do
+    code=$(docker exec "$container" curl -s -o /dev/null -w '%{http_code}' --max-time 3 \
+      "${api_url}/" 2>/dev/null || true)
+    if [[ "$code" == "200" ]]; then
+      return 0
+    fi
+    if (( SECONDS - last_heartbeat >= 10 )); then
+      info "Still waiting for qBittorrent ($((SECONDS - start))s/${timeout}s, last HTTP: ${code:-none})..."
+      last_heartbeat=$SECONDS
+    fi
+    sleep 1
+  done
+  fail "qBittorrent not responding after ${timeout}s (last HTTP: ${code:-none})"
+  return 1
 }
 
 api_key_from_config_xml() {
@@ -261,7 +462,7 @@ configure_arr_service() {
   local base="http://127.0.0.1:${port}"
   local auth="X-Api-Key: ${api_key}"
 
-  if ! wait_for_service "$name" "${base}/api/v3/system/status"; then
+  if ! wait_for_arr_api "$name" "$port" "$api_key" "v3"; then
     return
   fi
 

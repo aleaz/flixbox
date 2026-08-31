@@ -91,7 +91,7 @@ Do **not** put Radarr, Sonarr, Prowlarr, Seerr, Jellyfin, or Bazarr into `networ
 
 User-defined bridge `flixbox_net` for all non-VPN-netns services.
 
-**Fixed subnet `172.30.42.0/24` (trusted network):** Docker’s default bridge IPAM is unpredictable, so Flixbox pins a dedicated CIDR and mirrors it in qBittorrent’s `AuthSubnetWhitelist`. That CIDR is a **trust boundary**: clients on `flixbox_net` (stack peers, and often the bridge gateway when you open the published WebUI from the host) **bypass qBit WebUI password**. Purpose: avoid IP bans after first-run auth mistakes without whitelisting the operator’s home LAN (`192.168.0.0/16`, etc.). Not env-configurable — Compose subnet and qBit whitelist must stay identical ([ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md), [compose/network-base.yml](../compose/network-base.yml)). **Never publish qBit WebUI to the public internet.**
+**Fixed subnet `172.30.42.0/24` (Docker automation network):** Docker’s default bridge IPAM is unpredictable, so Flixbox pins a dedicated CIDR and mirrors it in qBittorrent’s `AuthSubnetWhitelist` for **stack peers only** ([ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md), [ADR 0015](adr/0015-access-profiles-and-remote-transport.md)). LAN human access policy is separate: **`FLIXBOX_ACCESS_PROFILE`** (`trusted` vs `shared`). **Never publish qBit WebUI to the public internet.**
 
 **Startup:** qBittorrent exposes a WebUI healthcheck; Radarr, Sonarr, Decluttarr, and Unpackerr wait until it is healthy before starting (reduces stale “Connection refused” health banners).
 

@@ -84,7 +84,8 @@ services:
       - ${DATA_DIR:?set DATA_DIR}:/data
     # WebUI readiness (shared Gluetun netns) — peers wait via depends_on service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/api/v2/app/version >/dev/null"]
+      # WebUI login page — API /app/version returns 403 without auth when LocalHostAuth=false
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:8080/"]
       interval: 10s
       timeout: 5s
       retries: 12

@@ -67,6 +67,10 @@ container_running() {
 
 load_env
 
+if [[ "${FLIXBOX_ACCESS_PROFILE:-trusted}" == "shared" ]]; then
+  info "Access profile: shared — *arr WebUI uses FLIXBOX_ARR_UI_USER/PASSWORD (configure uses API keys)"
+fi
+
 echo "=== Flixbox app configuration ==="
 echo ""
 
@@ -110,6 +114,9 @@ fi
 # ADR 0014: same logical host in VPN and Direct
 QBIT_ARR_HOST="qbittorrent"
 QBIT_URL="http://127.0.0.1:${QBITTORRENT_PORT}"
+QBIT_INTERNAL_API_URL="http://127.0.0.1:8080"
+QBIT_DOCKER_CONTAINER="flixbox-qbittorrent"
+QBIT_DOCKER_COOKIE="/tmp/flixbox-configure-cookie.txt"
 
 log "Discovering API keys..."
 
@@ -120,6 +127,10 @@ PROWLARR_API_KEY="${PROWLARR_API_KEY:-}"
 [[ -z "$SONARR_API_KEY" ]] && SONARR_API_KEY=$(api_key_from_config_xml flixbox-sonarr)
 [[ -z "$RADARR_API_KEY" ]] && RADARR_API_KEY=$(api_key_from_config_xml flixbox-radarr)
 [[ -z "$PROWLARR_API_KEY" ]] && PROWLARR_API_KEY=$(api_key_from_config_xml flixbox-prowlarr)
+
+SONARR_API_KEY=$(resolve_arr_api_key SONARR_API_KEY flixbox-sonarr "$SONARR_API_KEY")
+RADARR_API_KEY=$(resolve_arr_api_key RADARR_API_KEY flixbox-radarr "$RADARR_API_KEY")
+PROWLARR_API_KEY=$(resolve_arr_api_key PROWLARR_API_KEY flixbox-prowlarr "$PROWLARR_API_KEY")
 
 BAZARR_API_KEY=$(docker exec flixbox-bazarr grep '^\s*apikey:' /config/config/config.yaml 2>/dev/null \
   | head -1 | sed 's/.*apikey:[[:space:]]*//' | tr -d ' ' || true)
@@ -149,16 +160,26 @@ QBIT_API_KEY=$(qbit_api_key_from_config flixbox-qbittorrent)
 [[ -n "$QBIT_API_KEY" ]] && info "qBittorrent API key: ${QBIT_API_KEY:0:8}..."
 
 echo ""
+log "Waiting for first-start initialization (databases + APIs)..."
+wait_for_qbittorrent || exit 1
+wait_for_arr_api "Sonarr" "$SONARR_PORT" "$SONARR_API_KEY" "v3" || exit 1
+wait_for_arr_api "Radarr" "$RADARR_PORT" "$RADARR_API_KEY" "v3" || exit 1
+wait_for_arr_api "Prowlarr" "$PROWLARR_PORT" "$PROWLARR_API_KEY" "v1" || exit 1
+wait_for_bazarr_api "$BAZARR_PORT" "$BAZARR_API_KEY" || exit 1
+wait_for_service "Jellyfin" "http://127.0.0.1:${JELLYFIN_PORT}/System/Info/Public" || exit 1
+container_running flixbox-seerr && wait_for_service "Seerr" "http://127.0.0.1:${SEERR_PORT}/api/v1/status" || true
+echo ""
 
 configure_qbittorrent() {
   log "Configuring qBittorrent..."
 
-  if ! wait_for_service "qBittorrent" "${QBIT_URL}/api/v2/app/version"; then
+  if ! wait_for_qbittorrent; then
     return
   fi
 
   if $DRY_RUN; then
-    dry "Auth (env password or temp); set stable WebUI password if needed"
+    dry "Auth via in-container :8080 (env password or temp); set stable WebUI password if needed"
+    dry "Apply WebUI host-header fix for remapped QBITTORRENT_PORT"
     dry "Create categories tv/movies under /data/torrents/{tv,movies}"
     dry "Prefs: auto TMM, UPnP off, encryption, limits; tun0 bind if VPN"
     return
@@ -171,12 +192,12 @@ configure_qbittorrent() {
     authed=true
     if [[ -n "$QBIT_PASSWORD" && "$QBIT_PASSWORD" != "$QBIT_TEMP_PASSWORD" ]]; then
       local http_code
-      http_code=$(curl -s -o /dev/null -w '%{http_code}' -b "$QBIT_COOKIE" \
+      http_code=$(qbit_curl_authed_code -X POST \
         --data-urlencode "json={\"web_ui_password\":\"${QBIT_PASSWORD}\"}" \
-        "${QBIT_URL}/api/v2/app/setPreferences")
+        "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/setPreferences")
       if [[ "$http_code" == "200" ]]; then
         ok "qBittorrent: WebUI password set from .env"
-        rm -f "$QBIT_COOKIE"
+        docker exec "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}" rm -f "${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}" 2>/dev/null || true
         if ! qbit_auth "$QBIT_URL" "$QBIT_USERNAME" "$QBIT_PASSWORD" "$QBIT_COOKIE"; then
           fail "qBittorrent: re-auth after password change failed"
           return
@@ -191,21 +212,32 @@ configure_qbittorrent() {
   fi
 
   if ! $authed; then
-    fail "qBittorrent: authentication failed — set QBITTORRENT_PASSWORD in .env or log in once at ${QBIT_URL}"
+    fail "qBittorrent: authentication failed — set QBITTORRENT_PASSWORD in .env to your WebUI password, or check temp password in: docker compose logs qbittorrent"
     return
   fi
 
   env_set_if_empty QBITTORRENT_USERNAME "$QBIT_USERNAME"
   env_set_if_empty QBITTORRENT_PASSWORD "$QBIT_PASSWORD"
 
+  # cont-init WebUI keys can be overwritten when qBit first starts — apply via API.
+  local webui_code
+  # qBit 5.x API keys (4.x used web_ui_host_header_validation / web_ui_auth_subnet_*).
+  webui_code=$(qbit_curl_authed_code -X POST \
+    --data-urlencode 'json={"web_ui_host_header_validation_enabled":false,"bypass_local_auth":false,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"172.30.42.0/24","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300}' \
+    "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/setPreferences")
+  if [[ "$webui_code" == "200" ]]; then
+    ok "qBittorrent: WebUI host-header + Docker subnet whitelist"
+  else
+    fail "qBittorrent: WebUI settings (HTTP ${webui_code})"
+  fi
+
   local http_code cat_name save_path
   for cat_name in tv movies; do
     save_path="/data/torrents/${cat_name}"
-    http_code=$(curl -s -o /dev/null -w '%{http_code}' \
-      -b "$QBIT_COOKIE" \
+    http_code=$(qbit_curl_authed_code \
       --data-urlencode "category=${cat_name}" \
       --data-urlencode "savePath=${save_path}" \
-      "${QBIT_URL}/api/v2/torrents/createCategory")
+      "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/torrents/createCategory")
     case "$http_code" in
       200) ok "qBittorrent: category '${cat_name}' → ${save_path}" ;;
       409) skip "qBittorrent: category '${cat_name}'" ;;
@@ -214,7 +246,7 @@ configure_qbittorrent() {
   done
 
   local current_prefs
-  current_prefs=$(curl -s -b "$QBIT_COOKIE" "${QBIT_URL}/api/v2/app/preferences" 2>/dev/null || true)
+  current_prefs=$(qbit_curl_authed "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/preferences" 2>/dev/null || true)
 
   local prefs_ok=false
   if [[ -n "$current_prefs" ]]; then
@@ -252,10 +284,10 @@ if not p.get('limit_lan_peers', False): sys.exit(1)
     if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
       prefs='{"auto_tmm_enabled":true,"upnp":false,"encryption":1,"limit_utp_rate":true,"limit_lan_peers":true,"max_active_downloads":5,"max_active_torrents":10,"max_active_uploads":5,"current_network_interface":"tun0","current_interface_address":""}'
     fi
-    http_code=$(curl -s -o /dev/null -w '%{http_code}' \
-      -b "$QBIT_COOKIE" \
+    http_code=$(qbit_curl_authed_code \
+      -X POST \
       --data-urlencode "json=${prefs}" \
-      "${QBIT_URL}/api/v2/app/setPreferences")
+      "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/setPreferences")
     if [[ "$http_code" == "200" ]]; then
       ok "qBittorrent: preferences updated"
     else
@@ -264,6 +296,7 @@ if not p.get('limit_lan_peers', False): sys.exit(1)
   fi
 
   rm -f "$QBIT_COOKIE"
+  docker exec "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}" rm -f "${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}" 2>/dev/null || true
 }
 
 configure_prowlarr() {
@@ -277,7 +310,14 @@ configure_prowlarr() {
   local base="http://127.0.0.1:${PROWLARR_PORT}"
   local auth="X-Api-Key: ${PROWLARR_API_KEY}"
 
-  if ! wait_for_service "Prowlarr" "${base}/api/v1/health"; then
+  if ! wait_for_arr_api "Prowlarr" "$PROWLARR_PORT" "$PROWLARR_API_KEY" "v1"; then
+    return
+  fi
+
+  local cf_tag_id
+  cf_tag_id=$(prowlarr_ensure_tag_id "$base" "$auth" "cf") || true
+  if [[ -z "$cf_tag_id" ]]; then
+    fail "Prowlarr: create or resolve tag 'cf'"
     return
   fi
 
@@ -292,7 +332,8 @@ configure_prowlarr() {
   if json_extract "$proxies" "sys.exit(0 if any('byparr' in p.get('name','').lower() or 'flaresolverr' in p.get('name','').lower() for p in data) else 1)"; then
     skip "Prowlarr: Byparr/FlareSolverr proxy"
   else
-    local proxy_payload='{"name":"Byparr","implementation":"FlareSolverr","configContract":"FlareSolverrSettings","fields":[{"name":"host","value":"http://byparr:8191"},{"name":"requestTimeout","value":60}],"tags":["cf"]}'
+    local proxy_payload
+    proxy_payload="{\"name\":\"Byparr\",\"implementation\":\"FlareSolverr\",\"configContract\":\"FlareSolverrSettings\",\"fields\":[{\"name\":\"host\",\"value\":\"http://byparr:8191\"},{\"name\":\"requestTimeout\",\"value\":60}],\"tags\":[${cf_tag_id}]}"
     if api_post "${base}/api/v1/indexerProxy" "application/json" "$proxy_payload" "$auth" >/dev/null 2>&1; then
       ok "Prowlarr: added Byparr proxy (tag: cf)"
     else
@@ -319,7 +360,7 @@ configure_prowlarr() {
     elif [[ -z "$arr_key" ]]; then
       fail "Prowlarr: add ${arr_name} (no API key)"
     else
-      app_payload="{\"name\":\"${arr_name}\",\"syncLevel\":\"fullSync\",\"implementation\":\"${arr_name}\",\"configContract\":\"${arr_name}Settings\",\"fields\":[{\"name\":\"prowlarrUrl\",\"value\":\"http://prowlarr:9696\"},{\"name\":\"baseUrl\",\"value\":\"http://${name_lower}:${arr_port}\"},{\"name\":\"apiKey\",\"value\":\"${arr_key}\"},{\"name\":\"syncCategories\",\"value\":${arr_categories}}],\"tags\":[\"cf\"]}"
+      app_payload="{\"name\":\"${arr_name}\",\"syncLevel\":\"fullSync\",\"implementation\":\"${arr_name}\",\"configContract\":\"${arr_name}Settings\",\"fields\":[{\"name\":\"prowlarrUrl\",\"value\":\"http://prowlarr:9696\"},{\"name\":\"baseUrl\",\"value\":\"http://${name_lower}:${arr_port}\"},{\"name\":\"apiKey\",\"value\":\"${arr_key}\"},{\"name\":\"syncCategories\",\"value\":${arr_categories}}],\"tags\":[${cf_tag_id}]}"
       if api_post "${base}/api/v1/applications" "application/json" "$app_payload" "$auth" >/dev/null 2>&1; then
         ok "Prowlarr: added ${arr_name} application sync"
       else
@@ -340,7 +381,7 @@ configure_bazarr() {
   local base="http://127.0.0.1:${BAZARR_PORT}"
   local auth="X-API-KEY: ${BAZARR_API_KEY}"
 
-  if ! wait_for_service "Bazarr" "${base}/api/system/status"; then
+  if ! wait_for_bazarr_api "$BAZARR_PORT" "$BAZARR_API_KEY"; then
     return
   fi
 
@@ -456,18 +497,9 @@ configure_jellyfin() {
     return
   fi
 
-  local startup
-  startup=$(curl -s "${base}/Startup/Configuration" 2>/dev/null || true)
   local needs_startup=false
-  if echo "$startup" | grep -qi '"IsStartupWizardCompleted"[[:space:]]*:[[:space:]]*false'; then
+  if jellyfin_startup_wizard_pending "$base"; then
     needs_startup=true
-  elif [[ -z "$startup" ]] || echo "$startup" | grep -qi 'wizard'; then
-    # Older/alternate: try System/Info/Public for wizard flag
-    local pub
-    pub=$(curl -s "${base}/System/Info/Public" 2>/dev/null || true)
-    if echo "$pub" | grep -qi '"StartupWizardCompleted"[[:space:]]*:[[:space:]]*false'; then
-      needs_startup=true
-    fi
   fi
 
   if $needs_startup; then
@@ -475,20 +507,58 @@ configure_jellyfin() {
       fail "Jellyfin: startup wizard incomplete — set FLIXBOX_ADMIN_PASSWORD in .env and re-run"
       return
     fi
-    # Minimal startup sequence (Jellyfin 10.x)
+    # Jellyfin 10.x: initialize first user, then set password, then complete wizard.
     curl -s -o /dev/null -X POST "${base}/Startup/Configuration" \
       -H 'Content-Type: application/json' \
       -d '{"UICulture":"en-US","MetadataCountryCode":"US","PreferredDisplayLanguage":"en"}' || true
-    curl -s -o /dev/null -X POST "${base}/Startup/User" \
+    curl -s -o /dev/null "${base}/Startup/User" || true
+    local user_code
+    user_code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${base}/Startup/User" \
       -H 'Content-Type: application/json' \
-      -d "{\"Name\":\"${admin_user}\",\"Password\":\"${admin_pass}\"}" || true
+      -d "{\"Name\":\"${admin_user}\",\"Password\":\"${admin_pass}\"}")
+    if [[ "$user_code" =~ ^2 ]]; then
+      ok "Jellyfin: startup user ${admin_user} configured"
+    else
+      fail "Jellyfin: startup user setup failed (HTTP ${user_code})"
+      return
+    fi
+    # Seerr bootstrap requires Jellyfin admin; ensure flag on first user (Jellyfin 10.11 quirk).
+    local jf_auth_json jf_token jf_user_id jf_is_admin
+    jf_auth_json=$(curl -s -X POST "${base}/Users/AuthenticateByName" \
+      -H 'Content-Type: application/json' \
+      -H 'X-Emby-Authorization: MediaBrowser Client="Flixbox", Device="configure", DeviceId="flixbox-configure", Version="1.0.0"' \
+      -d "{\"Username\":\"${admin_user}\",\"Pw\":\"${admin_pass}\"}" 2>/dev/null || true)
+    jf_token=$(json_extract "$jf_auth_json" "print(data.get('AccessToken',''))" || true)
+    jf_user_id=$(json_extract "$jf_auth_json" "print(data.get('User', {}).get('Id', ''))" || true)
+    jf_is_admin=$(json_extract "$jf_auth_json" "print(str(data.get('User', {}).get('Policy', {}).get('IsAdministrator', False)).lower())" || echo false)
+    if [[ -n "$jf_token" && -n "$jf_user_id" && "$jf_is_admin" != "true" ]]; then
+      local policy_json policy_code
+      policy_json=$(curl -s "${base}/Users/${jf_user_id}" -H "X-Emby-Token: ${jf_token}" 2>/dev/null || true)
+      policy_json=$(json_extract "$policy_json" "
+p = data.get('Policy', {})
+p['IsAdministrator'] = True
+data['Policy'] = p
+print(__import__('json').dumps(data.get('Policy', {})))" || true)
+      if [[ -n "$policy_json" ]]; then
+        policy_code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${base}/Users/${jf_user_id}/Policy" \
+          -H "X-Emby-Token: ${jf_token}" -H 'Content-Type: application/json' -d "$policy_json")
+        if [[ "$policy_code" =~ ^2 ]]; then
+          ok "Jellyfin: granted administrator to ${admin_user}"
+        else
+          info "Jellyfin: could not set administrator policy (HTTP ${policy_code})"
+        fi
+      fi
+    fi
+    unset jf_token jf_auth_json
     curl -s -o /dev/null -X POST "${base}/Startup/RemoteAccess" \
       -H 'Content-Type: application/json' \
       -d '{"EnableRemoteAccess":true,"EnableAutomaticPortMapping":false}' || true
-    if curl -s -o /dev/null -w '%{http_code}' -X POST "${base}/Startup/Complete" | grep -qE '^2'; then
+    local complete_code
+    complete_code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${base}/Startup/Complete")
+    if [[ "$complete_code" =~ ^2 ]]; then
       ok "Jellyfin: completed startup wizard"
     else
-      fail "Jellyfin: startup Complete failed — finish wizard in UI once, then re-run configure"
+      fail "Jellyfin: startup Complete failed (HTTP ${complete_code}) — finish wizard in UI once, then re-run configure"
       return
     fi
   else
@@ -605,15 +675,26 @@ configure_seerr() {
 
   # Login / create admin via Jellyfin
   local cookie="/tmp/flixbox_seerr_configure_cookie.txt"
-  local login_code
+  local login_code login_body
+  if [[ "$init_flag" == "true" ]]; then
+    login_body=$(seerr_login_json false "$admin_user" "$admin_pass")
+  else
+    login_body=$(seerr_login_json true "$admin_user" "$admin_pass")
+  fi
   login_code=$(curl -s -o /tmp/flixbox_seerr_login.json -w '%{http_code}' -c "$cookie" \
     -X POST "${base}/api/v1/auth/jellyfin" \
     -H 'Content-Type: application/json' \
-    -d "{\"username\":\"${admin_user}\",\"password\":\"${admin_pass}\",\"hostname\":\"jellyfin\",\"port\":8096,\"useSsl\":false,\"urlBase\":\"\",\"email\":\"\"}")
+    -d "$login_body")
 
   if [[ ! "$login_code" =~ ^2 ]]; then
-    # Retry with jellyfin API key path if available
-    fail "Seerr: Jellyfin auth failed (HTTP ${login_code}) — complete Seerr wizard once if first install"
+    local login_msg
+    login_msg=$(json_extract "$(cat /tmp/flixbox_seerr_login.json 2>/dev/null || echo '{}')" \
+      "print(data.get('message') or data.get('error') or '')" 2>/dev/null || true)
+    if [[ -n "$login_msg" ]]; then
+      fail "Seerr: Jellyfin auth failed (HTTP ${login_code}: ${login_msg})"
+    else
+      fail "Seerr: Jellyfin auth failed (HTTP ${login_code}) — check FLIXBOX_ADMIN_USER/PASSWORD"
+    fi
     rm -f "$cookie" /tmp/flixbox_seerr_login.json
     return
   fi
@@ -621,15 +702,14 @@ configure_seerr() {
 
   # Radarr / Sonarr services
   add_seerr_arr() {
-    local kind="$1" host="$2" port="$3" api_key="$4" root="$5"
-    local list profiles profile_id profile_name
+    local kind="$1" host="$2" port="$3" api_key="$4" root="$5" is_default="${6:-false}"
+    local list profiles profile_id profile_name lang_profile_id payload http_code
     list=$(curl -s -b "$cookie" "${base}/api/v1/settings/${kind}" 2>/dev/null || true)
     if json_extract "$list" "sys.exit(0 if any(True for _ in (data if isinstance(data,list) else [])) else 1)" 2>/dev/null \
       && [[ -n "$list" && "$list" != "[]" ]]; then
       skip "Seerr: ${kind} service"
       return
     fi
-    # Discover profiles + root from *arr
     local arr_base arr_auth
     arr_base="http://127.0.0.1:${port}"
     arr_auth="X-Api-Key: ${api_key}"
@@ -640,30 +720,36 @@ configure_seerr() {
       fail "Seerr: add ${kind} (no quality profile from ${kind})"
       return
     fi
-    local payload
     if [[ "$kind" == "radarr" ]]; then
       payload=$(cat <<EOF
-{"name":"Radarr","hostname":"${host}","port":${port},"apiKey":"${api_key}","useSsl":false,"baseUrl":"","activeProfileId":${profile_id},"activeProfileName":"${profile_name}","activeDirectory":"${root}","is4k":false,"minimumAvailability":"released","isDefault":true,"syncEnabled":true,"preventSearch":false}
+{"name":"Radarr","hostname":"${host}","port":${port},"apiKey":"${api_key}","useSsl":false,"baseUrl":"","activeProfileId":${profile_id},"activeProfileName":"${profile_name}","activeDirectory":"${root}","is4k":false,"minimumAvailability":"released","isDefault":${is_default},"syncEnabled":true,"preventSearch":false}
 EOF
 )
     else
+      local lang_profiles
+      lang_profiles=$(api_get "${arr_base}/api/v3/languageprofile" "$arr_auth") || true
+      lang_profile_id=$(json_extract "$lang_profiles" "print(data[0]['id'] if data else 1)" || echo 1)
       payload=$(cat <<EOF
-{"name":"Sonarr","hostname":"${host}","port":${port},"apiKey":"${api_key}","useSsl":false,"baseUrl":"","activeProfileId":${profile_id},"activeProfileName":"${profile_name}","activeDirectory":"${root}","activeLanguageProfileId":null,"activeAnimeProfileId":null,"activeAnimeLanguageProfileId":null,"activeAnimeDirectory":"","is4k":false,"enableSeasonFolders":true,"isDefault":true,"syncEnabled":true,"preventSearch":false}
+{"name":"Sonarr","hostname":"${host}","port":${port},"apiKey":"${api_key}","useSsl":false,"baseUrl":"","activeProfileId":${profile_id},"activeProfileName":"${profile_name}","activeDirectory":"${root}","activeLanguageProfileId":${lang_profile_id},"activeAnimeProfileId":null,"activeAnimeLanguageProfileId":null,"activeAnimeDirectory":"","is4k":false,"enableSeasonFolders":true,"isDefault":${is_default},"syncEnabled":true,"preventSearch":false}
 EOF
 )
     fi
-    if curl -s -o /dev/null -w '%{http_code}' -b "$cookie" -X POST \
+    http_code=$(curl -s -o /tmp/flixbox_seerr_arr.json -w '%{http_code}' -b "$cookie" -X POST \
       "${base}/api/v1/settings/${kind}" \
       -H 'Content-Type: application/json' \
-      -d "$payload" | grep -qE '^2'; then
+      -d "$payload")
+    if [[ "$http_code" =~ ^2 ]]; then
       ok "Seerr: added ${kind}"
     else
-      fail "Seerr: add ${kind}"
+      if [[ "${VERBOSE:-false}" == "true" ]]; then
+        info "Seerr ${kind} response (HTTP ${http_code}): $(cat /tmp/flixbox_seerr_arr.json 2>/dev/null || true)"
+      fi
+      fail "Seerr: add ${kind} (HTTP ${http_code})"
     fi
   }
 
-  add_seerr_arr radarr radarr 7878 "$RADARR_API_KEY" "/data/media/movies"
-  add_seerr_arr sonarr sonarr 8989 "$SONARR_API_KEY" "/data/media/tv"
+  add_seerr_arr radarr radarr 7878 "$RADARR_API_KEY" "/data/media/movies" true
+  add_seerr_arr sonarr sonarr 8989 "$SONARR_API_KEY" "/data/media/tv" false
 
   if [[ "$init_flag" == "true" ]]; then
     skip "Seerr: initialize"
