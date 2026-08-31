@@ -137,7 +137,7 @@ Your host / Docker
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | `vpn-test` shows ISP IP in VPN mode | Tunnel down, wrong mode, or qBit not in Gluetun netns | Check `FLIXBOX_MODE`, Gluetun logs, recreate stack |
-| *arr cannot reach qBit after VPN switch | Download client still points at `qbittorrent` | Set host to `gluetun` in Radarr/Sonarr — [Configuration](06-configuration.md#download-client-urls-arr-ui) |
+| *arr cannot reach qBit after VPN switch | Missing Gluetun `qbittorrent` alias or Gluetun unhealthy | Keep download client host **`qbittorrent`**; check `docker compose ps gluetun` — [ADR 0014](../adr/0014-stable-qbit-download-hostname.md) |
 | IPv6 leak on external test | `BLOCK_IPV6=off` or provider issue | Keep default `on`; test from Gluetun container |
 | Home router port opened unexpectedly | UPnP enabled in qBit | Disable UPnP/NAT-PMP in qBit |
 
