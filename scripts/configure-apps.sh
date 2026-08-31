@@ -11,9 +11,10 @@
 #   - ./bin/flixbox up (stack healthy; Gluetun healthy in VPN mode)
 #
 # --sync-qbit-auth:
-#   Force .env QBITTORRENT_* (and qBit API key from config) onto qBit WebUI,
-#   Radarr/Sonarr download clients, and recreate Decluttarr. Use after changing
-#   the password in the qBit UI (update .env first) or after rotating credentials.
+#   Force .env QBITTORRENT_* onto qBit WebUI, rewrite *arr download clients
+#   (password + current API key from qBit config), and recreate Decluttarr.
+#   Use after changing the password in the qBit UI (update .env first).
+#   Accidental qBit API key regen: plain `configure` is usually enough (key drift).
 #
 # Still manual after this script:
 #   - Prowlarr indexers (your credentials)
@@ -39,7 +40,7 @@ while [[ $# -gt 0 ]]; do
     --verbose|-v) VERBOSE=true; shift ;;
     --sync-qbit-auth) SYNC_QBIT_AUTH=true; shift ;;
     --help|-h)
-      sed -n '2,22p' "$0"
+      sed -n '2,28p' "$0"
       exit 0
       ;;
     *)
@@ -200,9 +201,7 @@ configure_qbittorrent() {
     authed=true
     if [[ -n "$QBIT_PASSWORD" && "$QBIT_PASSWORD" != "$QBIT_TEMP_PASSWORD" ]]; then
       local http_code
-      http_code=$(qbit_curl_authed_code -X POST \
-        --data-urlencode "json={\"web_ui_password\":\"${QBIT_PASSWORD}\"}" \
-        "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/setPreferences")
+      http_code=$(qbit_set_webui_password "$QBIT_PASSWORD")
       if [[ "$http_code" == "200" ]]; then
         ok "qBittorrent: WebUI password set from .env"
         docker exec "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}" rm -f "${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}" 2>/dev/null || true
@@ -230,9 +229,7 @@ configure_qbittorrent() {
   # --sync-qbit-auth: always re-apply .env password (source of truth for Decluttarr/*arr).
   if $SYNC_QBIT_AUTH && [[ -n "$QBIT_PASSWORD" ]]; then
     local sync_pw_code
-    sync_pw_code=$(qbit_curl_authed_code -X POST \
-      --data-urlencode "json={\"web_ui_password\":\"${QBIT_PASSWORD}\"}" \
-      "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/setPreferences")
+    sync_pw_code=$(qbit_set_webui_password "$QBIT_PASSWORD")
     if [[ "$sync_pw_code" == "200" ]]; then
       ok "qBittorrent: WebUI password synced from .env (--sync-qbit-auth)"
       docker exec "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}" rm -f "${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}" 2>/dev/null || true
@@ -368,7 +365,7 @@ configure_prowlarr() {
     fi
   fi
 
-  local apps arr_name arr_port arr_key arr_categories name_lower app_payload
+  local apps arr_name arr_port arr_key arr_categories name_lower app_payload existing_app_id existing_app stored_key
   apps=$(api_get "${base}/api/v1/applications" "$auth") || true
 
   for arr_name in Sonarr Radarr; do
@@ -382,8 +379,33 @@ configure_prowlarr() {
       arr_categories="[2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060, 2070, 2080]"
     fi
     name_lower=$(echo "$arr_name" | tr '[:upper:]' '[:lower:]')
-    if json_extract "$apps" "sys.exit(0 if any(a.get('name','').lower() == '${name_lower}' for a in data) else 1)"; then
-      skip "Prowlarr: ${arr_name} application"
+    existing_app_id=$(json_extract "$apps" "
+ids = [a['id'] for a in data if a.get('name','').lower() == '${name_lower}']
+print(ids[0] if ids else '')")
+    if [[ -n "$existing_app_id" ]]; then
+      if [[ -z "$arr_key" ]]; then
+        skip "Prowlarr: ${arr_name} application"
+        continue
+      fi
+      existing_app=$(api_get "${base}/api/v1/applications/${existing_app_id}" "$auth") || true
+      stored_key=$(json_extract "$existing_app" "
+fields = data.get('fields') or []
+vals = [f.get('value') for f in fields if f.get('name') == 'apiKey']
+print('' if not vals or vals[0] is None else vals[0])")
+      if [[ "$stored_key" == "$arr_key" ]]; then
+        skip "Prowlarr: ${arr_name} application"
+      else
+        app_payload=$(json_extract "$existing_app" "
+for f in data.get('fields') or []:
+    if f.get('name') == 'apiKey':
+        f['value'] = '''${arr_key}'''
+print(json.dumps(data))")
+        if api_put "${base}/api/v1/applications/${existing_app_id}" "application/json" "$app_payload" "$auth" >/dev/null 2>&1; then
+          ok "Prowlarr: refreshed ${arr_name} API key"
+        else
+          fail "Prowlarr: update ${arr_name} application API key"
+        fi
+      fi
     elif [[ -z "$arr_key" ]]; then
       fail "Prowlarr: add ${arr_name} (no API key)"
     else
@@ -730,11 +752,33 @@ configure_seerr() {
   # Radarr / Sonarr services
   add_seerr_arr() {
     local kind="$1" host="$2" port="$3" api_key="$4" root="$5" is_default="${6:-false}"
-    local list profiles profile_id profile_name lang_profile_id payload http_code
+    local list profiles profile_id profile_name lang_profile_id payload http_code existing_id stored_key
     list=$(curl -s -b "$cookie" "${base}/api/v1/settings/${kind}" 2>/dev/null || true)
-    if json_extract "$list" "sys.exit(0 if any(True for _ in (data if isinstance(data,list) else [])) else 1)" 2>/dev/null \
-      && [[ -n "$list" && "$list" != "[]" ]]; then
-      skip "Seerr: ${kind} service"
+    existing_id=$(json_extract "$list" "
+items = data if isinstance(data, list) else []
+print(items[0]['id'] if items else '')" 2>/dev/null || true)
+    if [[ -n "$existing_id" ]]; then
+      stored_key=$(json_extract "$list" "
+items = data if isinstance(data, list) else []
+print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
+      if [[ "$stored_key" == "$api_key" ]]; then
+        skip "Seerr: ${kind} service"
+        return
+      fi
+      payload=$(json_extract "$list" "
+items = data if isinstance(data, list) else []
+item = dict(items[0])
+item['apiKey'] = '''${api_key}'''
+print(json.dumps(item))")
+      http_code=$(curl -s -o /tmp/flixbox_seerr_arr.json -w '%{http_code}' -b "$cookie" -X PUT \
+        "${base}/api/v1/settings/${kind}/${existing_id}" \
+        -H 'Content-Type: application/json' \
+        -d "$payload")
+      if [[ "$http_code" =~ ^2 ]]; then
+        ok "Seerr: refreshed ${kind} API key"
+      else
+        fail "Seerr: update ${kind} API key (HTTP ${http_code}) — set it in Seerr Settings if needed"
+      fi
       return
     fi
     local arr_base arr_auth

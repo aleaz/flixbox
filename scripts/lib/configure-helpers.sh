@@ -277,6 +277,14 @@ qbit_curl_authed_code() {
   curl -s -o /dev/null -w '%{http_code}' -H 'Host: localhost:8080' "$@"
 }
 
+# Set WebUI password via API (JSON-safe for special characters in the password).
+qbit_set_webui_password() {
+  local password="$1"
+  local json api_url="${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}"
+  json=$(PASSWORD="$password" python3 -c 'import json,os; print(json.dumps({"web_ui_password": os.environ["PASSWORD"]}))')
+  qbit_curl_authed_code -X POST --data-urlencode "json=${json}" "${api_url}/api/v2/app/setPreferences"
+}
+
 wait_for_qbittorrent() {
   local container="${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}"
   local api_url="${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}"
@@ -521,10 +529,20 @@ print(ids[0] if ids else '')")
 QBIT_JSON
 )
     if [[ -n "$existing_id" ]]; then
-      local existing_client force_client_sync=false
+      local existing_client force_client_sync=false key_drift=false stored_api_key=""
       [[ "${SYNC_QBIT_AUTH:-false}" == "true" ]] && force_client_sync=true
       existing_client=$(api_get "${base}/api/v3/downloadclient/${existing_id}" "$auth") || true
-      if ! $force_client_sync && [[ -n "$existing_client" ]] \
+      # Accidental qBit API key regen: password auth can still make Test pass while apiKey is stale.
+      if [[ -n "$existing_client" && -n "$qbit_api_key" ]]; then
+        stored_api_key=$(json_extract "$existing_client" "
+fields = data.get('fields') or []
+vals = [f.get('value') for f in fields if f.get('name') == 'apiKey']
+print('' if not vals or vals[0] is None else vals[0])")
+        if [[ -n "$stored_api_key" && "$stored_api_key" != "$qbit_api_key" ]]; then
+          key_drift=true
+        fi
+      fi
+      if ! $force_client_sync && ! $key_drift && [[ -n "$existing_client" ]] \
         && api_post "${base}/api/v3/downloadclient/test" "application/json" "$existing_client" "$auth" >/dev/null 2>&1; then
         skip "${name}: qBittorrent download client"
       else
@@ -533,6 +551,8 @@ QBIT_JSON
           && api_post "${base}/api/v3/downloadclient/test" "application/json" "$qbit_payload" "$auth" >/dev/null 2>&1; then
           if $force_client_sync; then
             ok "${name}: synced qBittorrent download client from .env (--sync-qbit-auth)"
+          elif $key_drift; then
+            ok "${name}: refreshed qBittorrent API key on download client"
           else
             ok "${name}: updated qBittorrent download client (${qbit_host}:8080)"
           fi
