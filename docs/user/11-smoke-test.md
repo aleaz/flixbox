@@ -2,7 +2,7 @@
 
 Use this checklist **before tagging v0.1**. It validates that the implemented stack works on a real host, not only that Compose resolves in CI.
 
-**Reference platform:** Linux x86_64 or ARM64 with Docker Engine + Compose v2. WSL2 (ext4 paths) and macOS Docker Desktop are best-effort — hardlink tests may be inconclusive on macOS.
+**Reference platform:** Linux x86_64 or ARM64 with Docker Engine + Compose v2. WSL2 (ext4 paths) and macOS (**OrbStack** or Docker Desktop) are best-effort — hardlink tests may be inconclusive on macOS.
 
 ## Quick automated preflight
 
@@ -10,9 +10,11 @@ From the repo root:
 
 ```bash
 ./scripts/ci-validate.sh          # contract checks (no containers)
-./scripts/ci-smoke-init.sh        # C-50–52 init smoke + env-file unit (restores .env)
+./scripts/ci-smoke-init.sh        # C-50–52 + env-file unit (worktree; safe with stack up)
 ./scripts/smoke-test.sh preflight   # docker + compose config
 ```
+
+**Idempotency (stack running):** after first `./bin/flixbox configure`, a second run should report **`0 configured`** (all skipped). If not, file an issue with both outputs.
 
 ## Full automated smoke (Direct mode, `trusted`)
 
@@ -23,6 +25,8 @@ Uses `/tmp/flixbox-smoke` for data/config so you do not need `/srv/flixbox`:
 ```
 
 This runs `init`, `up`, HTTP probes, and prints manual steps still required.
+
+If you already have a `.env` in the repo root, `run` **backs it up and restores it on exit** — only the smoke paths under `/tmp/flixbox-smoke` are used for data/config during the test.
 
 To tear down:
 

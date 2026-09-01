@@ -244,16 +244,22 @@ configure_qbittorrent() {
     fi
   fi
 
-  # cont-init WebUI keys can be overwritten when qBit first starts — apply via API.
-  local webui_code
-  # qBit 5.x API keys (4.x used web_ui_host_header_validation / web_ui_auth_subnet_*).
-  webui_code=$(qbit_curl_authed_code -X POST \
-    --data-urlencode 'json={"web_ui_host_header_validation_enabled":false,"bypass_local_auth":false,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"172.30.42.0/24","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300}' \
-    "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/setPreferences")
-  if [[ "$webui_code" == "200" ]]; then
-    ok "qBittorrent: WebUI host-header + Docker subnet whitelist"
+  # cont-init WebUI keys can be overwritten when qBit first starts — apply via API when needed.
+  local current_prefs webui_code
+  current_prefs=$(qbit_curl_authed "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/preferences" 2>/dev/null || true)
+  if qbit_webui_security_prefs_ok "$current_prefs"; then
+    skip "qBittorrent: WebUI host-header + Docker subnet whitelist"
   else
-    fail "qBittorrent: WebUI settings (HTTP ${webui_code})"
+    local webui_json webui_code
+    webui_json=$(qbit_webui_security_prefs_json)
+    webui_code=$(qbit_curl_authed_code -X POST \
+      --data-urlencode "json=${webui_json}" \
+      "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/setPreferences")
+    if [[ "$webui_code" == "200" ]]; then
+      ok "qBittorrent: WebUI host-header + Docker subnet whitelist"
+    else
+      fail "qBittorrent: WebUI settings (HTTP ${webui_code})"
+    fi
   fi
 
   local http_code cat_name save_path
@@ -269,9 +275,6 @@ configure_qbittorrent() {
       *) fail "qBittorrent: category '${cat_name}' (HTTP ${http_code})" ;;
     esac
   done
-
-  local current_prefs
-  current_prefs=$(qbit_curl_authed "${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}/api/v2/app/preferences" 2>/dev/null || true)
 
   local prefs_ok=false
   if [[ -n "$current_prefs" ]]; then
@@ -393,7 +396,7 @@ print(ids[0] if ids else '')")
 fields = data.get('fields') or []
 vals = [f.get('value') for f in fields if f.get('name') == 'apiKey']
 print('' if not vals or vals[0] is None else vals[0])")
-      if [[ "$stored_key" == "$arr_key" ]]; then
+      if prowlarr_app_api_key_in_sync "$stored_key" "$arr_key" "$arr_port" "v3"; then
         skip "Prowlarr: ${arr_name} application"
       else
         app_payload=$(json_extract "$existing_app" "
@@ -748,7 +751,7 @@ configure_seerr() {
     rm -f "$cookie" /tmp/flixbox_seerr_login.json
     return
   fi
-  ok "Seerr: authenticated via Jellyfin"
+  info "Seerr: Jellyfin session ready"
 
   # Radarr / Sonarr services
   add_seerr_arr() {

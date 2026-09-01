@@ -42,6 +42,10 @@ Flixbox automates plumbing and sane defaults. You will still:
 
 You are responsible for complying with applicable laws and terms of service for any content, indexers, or VPN providers you use with this software.
 
+## LAN security (access profiles)
+
+Default profile is **`trusted`**: *arr admin UIs on your Wi‑Fi do not ask for login. If **roommates or guests share the same network**, set `FLIXBOX_ACCESS_PROFILE=shared` in `.env` before `init`/`up` — admin ports bind to localhost and *arr use Forms login. See [Access profiles](13-access-profiles.md).
+
 ## Next
 
 Read [How it works](02-how-it-works.md) for the mental model, then [Requirements](03-requirements.md).

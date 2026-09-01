@@ -64,7 +64,7 @@ If Gluetun is unhealthy, qBit and those peers fail with dependency errors. That 
 2. WebUI / BT ports are published on **Gluetun**, not on the qBittorrent service.
 3. Radarr/Sonarr/Decluttarr must use host **`qbittorrent`** (same in Direct — [ADR 0014](../adr/0014-stable-qbit-download-hostname.md)).
 4. IPv6 blocked by default (`BLOCK_IPV6=on`); DNS over TLS on (`DOT=on`).
-5. Optional port forwarding: `VPN_PORT_FORWARDING=on` (supported providers). Enable qBittorrent **Bypass authentication for clients on localhost**.
+5. Optional port forwarding: `VPN_PORT_FORWARDING=on` (supported providers). `./bin/flixbox configure` sets qBittorrent **Bypass authentication for clients on localhost** when port forwarding is enabled (Gluetun hooks need unauthenticated localhost API access).
 6. Put provider credentials only in `.env` or files under `${CONFIG_DIR}/gluetun` — never in git.
 7. Custom OpenVPN (e.g. a VPNGate `.ovpn` for lab tests): `VPN_SERVICE_PROVIDER=custom`, file under `${CONFIG_DIR}/gluetun/`, `OPENVPN_CUSTOM_CONFIG=/gluetun/<file>`, and `remote` must be an **IP** (Gluetun). Free relays are not a privacy substitute for a real no-logs provider.
 

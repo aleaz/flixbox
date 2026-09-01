@@ -132,6 +132,8 @@ pass C-24
 # --- C-24b: VPN-only tun0 bind sidecar (ADR 0002) ---
 grep -q 'qbittorrent-custom-services:/custom-services.d' compose/downloaders-vpn.yml || \
   fail C-24b 'downloaders-vpn.yml missing qbittorrent-custom-services mount'
+grep -q 'QBITTORRENT_PASSWORD' compose/downloaders-vpn.yml || \
+  fail C-24b 'downloaders-vpn.yml qbittorrent missing QBITTORRENT_PASSWORD for bind-vpn sidecar'
 [[ -f templates/qbittorrent/custom-services.d/99-flixbox-bind-vpn-interface.sh ]] || \
   fail C-24b 'missing VPN bind-vpn-interface custom-services script'
 if grep -q 'qbittorrent-custom-services' compose/downloaders-direct.yml; then
@@ -159,6 +161,9 @@ grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/downloaders-vpn.yml || \
   fail C-24c 'downloaders-vpn.yml missing FLIXBOX_ADMIN_BIND_IP on Gluetun WebUI publish'
 grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/optimization.yml || \
   fail C-24c 'optimization.yml missing FLIXBOX_ADMIN_BIND_IP on Maintainerr'
+grep -q 'healthcheck:' compose/servarr.yml || fail C-24c 'servarr.yml missing byparr healthcheck'
+grep -A12 '^  byparr:' compose/servarr.yml | grep -q '8191/health' || \
+  fail C-24c 'byparr healthcheck must probe /health with short timeout'
 grep -q 'FLIXBOX_ADMIN_BIND_IP' scripts/lib/access-profile.sh || \
   fail C-24c 'access-profile.sh missing FLIXBOX_ADMIN_BIND_IP sync'
 grep -q 'flixbox_env_file_exports' scripts/lib/env-file.sh || \

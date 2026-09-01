@@ -22,9 +22,9 @@ Platform defaults when you run `./bin/flixbox init` (new `.env`):
 | OS | `DATA_DIR` | `CONFIG_DIR` |
 | --- | --- | --- |
 | Linux | `/srv/flixbox/data` | `/srv/flixbox/config` |
-| macOS | `$HOME/flixbox/data` | `$HOME/flixbox/config` |
+| macOS (OrbStack / Docker Desktop) | `$HOME/flixbox/data` | `$HOME/flixbox/config` |
 
-`.env.example` shows the Linux reference paths. `init` rewrites them on macOS.
+`.env.example` shows the Linux reference paths. `init` rewrites them on macOS. **OrbStack** is a supported macOS dev runtime; tag v0.1 smoke still targets Linux.
 
 On Linux, `/srv/flixbox/…` is not writable until you create it (usually with `sudo`) or you choose another path — see [Install — Storage paths and permissions](04-install.md#storage-paths-and-permissions). Flixbox reads paths from `.env` only; shell `export DATA_DIR=…` does not affect `init` or `up` unless you also write that value into `.env`.
 
@@ -121,6 +121,10 @@ Flixbox uses **five credential types** for inter-app wiring (plus per-indexer tr
 | **Radarr** API key | Unpackerr, Decluttarr; also Prowlarr Apps, Seerr, Bazarr, Maintainerr, Recyclarr | Radarr `config.xml` (synced into `.env` by `configure`) | Same key everywhere — see [Accidental / intentional key changes](#accidental--intentional-key-changes). |
 | **Sonarr** API key | Same pattern as Radarr | Sonarr `config.xml` → `.env` via `configure` | Same as Radarr. |
 | **Jellyfin** API key | Seerr, Maintainerr | Jellyfin → Dashboard → **API Keys** | Created after the Jellyfin admin account exists. |
+
+### Runtime secrets in Docker
+
+Compose passes some credentials as **container environment variables** (for example `QBITTORRENT_PASSWORD`, `RADARR_API_KEY` on Decluttarr). Anyone who can run `docker inspect` or `docker exec` on the host can read them. That is normal for Compose homelab stacks — keep Docker socket access limited to the operator account. API keys also live under `${CONFIG_DIR}` in app config files; treat backups of `config/` like `.env`.
 
 ### Accidental / intentional key changes
 

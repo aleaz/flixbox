@@ -63,7 +63,7 @@ cp .env.example .env
 ./bin/flixbox init --non-interactive
 ```
 
-**macOS:** `init` rewrites paths to `$HOME/flixbox/{data,config}` and sets `PUID`/`PGID` from your user — no `sudo` for paths.
+**macOS (Docker Desktop or OrbStack):** `init` rewrites paths to `$HOME/flixbox/{data,config}` and sets `PUID`/`PGID` from your user — no `sudo` for paths. OrbStack is the recommended macOS runtime for Flixbox development (fast bind mounts, Compose v2 compatible). Use Linux for release smoke and hardlink verification.
 
 After a successful init, `bootstrap-dirs.sh` creates `torrents/` and `media/` under `DATA_DIR` and applies SGID so group-writable files match `UMASK=002`.
 

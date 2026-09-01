@@ -76,6 +76,9 @@ services:
       WEBUI_PORT: 8080
       TORRENTING_PORT: ${QBITTORRENT_BT_PORT:-6881}
       FLIXBOX_QBIT_FORCE_PATHS: ${FLIXBOX_QBIT_FORCE_PATHS:-false}
+      # bind-vpn custom-service (ADR 0002) — same creds as Decluttarr/configure
+      QBITTORRENT_USERNAME: ${QBITTORRENT_USERNAME:-}
+      QBITTORRENT_PASSWORD: ${QBITTORRENT_PASSWORD:-}
     volumes:
       - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent:/config
       - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent-cont-init:/custom-cont-init.d:ro

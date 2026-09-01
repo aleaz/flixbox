@@ -1,4 +1,5 @@
 #!/usr/bin/with-contenv bash
+# shellcheck shell=bash
 # Flixbox qBittorrent bootstrap (linuxserver image).
 #
 # Installed to ${CONFIG_DIR}/qbittorrent-cont-init/ and mounted at /custom-cont-init.d

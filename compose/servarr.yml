@@ -32,6 +32,13 @@ services:
     ports:
       # shared → 127.0.0.1 only (ADR 0015 phase 2); Prowlarr still uses http://byparr:8191
       - ${FLIXBOX_ADMIN_BIND_IP:-0.0.0.0}:${BYPARR_PORT:-8191}:8191
+    healthcheck:
+      # Image default healthcheck can hang 30s+; probe /health with a short timeout.
+      test: ["CMD-SHELL", "curl -fsS -m 5 -o /dev/null http://127.0.0.1:8191/health || curl -fsS -m 5 -o /dev/null http://127.0.0.1:8191/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
     stop_grace_period: 30s
     networks:

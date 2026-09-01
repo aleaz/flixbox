@@ -126,9 +126,9 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 
 - **Mitigation (enforce):** `.gitattributes` / `.editorconfig` force LF.
 
-### 5.3 macOS VirtioFS / APFS
+### 5.3 macOS VirtioFS / APFS (OrbStack / Docker Desktop)
 
-- **Mitigation (document):** Best-effort; Linux is reference.
+- **Mitigation (document):** Best-effort for dev; Linux is reference. Hardlink smoke (Phase C) may be skipped on macOS.
 
 ---
 

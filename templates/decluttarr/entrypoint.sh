@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck shell=sh
 # Flixbox Decluttarr entrypoint — idle until qBit WebUI credentials exist.
 #
 # Mounted from ${CONFIG_DIR}/decluttarr-entrypoint.sh (copied by flixbox init).

@@ -1,4 +1,5 @@
 #!/usr/bin/with-contenv bash
+# shellcheck shell=bash
 # Flixbox VPN: keep qBittorrent BitTorrent traffic on Gluetun's tunnel interface.
 #
 # Installed to ${CONFIG_DIR}/qbittorrent-custom-services/ (VPN mode only) and
@@ -12,57 +13,106 @@
 # memory at startup and can discard a pre-start InterfaceName. The WebUI API is
 # the reliable path; this loop re-asserts periodically.
 #
-# Auth: cont-init enables AuthSubnetWhitelist for flixbox_net and LocalHostAuth=false.
-# Fresh volumes before that may return 403 — configure / first WebUI login fixes it.
+# Auth: uses QBITTORRENT_USERNAME/PASSWORD from container env (same as Decluttarr).
+# After configure, localhost API calls without login return 403 — cookie required.
 
 set -uo pipefail
 
 IFACE="${VPN_INTERFACE:-tun0}"
 API="http://127.0.0.1:${WEBUI_PORT:-8080}/api/v2"
 INTERVAL="${FLIXBOX_VPN_IFACE_CHECK_INTERVAL:-300}"
+COOKIE="/tmp/.flixbox-qbprefs-cookie"
+PREFS="/tmp/.flixbox-qbprefs"
+QBIT_USER="${QBITTORRENT_USERNAME:-admin}"
+QBIT_PASS="${QBITTORRENT_PASSWORD:-}"
 
 log() { echo "[flixbox-bind-vpn] $*"; }
 
+qbit_login() {
+  local code
+  [[ -n "$QBIT_PASS" ]] || return 1
+  rm -f "$COOKIE"
+  code=$(curl -s -c "$COOKIE" -w '%{http_code}' --max-time 15 \
+    -X POST "${API}/auth/login" \
+    --data-urlencode "username=${QBIT_USER}" \
+    --data-urlencode "password=${QBIT_PASS}" 2>/dev/null || echo 000)
+  case "$code" in
+    200|204) ;;
+    *) return 1 ;;
+  esac
+  chmod 600 "$COOKIE" 2>/dev/null || true
+  return 0
+}
+
 prefs_code() {
-  curl -s -o /tmp/.flixbox-qbprefs -w '%{http_code}' --max-time 10 \
+  curl -s -b "$COOKIE" -o "$PREFS" -w '%{http_code}' --max-time 10 \
     "${API}/app/preferences" 2>/dev/null || echo 000
 }
 
-code=000
-for _ in $(seq 1 90); do
+ensure_session() {
+  local code
   code="$(prefs_code)"
-  [[ "$code" == "200" || "$code" == "403" ]] && break
+  if [[ "$code" == "200" ]]; then
+    return 0
+  fi
+  if [[ "$code" == "403" || "$code" == "401" ]]; then
+    if qbit_login; then
+      code="$(prefs_code)"
+      [[ "$code" == "200" ]] && return 0
+    fi
+  fi
+  if qbit_login; then
+    code="$(prefs_code)"
+    [[ "$code" == "200" ]]
+    return
+  fi
+  return 1
+}
+
+correct_bind_if_needed() {
+  local current
+  current="$(grep -o '"current_network_interface":"[^"]*"' "$PREFS" 2>/dev/null | cut -d'"' -f4 || true)"
+  if [[ "$current" == "$IFACE" ]]; then
+    return 0
+  fi
+  if curl -sf -b "$COOKIE" -o /dev/null --max-time 10 -X POST "${API}/app/setPreferences" \
+    --data-urlencode "json={\"current_network_interface\":\"${IFACE}\",\"current_interface_address\":\"\"}"; then
+    log "binding corrected: ${current:-<unset>} → ${IFACE}"
+    curl -sf -b "$COOKIE" -o /dev/null --max-time 10 -X POST "${API}/torrents/reannounce" \
+      --data "hashes=all" || true
+    return 0
+  fi
+  log "FAILED to set interface binding to ${IFACE}"
+  return 1
+}
+
+# Wait for WebUI + credentials (configure may run after first boot).
+for _ in $(seq 1 90); do
+  if ensure_session; then
+    correct_bind_if_needed || true
+    break
+  fi
   sleep 2
 done
 
-if [[ "$code" == "403" ]]; then
-  log "preferences API 403 (localhost auth not ready yet)."
-  log "Run ./bin/flixbox configure after qBit is reachable, or log in once via WebUI."
-  exec sleep infinity
-fi
-
-if [[ "$code" != "200" ]]; then
-  log "preferences API never reachable (last HTTP ${code})"
-  exec sleep infinity
+if ! ensure_session; then
+  if [[ -z "$QBIT_PASS" ]]; then
+    log "QBITTORRENT_PASSWORD not set — waiting for .env + container recreate."
+  else
+    log "WebUI login failed — check QBITTORRENT_* in .env, then ./bin/flixbox configure"
+  fi
 fi
 
 log "watching interface bind → ${IFACE} (every ${INTERVAL}s)"
 
 while true; do
-  code="$(prefs_code)"
-  if [[ "$code" != "200" ]]; then
-    log "preferences fetch failed (HTTP ${code}); retry in ${INTERVAL}s"
+  if ensure_session; then
+    correct_bind_if_needed || true
   else
-    current="$(grep -o '"current_network_interface":"[^"]*"' /tmp/.flixbox-qbprefs 2>/dev/null | cut -d'"' -f4 || true)"
-    if [[ "$current" != "$IFACE" ]]; then
-      if curl -sf -o /dev/null --max-time 10 -X POST "${API}/app/setPreferences" \
-        --data-urlencode "json={\"current_network_interface\":\"${IFACE}\",\"current_interface_address\":\"\"}"; then
-        log "binding corrected: ${current:-<unset>} → ${IFACE}"
-        curl -sf -o /dev/null --max-time 10 -X POST "${API}/torrents/reannounce" \
-          --data "hashes=all" || true
-      else
-        log "FAILED to set interface binding to ${IFACE}"
-      fi
+    if [[ -z "$QBIT_PASS" ]]; then
+      log "still waiting for QBITTORRENT_USERNAME/PASSWORD in container env"
+    else
+      log "session lost — will retry login (check QBITTORRENT_* / run configure)"
     fi
   fi
   sleep "$INTERVAL"

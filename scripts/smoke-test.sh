@@ -5,9 +5,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/env-file.sh"
+
 SMOKE_ROOT="${SMOKE_ROOT:-/tmp/flixbox-smoke}"
 SMOKE_DATA="${SMOKE_DATA:-${SMOKE_ROOT}/data}"
 SMOKE_CONFIG="${SMOKE_CONFIG:-${SMOKE_ROOT}/config}"
+ENV_BACKUP=""
 
 sed_inplace() {
   if [[ "$(uname -s)" == Darwin ]]; then
@@ -24,6 +28,13 @@ die() {
 
 ok() {
   printf 'OK   %s\n' "$*"
+}
+
+restore_env() {
+  if [[ -n "${ENV_BACKUP}" && -f "${ENV_BACKUP}" ]]; then
+    cp -f "${ENV_BACKUP}" "${ROOT_DIR}/.env"
+    rm -f "${ENV_BACKUP}"
+  fi
 }
 
 need_cmd() {
@@ -57,15 +68,24 @@ cmd_preflight() {
 
 write_smoke_env() {
   cp -f "${ROOT_DIR}/.env.example" "${ROOT_DIR}/.env"
-  sed_inplace "s|^DATA_DIR=.*|DATA_DIR=${SMOKE_DATA}|" "${ROOT_DIR}/.env"
-  sed_inplace "s|^CONFIG_DIR=.*|CONFIG_DIR=${SMOKE_CONFIG}|" "${ROOT_DIR}/.env"
-  sed_inplace 's/^FLIXBOX_MODE=.*/FLIXBOX_MODE=direct/' "${ROOT_DIR}/.env"
+  flixbox_env_file_set "${ROOT_DIR}/.env" DATA_DIR "${SMOKE_DATA}"
+  flixbox_env_file_set "${ROOT_DIR}/.env" CONFIG_DIR "${SMOKE_CONFIG}"
+  flixbox_env_file_set "${ROOT_DIR}/.env" FLIXBOX_MODE direct
+  flixbox_env_file_set "${ROOT_DIR}/.env" VPN_ENABLED false
   ok "wrote .env for smoke test (${SMOKE_ROOT})"
 }
 
 cmd_run() {
   need_cmd docker
   need_cmd curl
+  need_cmd python3
+
+  trap restore_env EXIT
+  if [[ -f "${ROOT_DIR}/.env" ]]; then
+    ENV_BACKUP="$(mktemp)"
+    cp -f "${ROOT_DIR}/.env" "${ENV_BACKUP}"
+    ok "backed up existing .env (restored on exit)"
+  fi
 
   write_smoke_env
   "${ROOT_DIR}/bin/flixbox" init --non-interactive
@@ -135,7 +155,7 @@ Usage: smoke-test.sh <command>
 
 Commands:
   preflight   Docker, compose config, ci-validate (no containers)
-  run         init + up + HTTP probes (Direct mode, ${SMOKE_ROOT})
+  run         init + up + HTTP probes (Direct mode, ${SMOKE_ROOT}); restores .env on exit
   down        ./bin/flixbox down
 
 See docs/user/11-smoke-test.md for the full checklist.

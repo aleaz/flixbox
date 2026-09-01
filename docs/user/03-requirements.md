@@ -4,7 +4,7 @@
 
 | Requirement | Notes |
 | --- | --- |
-| Docker Engine 24+ | Or Docker Desktop equivalent |
+| Docker Engine 24+ | Or **OrbStack** / Docker Desktop on macOS |
 | Compose plugin ≥ 2.20 | `docker compose version` |
 | Git | To clone the repo |
 | Bash 4+ | For `bin/flixbox` on Linux / WSL2 / macOS |
@@ -15,7 +15,7 @@
 | --- | --- |
 | Linux x86_64 / ARM64 | **First-class** |
 | Windows + WSL2 (ext4 data path) | Best-effort |
-| macOS Docker Desktop | Best-effort |
+| macOS OrbStack / Docker Desktop | Best-effort dev; Linux for release smoke |
 
 Store `${DATA_DIR}` on a filesystem that supports hardlinks (**not exFAT**). On WSL2, keep data on the Linux filesystem — not `/mnt/c/...`.
 

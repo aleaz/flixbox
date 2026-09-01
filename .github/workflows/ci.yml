@@ -44,7 +44,11 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
 
       - name: ShellCheck
-        run: shellcheck -e SC1091 bin/flixbox scripts/*.sh scripts/lib/*.sh scripts/ci-validate.sh
+        run: |
+          shellcheck -e SC1091 bin/flixbox scripts/*.sh scripts/lib/*.sh scripts/ci-validate.sh scripts/ci-smoke-init.sh
+          shellcheck templates/qbittorrent/custom-services.d/*.sh
+          shellcheck templates/qbittorrent/custom-cont-init.d/*.sh
+          shellcheck templates/decluttarr/entrypoint.sh
 
       - name: Contract validation
         run: ./scripts/ci-validate.sh

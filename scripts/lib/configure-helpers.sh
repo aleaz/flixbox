@@ -234,6 +234,7 @@ qbit_auth() {
       204) ;;
       *) return 1 ;;
     esac
+    docker exec "$container" chmod 600 "$cookie_path" 2>/dev/null || true
     verify_code=$(docker exec "$container" curl -s -m 20 -o /dev/null -w '%{http_code}' \
       -b "$cookie_path" "${api_url}/api/v2/app/version")
     [[ "$verify_code" == "200" ]]
@@ -253,6 +254,7 @@ qbit_auth() {
     204) ;;
     *) return 1 ;;
   esac
+  chmod 600 "$cookie_file" 2>/dev/null || true
   verify_code=$(curl -s -m 20 -o /dev/null -w '%{http_code}' \
     -b "$cookie_file" -H 'Host: localhost:8080' "${url}/api/v2/app/version")
   [[ "$verify_code" == "200" ]]
@@ -362,6 +364,23 @@ env_set_if_empty() {
 }
 
 # Replace REPLACE_* placeholders in recyclarr.yml only (never overwrite real keys).
+# Uses Python so API keys with / & \ never break sed.
+recyclarr_replace_placeholder() {
+  local file="$1" placeholder="$2" value="$3"
+  RECYCLARR_FILE="$file" RECYCLARR_PLACEHOLDER="$placeholder" RECYCLARR_VALUE="$value" python3 <<'PY'
+import os
+from pathlib import Path
+
+path = Path(os.environ["RECYCLARR_FILE"])
+placeholder = os.environ["RECYCLARR_PLACEHOLDER"]
+value = os.environ["RECYCLARR_VALUE"]
+text = path.read_text()
+if placeholder not in text:
+    raise SystemExit(0)
+path.write_text(text.replace(placeholder, value))
+PY
+}
+
 patch_recyclarr_keys() {
   local file="${CONFIG_DIR}/recyclarr/recyclarr.yml"
   [[ -f "$file" ]] || return 0
@@ -370,11 +389,7 @@ patch_recyclarr_keys() {
     if $DRY_RUN; then
       dry "Patch Recyclarr Radarr API key placeholder"
     else
-      if [[ "$(uname -s)" == Darwin ]]; then
-        sed -i '' "s/REPLACE_RADARR_API_KEY/${RADARR_API_KEY}/" "$file"
-      else
-        sed -i "s/REPLACE_RADARR_API_KEY/${RADARR_API_KEY}/" "$file"
-      fi
+      recyclarr_replace_placeholder "$file" 'REPLACE_RADARR_API_KEY' "$RADARR_API_KEY"
       changed=true
     fi
   fi
@@ -382,11 +397,7 @@ patch_recyclarr_keys() {
     if $DRY_RUN; then
       dry "Patch Recyclarr Sonarr API key placeholder"
     else
-      if [[ "$(uname -s)" == Darwin ]]; then
-        sed -i '' "s/REPLACE_SONARR_API_KEY/${SONARR_API_KEY}/" "$file"
-      else
-        sed -i "s/REPLACE_SONARR_API_KEY/${SONARR_API_KEY}/" "$file"
-      fi
+      recyclarr_replace_placeholder "$file" 'REPLACE_SONARR_API_KEY' "$SONARR_API_KEY"
       changed=true
     fi
   fi
@@ -397,6 +408,45 @@ patch_recyclarr_keys() {
   else
     skip "Recyclarr: API keys"
   fi
+}
+
+# Build Radarr/Sonarr qBittorrent download-client JSON (password-safe).
+build_qbit_download_client_json() {
+  local qbit_host="$1" qbit_user="$2" qbit_pass="$3" qbit_api_key="$4"
+  local cat_field="$5" category="$6" priority_recent="$7" priority_older="$8"
+  local existing_id="${9:-}"
+  QBIT_DC_HOST="$qbit_host" QBIT_DC_USER="$qbit_user" QBIT_DC_PASS="$qbit_pass" \
+  QBIT_DC_API_KEY="$qbit_api_key" QBIT_DC_CAT_FIELD="$cat_field" QBIT_DC_CATEGORY="$category" \
+  QBIT_DC_PRIO_RECENT="$priority_recent" QBIT_DC_PRIO_OLDER="$priority_older" \
+  QBIT_DC_EXISTING_ID="$existing_id" python3 <<'PY'
+import json, os
+
+payload = {
+    "enable": True,
+    "protocol": "torrent",
+    "priority": 1,
+    "name": "qBittorrent",
+    "implementation": "QBittorrent",
+    "configContract": "QBittorrentSettings",
+    "fields": [
+        {"name": "host", "value": os.environ["QBIT_DC_HOST"]},
+        {"name": "port", "value": 8080},
+        {"name": "username", "value": os.environ["QBIT_DC_USER"]},
+        {"name": "password", "value": os.environ["QBIT_DC_PASS"]},
+        {"name": "apiKey", "value": os.environ["QBIT_DC_API_KEY"]},
+        {"name": os.environ["QBIT_DC_CAT_FIELD"], "value": os.environ["QBIT_DC_CATEGORY"]},
+        {"name": os.environ["QBIT_DC_PRIO_RECENT"], "value": 0},
+        {"name": os.environ["QBIT_DC_PRIO_OLDER"], "value": 0},
+        {"name": "initialState", "value": 0},
+        {"name": "sequentialOrder", "value": False},
+        {"name": "firstAndLast", "value": False},
+    ],
+}
+existing = os.environ.get("QBIT_DC_EXISTING_ID", "")
+if existing:
+    payload["id"] = int(existing)
+print(json.dumps(payload))
+PY
 }
 
 # Ensure a Reject ISO-style custom format exists and is scored (idempotent).
@@ -507,30 +557,8 @@ print(ids[0] if ids else '')")
     fail "${name}: add/update qBittorrent (need API key or QBITTORRENT_PASSWORD)"
   else
     local qbit_payload
-    qbit_payload=$(cat <<QBIT_JSON
-{
-  "enable": true,
-  "protocol": "torrent",
-  "priority": 1,
-  "name": "qBittorrent",
-  "implementation": "QBittorrent",
-  "configContract": "QBittorrentSettings",
-  "fields": [
-    {"name": "host", "value": "${qbit_host}"},
-    {"name": "port", "value": 8080},
-    {"name": "username", "value": "${qbit_user}"},
-    {"name": "password", "value": "${qbit_pass}"},
-    {"name": "apiKey", "value": "${qbit_api_key}"},
-    {"name": "${cat_field}", "value": "${category}"},
-    {"name": "${priority_recent}", "value": 0},
-    {"name": "${priority_older}", "value": 0},
-    {"name": "initialState", "value": 0},
-    {"name": "sequentialOrder", "value": false},
-    {"name": "firstAndLast", "value": false}
-  ]
-}
-QBIT_JSON
-)
+    qbit_payload=$(build_qbit_download_client_json "$qbit_host" "$qbit_user" "$qbit_pass" \
+      "$qbit_api_key" "$cat_field" "$category" "$priority_recent" "$priority_older")
     if [[ -n "$existing_id" ]]; then
       local existing_client force_client_sync=false key_drift=false stored_api_key=""
       [[ "${SYNC_QBIT_AUTH:-false}" == "true" ]] && force_client_sync=true
@@ -549,7 +577,8 @@ print('' if not vals or vals[0] is None else vals[0])")
         && api_post "${base}/api/v3/downloadclient/test" "application/json" "$existing_client" "$auth" >/dev/null 2>&1; then
         skip "${name}: qBittorrent download client"
       else
-        qbit_payload=$(json_extract "$qbit_payload" "data['id'] = ${existing_id}; print(json.dumps(data))")
+        qbit_payload=$(build_qbit_download_client_json "$qbit_host" "$qbit_user" "$qbit_pass" \
+          "$qbit_api_key" "$cat_field" "$category" "$priority_recent" "$priority_older" "$existing_id")
         if api_put "${base}/api/v3/downloadclient/${existing_id}" "application/json" "$qbit_payload" "$auth" >/dev/null 2>&1 \
           && api_post "${base}/api/v3/downloadclient/test" "application/json" "$qbit_payload" "$auth" >/dev/null 2>&1; then
           if $force_client_sync; then
@@ -602,4 +631,72 @@ print(str(xbmc[0].get('enable', False)).lower() if xbmc else 'false')")
 
   ensure_custom_format "$base" "$auth" "$name" "Reject ISO" -10000 \
     '[{"name":"ISO","implementation":"ReleaseTitleSpecification","negate":false,"required":true,"fields":[{"name":"value","value":"\\.iso$"}]}]'
+}
+
+# Servarr/Prowlarr often redact apiKey fields in GET responses (********).
+is_redacted_api_key() {
+  local key="$1"
+  [[ -z "$key" ]] && return 0
+  [[ "$key" =~ ^[[:space:]*]+$ ]]
+}
+
+# True when *arr responds to system/status with the given API key.
+arr_system_status_ok() {
+  local port="$1" api_key="$2" api_version="${3:-v3}"
+  [[ -n "$api_key" ]] || return 1
+  local code
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
+    -H "X-Api-Key: ${api_key}" "http://127.0.0.1:${port}/api/${api_version}/system/status" 2>/dev/null || echo 000)
+  [[ "$code" == "200" ]]
+}
+
+# Skip Prowlarr app PUT when keys match or stored value is redacted but *arr is reachable.
+prowlarr_app_api_key_in_sync() {
+  local stored_key="$1" arr_key="$2" arr_port="$3" arr_api_version="${4:-v3}"
+  [[ -n "$arr_key" ]] || return 1
+  if [[ "$stored_key" == "$arr_key" ]]; then
+    return 0
+  fi
+  if is_redacted_api_key "$stored_key" && arr_system_status_ok "$arr_port" "$arr_key" "$arr_api_version"; then
+    return 0
+  fi
+  return 1
+}
+
+# True when Gluetun port-forward hooks need unauthenticated localhost WebUI API.
+qbit_webui_bypass_local_auth_expected() {
+  [[ "${VPN_PORT_FORWARDING:-off}" == "on" ]]
+}
+
+# JSON blob for qBit WebUI security prefs (configure + GET-skip must agree).
+qbit_webui_security_prefs_json() {
+  local bypass="false"
+  qbit_webui_bypass_local_auth_expected && bypass="true"
+  QBIT_BYPASS_LOCAL="$bypass" python3 -c 'import json, os; print(json.dumps({
+    "web_ui_host_header_validation_enabled": False,
+    "bypass_local_auth": os.environ["QBIT_BYPASS_LOCAL"] == "true",
+    "bypass_auth_subnet_whitelist_enabled": True,
+    "bypass_auth_subnet_whitelist": "172.30.42.0/24",
+    "web_ui_max_auth_fail_count": 20,
+    "web_ui_ban_duration": 300,
+  }))'
+}
+
+# qBit 5.x WebUI security prefs applied by configure (ADR 0008 whitelist).
+qbit_webui_security_prefs_ok() {
+  local prefs_json="$1"
+  [[ -n "$prefs_json" ]] || return 1
+  local expect_bypass="false"
+  qbit_webui_bypass_local_auth_expected && expect_bypass="true"
+  QBIT_EXPECT_BYPASS_LOCAL="$expect_bypass" json_extract "$prefs_json" "
+import os
+p = data
+expect = os.environ['QBIT_EXPECT_BYPASS_LOCAL'] == 'true'
+if p.get('web_ui_host_header_validation_enabled', True): sys.exit(1)
+if bool(p.get('bypass_local_auth', False)) != expect: sys.exit(1)
+if not p.get('bypass_auth_subnet_whitelist_enabled', False): sys.exit(1)
+if p.get('bypass_auth_subnet_whitelist', '') != '172.30.42.0/24': sys.exit(1)
+if p.get('web_ui_max_auth_fail_count', 5) != 20: sys.exit(1)
+if p.get('web_ui_ban_duration', 3600) != 300: sys.exit(1)
+" >/dev/null
 }
