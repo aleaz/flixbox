@@ -95,6 +95,19 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   done
   $ready || fail "core containers not up within 600s"
 
+  log "Waiting for core healthchecks..."
+  deadline=$((SECONDS + 600))
+  while (( SECONDS < deadline )); do
+    healthy=0
+    for c in "${core[@]}"; do
+      status=$(docker inspect -f '{{.State.Health.Status}}' "$c" 2>/dev/null || echo none)
+      [[ "$status" == "healthy" || "$status" == "none" ]] && healthy=$((healthy + 1))
+    done
+    [[ "$healthy" -eq ${#core[@]} ]] && break
+    sleep 5
+  done
+  [[ "$healthy" -eq ${#core[@]} ]] || fail "core containers not healthy within 600s"
+
   log "Running configure (preflight budget=${preflight_timeout}s)..."
   set +e
   out="$(CONFIGURE_PREFLIGHT_TIMEOUT="${preflight_timeout}" WAIT_TIMEOUT="${wait_timeout}" ./bin/flixbox configure 2>&1)"

@@ -62,9 +62,9 @@ configure_seerr() {
     local kind="$1" host="$2" probe_port="$3" container_port="$4" api_key="$5" root="$6" is_default="${7:-false}"
     local list profiles profile_id profile_name lang_profile_id payload http_code existing_id stored_key
     list=$(curl -s -b "$cookie" "${base}/api/v1/settings/${kind}" 2>/dev/null || true)
-    existing_id=$(json_query arr-first-list-field "$list" "$(json_params field=id)" 2>/dev/null || true)
+    existing_id=$(json_query arr-first-list-field "$list" "$(FIELD=id json_params field=FIELD)" 2>/dev/null || true)
     if [[ -n "$existing_id" ]]; then
-      stored_key=$(json_query arr-first-list-field "$list" "$(json_params field=apiKey)" 2>/dev/null || true)
+      stored_key=$(json_query arr-first-list-field "$list" "$(FIELD=apiKey json_params field=FIELD)" 2>/dev/null || true)
       if [[ "$stored_key" == "$api_key" ]]; then
         skip "Seerr: ${kind} service"
         return
@@ -85,8 +85,8 @@ configure_seerr() {
     arr_base="http://127.0.0.1:${probe_port}"
     arr_auth="X-Api-Key: ${api_key}"
     profiles=$(api_get "${arr_base}/api/v3/qualityprofile" "$arr_auth") || true
-    profile_id=$(json_query arr-first-list-field "$profiles" "$(json_params field=id)" || true)
-    profile_name=$(json_query arr-first-list-field "$profiles" "$(json_params field=name)" || true)
+    profile_id=$(json_query arr-first-list-field "$profiles" "$(FIELD=id json_params field=FIELD)" || true)
+    profile_name=$(json_query arr-first-list-field "$profiles" "$(FIELD=name json_params field=FIELD)" || true)
     if [[ -z "$profile_id" ]]; then
       fail "Seerr: add ${kind} (no quality profile from ${kind})"
       return

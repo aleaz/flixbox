@@ -495,6 +495,9 @@ pass C-78
 if grep -r 'json_extract' scripts/configure/ 2>/dev/null; then
   fail C-79 'scripts/configure must not use json_extract (use json_query)'
 fi
+if grep -E 'json_params field=[a-zA-Z]+"\)' scripts/configure/seerr.sh 2>/dev/null; then
+  fail C-79 'seerr json_params must bind field names via env vars (FIELD=id json_params field=FIELD)'
+fi
 grep -q 'seerr-initialized' scripts/lib/json-query.py || \
   fail C-79 'json-query must include seerr-initialized handler'
 grep -q 'qbit-prefs-vpn-ok' scripts/lib/json-query.py || \
