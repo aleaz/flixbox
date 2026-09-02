@@ -145,10 +145,12 @@ if not p.get('limit_lan_peers', False): sys.exit(1)
     fi
   fi
 
+  # API key may appear in qBittorrent.conf or WebUI preferences after auth/password setup.
+  QBIT_API_KEY=$(qbit_api_key_from_config "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}")
+  if [[ -n "$QBIT_API_KEY" ]]; then
+    info "qBittorrent API key: ${QBIT_API_KEY:0:8}..."
+  fi
+
   rm -f "$QBIT_COOKIE"
   docker exec "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}" rm -f "${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}" 2>/dev/null || true
-
-  # API key may appear in qBittorrent.conf only after WebUI auth/password setup.
-  QBIT_API_KEY=$(qbit_api_key_from_config "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}")
-  [[ -n "$QBIT_API_KEY" ]] && info "qBittorrent API key: ${QBIT_API_KEY:0:8}..."
 }

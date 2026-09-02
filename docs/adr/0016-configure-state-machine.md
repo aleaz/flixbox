@@ -55,13 +55,16 @@ Configure modules use `scripts/lib/json-query.py` with parameters in `JSON_QUERY
 
 ### Failure model
 
-- **Preflight fatal:** missing tools/stack, `.env` not writable, global timeout, VPN hard-fail → `exit 1`.
-- **Wiring best-effort:** `fail()` increments `FAILED` and returns non-zero; script exits 1 if `FAILED>0` at end.
+- **Preflight fatal:** missing tools/stack, `.env` not writable, global timeout, VPN hard-fail → `exit 1` (or `return 1` from retry loop).
+- **Wiring best-effort (PARTIAL):** `fail()` increments `FAILED` and **returns 0** so `set -euo pipefail` does not abort mid-run; `configure-apps.sh` exits 1 only when `FAILED>0` after the full wiring pass and summary.
+- **Wait helpers:** after `fail()` on hard timeout they still `return 1` to signal preflight retry / module early-exit (e.g. skip rest of one service when API never came up).
 - **Optional services:** Seerr container absent → skip; Byparr down → skip CF proxy.
 
 ### qBit download client auth
 
-`*arr` download client may use qBit **API key** (preferred) or **WebUI password** when the API key is not yet in `qBittorrent.conf`. `configure_qbittorrent` runs before *arr wiring and refreshes `QBIT_API_KEY` after password setup.
+`*arr` download client may use qBit **API key** (preferred) or **WebUI password** when the API key is not yet in `qBittorrent.conf`. `configure_qbittorrent` runs before *arr wiring and refreshes `QBIT_API_KEY` after password setup (conf file, then WebUI preferences JSON when authenticated).
+
+Internal *arr/Bazarr/Seerr/Prowlarr app ports use `SONARR_PORT` / `RADARR_PORT` from `.env` (defaults 8989/7878), not hardcoded literals.
 
 ## Consequences
 

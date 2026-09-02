@@ -30,7 +30,7 @@ configure_entry_recreate_admin_services() {
   warn "Recreating admin-bound services — configure may wait longer while they restart"
   log "Recreating admin-bound services (access profile derived keys changed)..."
   if docker compose --project-directory "${ROOT_DIR}" up -d --force-recreate "${services[@]}" >/dev/null 2>&1; then
-    ok "Admin-bound services recreated (FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP})"
+    info "Admin-bound services recreated (FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP})"
   else
     warn "Could not recreate all admin-bound services — run: ./bin/flixbox reload"
     return 1
@@ -59,7 +59,7 @@ configure_entry_prepare() {
     flixbox_sync_access_profile_env "${ROOT_DIR}/.env"
     synced=true
     flixbox_load_env
-    ok "Access profile $(flixbox_access_profile) synced (FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP})"
+    info "Access profile $(flixbox_access_profile) synced (FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP})"
   fi
   if [[ "$(flixbox_access_profile)" == "shared" ]]; then
     _configure_entry_ensure_shared_ui_credentials

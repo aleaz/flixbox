@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Enforce Flixbox architecture contracts in CI and locally.
-# See docs/10-ci-plan.md for check IDs (C-01 … C-70).
+# See docs/10-ci-plan.md for check IDs (C-01 … C-71).
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -391,8 +391,10 @@ grep -q 'configure_ensure_http_parallel' scripts/configure/preflight.sh || \
   fail C-69 'preflight must parallelize HTTP warm-up waits'
 grep -q 'configure_ensure_stack_apis_parallel' scripts/configure/preflight.sh || \
   fail C-69 'preflight must parallelize authenticated API waits'
-grep -q 'return 1' scripts/lib/configure-helpers.sh || \
-  fail C-69 'configure fail() must return non-zero'
+grep -q 'FAILED=\$((FAILED + 1))' scripts/lib/configure-helpers.sh || \
+  fail C-69 'configure fail() must increment FAILED'
+sed -n '/^fail() {/,/^}/p' scripts/lib/configure-helpers.sh | grep -q 'return 0' || \
+  fail C-69 'configure fail() must return 0 under set -e (PARTIAL wiring; ADR 0016)'
 grep -q 'wait_for_bazarr_api' scripts/configure/bazarr.sh || \
   fail C-69 'Bazarr must re-wait for API after restart'
 [[ -f docs/adr/0016-configure-state-machine.md ]] || \
@@ -413,6 +415,20 @@ if grep -E 'json_extract.*\$\{' scripts/configure/arr-common.sh scripts/configur
   fail C-70 'arr/bazarr must not shell-interpolate into json_extract'
 fi
 pass C-70
+
+# --- C-71: configure JSON/env footgun guards (post-audit) ---
+if grep -E 'JSON_QUERY_PARAMS="\$params" echo' scripts/lib/configure-helpers.sh; then
+  fail C-71 'json_query must not bind JSON_QUERY_PARAMS to echo (apply to python3)'
+fi
+grep -q 'echo "\$json" | JSON_QUERY_PARAMS=' scripts/lib/configure-helpers.sh || \
+  fail C-71 'json_query must pipe JSON stdin to python3 with JSON_QUERY_PARAMS on python'
+grep -q 'sonarr_port=SONARR_PORT' scripts/configure/bazarr.sh || \
+  fail C-71 'bazarr must pass SONARR_PORT/RADARR_PORT to bazarr-conn-diff'
+grep -q '"\$RADARR_PORT"' scripts/configure/seerr.sh || \
+  fail C-71 'seerr must use RADARR_PORT/SONARR_PORT from env'
+grep -q 'web_ui_api_key' scripts/lib/configure-helpers.sh || \
+  fail C-71 'qbit_api_key_from_config must read web_ui_api_key fallback'
+pass C-71
 
 # --- Compose render (shared script — R4) ---
 "${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1

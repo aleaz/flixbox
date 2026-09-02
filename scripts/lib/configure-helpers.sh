@@ -38,7 +38,8 @@ ${expr}
 }
 
 # Build JSON_QUERY_PARAMS from param_key=ENV_VAR pairs (comma-separated spec).
-# Example: CF_NAME="$cf_name" json_params cf_name=CF_NAME
+# Values are read from the process environment — prefix assignments inside $(...):
+#   "$(ROOT_PATH="$root_path" json_params root_path=ROOT_PATH)"
 json_params() {
   python3 -c '
 import json, os, sys
@@ -55,14 +56,20 @@ print(json.dumps(out))
 
 # Named query (scripts/lib/json-query.py) — parameters via JSON, never shell-interpolated Python.
 json_query() {
-  local query="$1" json="$2" params="${3:-{}}"
-  JSON_QUERY_PARAMS="$params" echo "$json" | python3 "${FLIXBOX_JSON_QUERY}" "$query"
+  local query="$1" json="$2" params="${3-}"
+  [[ -n "$params" ]] || params='{}'
+  echo "$json" | JSON_QUERY_PARAMS="$params" python3 "${FLIXBOX_JSON_QUERY}" "$query"
 }
 
 log()  { echo "[configure] $*"; }
 ok()   { echo "  ✓ $*"; CONFIGURED=$((CONFIGURED + 1)); }
 skip() { echo "  - $* (already configured)"; SKIPPED=$((SKIPPED + 1)); }
-fail() { echo "  ✗ $*"; FAILED=$((FAILED + 1)); return 1; }
+fail() {
+  echo "  ✗ $*"
+  FAILED=$((FAILED + 1))
+  # Return 0 so set -e does not abort wiring; FAILED drives exit 1 at end (ADR 0016 PARTIAL).
+  return 0
+}
 warn() { echo "  ! $*"; }
 info() { echo "  $*"; }
 dry()  { echo "  [dry-run] Would: $*"; }
@@ -346,8 +353,24 @@ api_key_from_config_xml() {
 
 qbit_api_key_from_config() {
   local container="$1"
-  docker exec "$container" grep -m1 '^WebUI\\API\\APIKey=' /config/qBittorrent/qBittorrent.conf 2>/dev/null \
-    | cut -d= -f2- | tr -d '\r' || true
+  local cookie_path="${2:-${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}}"
+  local key prefs api_url="${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}"
+  key=$(docker exec "$container" grep -m1 '^WebUI\\API\\APIKey=' /config/qBittorrent/qBittorrent.conf 2>/dev/null \
+    | cut -d= -f2- | tr -d '\r' || true)
+  if [[ -n "$key" ]]; then
+    printf '%s' "$key"
+    return 0
+  fi
+  # qBit 5.x may keep the key in WebUI preferences only (not qBittorrent.conf).
+  if docker exec "$container" test -f "$cookie_path" 2>/dev/null; then
+    prefs=$(docker exec "$container" curl -s -b "$cookie_path" "${api_url}/api/v2/app/preferences" 2>/dev/null || true)
+    if [[ -n "$prefs" ]]; then
+      key=$(json_extract "$prefs" "print(data.get('web_ui_api_key') or '')" 2>/dev/null || true)
+      if [[ -n "$key" ]]; then
+        printf '%s' "$key"
+      fi
+    fi
+  fi
 }
 
 bazarr_settings_post() {

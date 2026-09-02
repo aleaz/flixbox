@@ -49,16 +49,16 @@ configure_prowlarr() {
 
   for arr_name in Sonarr Radarr; do
     if [[ "$arr_name" == "Sonarr" ]]; then
-      arr_port=8989
+      arr_port="$SONARR_PORT"
       arr_key="$SONARR_API_KEY"
       arr_categories="[5000, 5010, 5020, 5030, 5040, 5045, 5050, 5060, 5070, 5080]"
     else
-      arr_port=7878
+      arr_port="$RADARR_PORT"
       arr_key="$RADARR_API_KEY"
       arr_categories="[2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060, 2070, 2080]"
     fi
     name_lower=$(echo "$arr_name" | tr '[:upper:]' '[:lower:]')
-    NAME_LOWER="$name_lower" existing_app_id=$(json_query prowlarr-app-id-by-name "$apps" "$(json_params name_lower=NAME_LOWER)")
+    existing_app_id=$(json_query prowlarr-app-id-by-name "$apps" "$(NAME_LOWER="$name_lower" json_params name_lower=NAME_LOWER)")
     if [[ -n "$existing_app_id" ]]; then
       if [[ -z "$arr_key" ]]; then
         skip "Prowlarr: ${arr_name} application"

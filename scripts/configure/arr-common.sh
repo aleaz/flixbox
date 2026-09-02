@@ -17,7 +17,7 @@ ensure_custom_format() {
   local base="$1" auth="$2" name="$3" cf_name="$4" cf_score="$5" cf_specs="$6"
   local formats cf_id
   formats=$(api_get "${base}/api/v3/customformat" "$auth") || true
-  CF_NAME="$cf_name" cf_id=$(json_query arr-cf-id-by-name "$formats" "$(json_params cf_name=CF_NAME)")
+  cf_id=$(json_query arr-cf-id-by-name "$formats" "$(CF_NAME="$cf_name" json_params cf_name=CF_NAME)")
   if [[ -n "$cf_id" ]]; then
     skip "${name}: ${cf_name} custom format"
   else
@@ -91,8 +91,8 @@ configure_arr_service() {
 
   local roots
   roots=$(api_get "${base}/api/v3/rootfolder" "$auth") || true
-  ROOT_PATH="$root_path"
-  if json_query arr-root-folder-exists "$roots" "$(json_params root_path=ROOT_PATH)" >/dev/null 2>&1; then
+  if json_query arr-root-folder-exists "$roots" \
+    "$(ROOT_PATH="$root_path" json_params root_path=ROOT_PATH)" >/dev/null 2>&1; then
     skip "${name}: root folder ${root_path}"
   else
     if api_post "${base}/api/v3/rootfolder" "application/json" "{\"path\":\"${root_path}\"}" "$auth" >/dev/null 2>&1; then

@@ -30,13 +30,15 @@ configure_wait_for_first_start() {
 
 bazarr_api_key_from_config() {
   local attempt key=""
-  for attempt in 1 2 3 4 5; do
-    key=$(docker exec flixbox-bazarr grep '^\s*apikey:' /config/config/config.yaml 2>/dev/null \
-      | head -1 | sed 's/.*apikey:[[:space:]]*//' | tr -d ' ' || true)
-    [[ -n "$key" ]] && {
-      printf '%s' "$key"
-      return 0
-    }
+  for attempt in $(seq 1 15); do
+    if docker exec flixbox-bazarr test -f /config/config/config.yaml 2>/dev/null; then
+      key=$(docker exec flixbox-bazarr grep '^\s*apikey:' /config/config/config.yaml 2>/dev/null \
+        | head -1 | sed 's/.*apikey:[[:space:]]*//' | tr -d ' ' || true)
+      if [[ -n "$key" ]]; then
+        printf '%s' "$key"
+        return 0
+      fi
+    fi
     sleep 2
   done
   return 1
@@ -93,7 +95,9 @@ configure_discover_api_keys() {
     | grep -oE '[^ ]+$' || true)
 
   QBIT_API_KEY=$(qbit_api_key_from_config flixbox-qbittorrent)
-  [[ -n "$QBIT_API_KEY" ]] && info "qBittorrent API key: ${QBIT_API_KEY:0:8}..."
+  if [[ -n "$QBIT_API_KEY" ]]; then
+    info "qBittorrent API key: ${QBIT_API_KEY:0:8}..."
+  fi
   return 0
 }
 

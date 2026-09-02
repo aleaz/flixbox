@@ -122,8 +122,8 @@ print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
     fi
   }
 
-  add_seerr_arr radarr radarr 7878 "$RADARR_API_KEY" "/data/media/movies" true
-  add_seerr_arr sonarr sonarr 8989 "$SONARR_API_KEY" "/data/media/tv" false
+  add_seerr_arr radarr radarr "$RADARR_PORT" "$RADARR_API_KEY" "/data/media/movies" true
+  add_seerr_arr sonarr sonarr "$SONARR_PORT" "$SONARR_API_KEY" "/data/media/tv" false
 
   if [[ "$init_flag" == "true" ]]; then
     skip "Seerr: initialize"

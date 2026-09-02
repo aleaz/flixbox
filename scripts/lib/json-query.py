@@ -114,18 +114,18 @@ def arr_profile_ids(data: list, _params: dict[str, Any]) -> str:
 
 
 def bazarr_conn_diff(data: dict, params: dict[str, Any]) -> str:
-    p = _require_param(params, "sonarr_key", "radarr_key")
+    p = _require_param(params, "sonarr_key", "radarr_key", "sonarr_port", "radarr_port")
     want = {
         "sonarr": {
             "ip": "sonarr",
-            "port": 8989,
+            "port": int(p["sonarr_port"]),
             "base_url": "",
             "ssl": False,
             "apikey": p["sonarr_key"],
         },
         "radarr": {
             "ip": "radarr",
-            "port": 7878,
+            "port": int(p["radarr_port"]),
             "base_url": "",
             "ssl": False,
             "apikey": p["radarr_key"],

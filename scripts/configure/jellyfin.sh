@@ -115,13 +115,13 @@ print(__import__('json').dumps(data.get('Policy', {})))" || true)
 
   ensure_jf_library() {
     local lib_name="$1" collection_type="$2" path="$3"
-    LIB_NAME="$lib_name" LIB_PATH="$path"
-    if json_query jellyfin-library-exists "$libs" "$(json_params lib_name=LIB_NAME,path=LIB_PATH)" >/dev/null 2>&1; then
+    if json_query jellyfin-library-exists "$libs" \
+      "$(LIB_NAME="$lib_name" LIB_PATH="$path" json_params lib_name=LIB_NAME,path=LIB_PATH)" >/dev/null 2>&1; then
       skip "Jellyfin: library ${lib_name}"
       return
     fi
     local code lib_body lib_q
-    lib_body=$(PATH="$path" flixbox_json jellyfin-library-options)
+    lib_body=$(JELLYFIN_LIB_PATH="$path" flixbox_json jellyfin-library-options)
     lib_q=$(VALUE="$lib_name" flixbox_json jellyfin-url-quote)
     code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
       "${base}/Library/VirtualFolders?name=${lib_q}&collectionType=${collection_type}&refreshLibrary=true" \

@@ -3,6 +3,9 @@
 
 Secrets and user-controlled strings must be passed via environment variables,
 never interpolated into shell JSON strings. See docs/05-standards.md §6.
+
+Avoid standard shell env names for payload inputs (e.g. PATH — use JELLYFIN_LIB_PATH).
+Prefix new vars when ambiguous (FLIXBOX_* / service-specific names).
 """
 
 from __future__ import annotations
@@ -263,8 +266,8 @@ def qbit_login_form() -> str:
 
 
 def jellyfin_library_options() -> str:
-    env = _require("PATH")
-    return json.dumps({"LibraryOptions": {"PathInfos": [{"Path": env["PATH"]}]}})
+    env = _require("JELLYFIN_LIB_PATH")
+    return json.dumps({"LibraryOptions": {"PathInfos": [{"Path": env["JELLYFIN_LIB_PATH"]}]}})
 
 
 def jellyfin_url_quote() -> str:

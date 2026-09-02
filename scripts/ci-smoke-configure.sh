@@ -49,6 +49,7 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   flixbox_env_file_set .env FLIXBOX_MODE direct
   flixbox_env_file_set .env VPN_ENABLED false
   flixbox_env_file_set .env FLIXBOX_ACCESS_PROFILE trusted
+  flixbox_env_file_set .env QBITTORRENT_PORT 18080
 
   ./bin/flixbox init --non-interactive
 
