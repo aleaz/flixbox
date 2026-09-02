@@ -28,6 +28,8 @@ configure_bazarr() {
 
   local needs_restart=false
   local conn_state _bazarr_params
+  # RADARR_API_KEY / SONARR_API_KEY set by preflight (not BAZARR_API_KEY misspelling).
+  # shellcheck disable=SC2153
   _bazarr_params="$(SONARR_API_KEY="$SONARR_API_KEY" RADARR_API_KEY="$RADARR_API_KEY" \
     json_params sonarr_key=SONARR_API_KEY,radarr_key=RADARR_API_KEY)"
   conn_state=$(json_query bazarr-conn-diff "$settings" "$_bazarr_params")

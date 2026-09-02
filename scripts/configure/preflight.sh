@@ -2,11 +2,34 @@
 # Preflight: stack assert → readiness retry loop → mark PREFLIGHT_PASSED for wiring.
 
 configure_init_qbit_context() {
-  QBIT_ARR_HOST="qbittorrent"
-  QBIT_URL="http://127.0.0.1:${QBITTORRENT_PORT}"
-  QBIT_INTERNAL_API_URL="http://127.0.0.1:8080"
-  QBIT_DOCKER_CONTAINER="flixbox-qbittorrent"
-  QBIT_DOCKER_COOKIE="/tmp/flixbox-configure-cookie.txt"
+  # Exported: consumed by configure modules / helpers (ShellCheck SC2034).
+  export QBIT_ARR_HOST="qbittorrent"
+  export QBIT_URL="http://127.0.0.1:${QBITTORRENT_PORT}"
+  export QBIT_INTERNAL_API_URL="http://127.0.0.1:8080"
+  export QBIT_DOCKER_CONTAINER="flixbox-qbittorrent"
+  export QBIT_DOCKER_COOKIE="/tmp/flixbox-configure-cookie.txt"
+  configure_ensure_qbit_webui_helpers
+}
+
+# Post-upgrade: ensure login + prefs helpers exist under CONFIG_DIR (mounted into qBit).
+configure_ensure_qbit_webui_helpers() {
+  local dest_dir src_login dest_login
+  [[ -n "${CONFIG_DIR:-}" && -n "${ROOT_DIR:-}" ]] || return 0
+  dest_dir="${CONFIG_DIR}/qbittorrent/.flixbox"
+  src_login="${ROOT_DIR}/templates/qbittorrent/flixbox-qbit-api-login.sh"
+  dest_login="${dest_dir}/qbit-api-login.sh"
+  [[ -f "$src_login" ]] || return 0
+  mkdir -p "$dest_dir"
+  if [[ ! -f "$dest_login" ]] || ! cmp -s "$src_login" "$dest_login" 2>/dev/null; then
+    cp -f "$src_login" "$dest_login"
+    chmod 700 "$dest_login"
+  fi
+  local f
+  for f in webui-security-prefs.json webui-security-prefs-portforward.json; do
+    if [[ -f "${ROOT_DIR}/templates/qbittorrent/${f}" ]]; then
+      cp -f "${ROOT_DIR}/templates/qbittorrent/${f}" "${dest_dir}/${f}"
+    fi
+  done
 }
 
 configure_wait_for_first_start() {
@@ -29,8 +52,8 @@ configure_wait_for_first_start() {
 }
 
 bazarr_api_key_from_config() {
-  local attempt key=""
-  for attempt in $(seq 1 15); do
+  local key=""
+  for _ in $(seq 1 15); do
     if docker exec flixbox-bazarr test -f /config/config/config.yaml 2>/dev/null; then
       key=$(docker exec flixbox-bazarr grep '^\s*apikey:' /config/config/config.yaml 2>/dev/null \
         | head -1 | sed 's/.*apikey:[[:space:]]*//' | tr -d ' ' || true)
@@ -87,17 +110,20 @@ configure_discover_api_keys() {
   env_set_if_empty PROWLARR_API_KEY "$PROWLARR_API_KEY"
   env_set_if_empty BAZARR_API_KEY "$BAZARR_API_KEY"
 
-  QBIT_USERNAME="${QBITTORRENT_USERNAME:-admin}"
-  QBIT_PASSWORD="${QBITTORRENT_PASSWORD:-}"
-  QBIT_TEMP_PASSWORD=""
+  export QBIT_USERNAME="${QBITTORRENT_USERNAME:-admin}"
+  export QBIT_PASSWORD="${QBITTORRENT_PASSWORD:-}"
+  export QBIT_TEMP_PASSWORD=""
   QBIT_TEMP_PASSWORD=$(docker logs flixbox-qbittorrent 2>&1 \
     | grep -iE 'temporary password|password is' | tail -1 \
     | grep -oE '[^ ]+$' || true)
+  export QBIT_TEMP_PASSWORD
 
+  export QBIT_API_KEY
   QBIT_API_KEY=$(qbit_api_key_from_config flixbox-qbittorrent)
   if [[ -n "$QBIT_API_KEY" ]]; then
     info "qBittorrent API key: ${QBIT_API_KEY:0:8}..."
   fi
+  export SONARR_API_KEY RADARR_API_KEY PROWLARR_API_KEY BAZARR_API_KEY
   return 0
 }
 
@@ -141,13 +167,13 @@ configure_preflight() {
   local window="${WAIT_TIMEOUT:-180}"
 
   while (( SECONDS < deadline )); do
-    FAILED=0
+    export FAILED=0
     local remaining=$((deadline - SECONDS))
     if (( remaining <= window )); then
-      CONFIGURE_SOFT_WAIT=0
+      export CONFIGURE_SOFT_WAIT=0
       configure_preflight_pass hard && return 0
     else
-      CONFIGURE_SOFT_WAIT=1
+      export CONFIGURE_SOFT_WAIT=1
       configure_preflight_pass soft && return 0
     fi
     info "First-start still in progress ($((SECONDS - start))s / ${timeout}s budget) — retrying in 10s..."

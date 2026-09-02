@@ -59,7 +59,7 @@ configure_qbittorrent() {
         fail "qBittorrent: re-auth after --sync-qbit-auth failed"
         return
       fi
-      ENV_DIRTY=true
+      export ENV_DIRTY=true
     else
       fail "qBittorrent: sync password from .env (HTTP ${sync_pw_code})"
       return

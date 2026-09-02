@@ -62,6 +62,7 @@ pass "env-file helpers (special chars + safe exports)"
 
 # --- json-payload: secrets with shell metacharacters ---
 jp="${ROOT_DIR}/scripts/lib/json-payload.py"
+# shellcheck disable=SC1003 # intentional metacharacters in test password
 special_pw='p|"&/$`'\''\\'
 got=$(USERNAME='admin' PASSWORD="${special_pw}" python3 "${jp}" jellyfin-auth)
 echo "${got}" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["Pw"]==sys.argv[1]' "${special_pw}" || \
@@ -69,7 +70,7 @@ echo "${got}" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["P
 got=$(BOOTSTRAP=1 USERNAME='u' PASSWORD="${special_pw}" python3 "${jp}" seerr-login)
 echo "${got}" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["password"]==sys.argv[1]' "${special_pw}" || \
   fail "json-payload seerr-login special chars"
-got=$(HOST=qbittorrent USER=admin PASS='secret' API_KEY= \
+got=$(HOST=qbittorrent USER=admin PASS='secret' API_KEY='' \
   CAT_FIELD=tvCategory CATEGORY=tv PRIO_RECENT=recentTvPriority PRIO_OLDER=olderTvPriority \
   python3 "${jp}" qbit-download-client)
 echo "${got}" | python3 -c 'import json,sys; d=json.load(sys.stdin); f={x["name"]:x["value"] for x in d["fields"]}; assert f["password"]=="secret" and f["apiKey"]==""' || \

@@ -40,14 +40,15 @@ jobs:
 
       - name: ShellCheck
         run: |
-          shellcheck -e SC1091 bin/flixbox scripts/*.sh scripts/lib/*.sh scripts/configure/*.sh \
+          # -S warning: ignore info (SC2016 intentional literal greps, etc.)
+          shellcheck -S warning -e SC1091 bin/flixbox scripts/*.sh scripts/lib/*.sh scripts/configure/*.sh \
             scripts/ci-validate.sh scripts/ci-smoke-init.sh scripts/ci-compose-render.sh \
             scripts/ci-trivy.sh scripts/ci-smoke-configure.sh scripts/ci-smoke-vpn.sh \
             scripts/ci-pin-digests.sh
-          shellcheck templates/qbittorrent/custom-services.d/*.sh
-          shellcheck templates/qbittorrent/flixbox-qbit-api-login.sh
-          shellcheck templates/qbittorrent/custom-cont-init.d/*.sh
-          shellcheck templates/decluttarr/entrypoint.sh
+          shellcheck -S warning templates/qbittorrent/custom-services.d/*.sh
+          shellcheck -S warning templates/qbittorrent/flixbox-qbit-api-login.sh
+          shellcheck -S warning templates/qbittorrent/custom-cont-init.d/*.sh
+          shellcheck -S warning templates/decluttarr/entrypoint.sh
 
       - name: Contract validation
         run: ./scripts/ci-validate.sh

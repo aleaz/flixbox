@@ -10,7 +10,6 @@ source "${ROOT_DIR}/scripts/lib/flixbox-env.sh"
 
 flixbox_load_env
 MODE="${FLIXBOX_MODE}"
-VPN_ENABLED="${VPN_ENABLED}"
 echo "FLIXBOX_MODE=${MODE}"
 echo "VPN_ENABLED=${VPN_ENABLED}"
 

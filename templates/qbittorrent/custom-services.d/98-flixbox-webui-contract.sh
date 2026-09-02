@@ -103,7 +103,7 @@ json_escape_string() {
   for ((idx = 0; idx < ${#s}; idx++)); do
     c="${s:idx:1}"
     case "$c" in
-      \\) out+='\\' ;;
+      \\) out+="\\" ;;
       '"') out+='\"' ;;
       $'\n') out+='\n' ;;
       $'\r') out+='\r' ;;

@@ -113,7 +113,7 @@ configure_seerr() {
       ok "Seerr: added ${kind}"
     else
       if [[ "${VERBOSE:-false}" == "true" ]]; then
-        info "Seerr ${kind} response (HTTP ${http_code}): $(cat "$seerr_arr_resp" 2>/dev/null | configure_redact || true)"
+        info "Seerr ${kind} response (HTTP ${http_code}): $(configure_redact <"$seerr_arr_resp" 2>/dev/null || true)"
       fi
       fail "Seerr: add ${kind} (HTTP ${http_code})"
     fi

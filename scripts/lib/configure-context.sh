@@ -5,10 +5,11 @@
 
 # Reset counters and flags at configure start (preflight sets API keys after).
 configure_context_reset() {
-  CONFIGURED=0
-  SKIPPED=0
-  FAILED=0
-  ENV_DIRTY=false
+  # Exported: counters shared across sourced configure modules.
+  export CONFIGURED=0
+  export SKIPPED=0
+  export FAILED=0
+  export ENV_DIRTY=false
   configure_state_init
 }
 

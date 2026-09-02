@@ -49,8 +49,7 @@ flixbox_qbit_webui_bootstrap() {
   fi
 
   # Wait briefly for WebUI (health may already be green).
-  local i
-  for i in $(seq 1 30); do
+  for _ in $(seq 1 30); do
     if docker exec "$container" curl -fsS -o /dev/null --max-time 3 http://127.0.0.1:8080/ 2>/dev/null; then
       break
     fi

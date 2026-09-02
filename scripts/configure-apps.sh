@@ -24,8 +24,9 @@ source "${ROOT_DIR}/scripts/lib/configure-helpers.sh"
 
 DRY_RUN=false
 VERBOSE=false
-SYNC_QBIT_AUTH=false
-QBIT_COOKIE=""
+# Exported: consumed by sourced configure modules (ShellCheck SC2034).
+export SYNC_QBIT_AUTH=false
+export QBIT_COOKIE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -49,6 +50,7 @@ flixbox_load_configure_env
 configure_runtime_init
 configure_context_reset
 QBIT_COOKIE=$(configure_tmpfile)
+export QBIT_COOKIE
 
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/configure-entry.sh"

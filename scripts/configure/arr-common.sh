@@ -38,11 +38,11 @@ ensure_custom_format() {
   local pid profile updated_profile
   for pid in $profile_ids; do
     profile=$(api_get "${base}/api/v3/qualityprofile/${pid}" "$auth") || continue
-    CF_ID="$cf_id" CF_SCORE="$cf_score" _cf_params="$(CF_ID="$cf_id" CF_SCORE="$cf_score" json_params cf_id=CF_ID,cf_score=CF_SCORE)"
+    _cf_params="$(CF_ID="$cf_id" CF_SCORE="$cf_score" json_params cf_id=CF_ID,cf_score=CF_SCORE)"
     if json_query arr-cf-scored-in-profile "$profile" "$_cf_params" >/dev/null 2>&1; then
       continue
     fi
-    CF_ID="$cf_id" CF_NAME="$cf_name" CF_SCORE="$cf_score" _cf_params="$(CF_ID="$cf_id" CF_NAME="$cf_name" CF_SCORE="$cf_score" json_params cf_id=CF_ID,cf_name=CF_NAME,cf_score=CF_SCORE)"
+    _cf_params="$(CF_ID="$cf_id" CF_NAME="$cf_name" CF_SCORE="$cf_score" json_params cf_id=CF_ID,cf_name=CF_NAME,cf_score=CF_SCORE)"
     updated_profile=$(json_query arr-cf-patch-profile "$profile" "$_cf_params")
     if api_put "${base}/api/v3/qualityprofile/${pid}" "application/json" "$updated_profile" "$auth" >/dev/null 2>&1; then
       ok "${name}: scored ${cf_name} at ${cf_score} in profile ${pid}"
