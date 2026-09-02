@@ -84,9 +84,15 @@ grep -q 'torrents/incomplete' scripts/bootstrap-dirs.sh || \
   fail C-11 'bootstrap-dirs.sh missing torrents/incomplete'
 grep -q 'flixbox_ensure_seerr_config_owner' scripts/bootstrap-dirs.sh || \
   fail C-11 'bootstrap-dirs.sh must ensure Seerr config is UID 1000'
+grep -q 'flixbox_chown_tree' scripts/bootstrap-dirs.sh || \
+  fail C-11 'bootstrap-dirs.sh must chown DATA_DIR via flixbox_chown_tree (alpine fallback)'
 grep -q 'flixbox_ensure_seerr_config_owner' bin/flixbox || \
   fail C-11 'bin/flixbox init must re-apply Seerr UID 1000 after CONFIG_DIR chown'
+grep -q 'flixbox_chown_tree' bin/flixbox || \
+  fail C-11 'bin/flixbox init must chown DATA_DIR via flixbox_chown_tree'
 [[ -f scripts/lib/seerr-perms.sh ]] || fail C-11 'missing scripts/lib/seerr-perms.sh'
+grep -q 'flixbox_chown_tree' scripts/lib/seerr-perms.sh || \
+  fail C-11 'seerr-perms.sh must define flixbox_chown_tree'
 pass C-11
 
 # --- C-12: Unpackerr torrent path ---

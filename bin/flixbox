@@ -257,9 +257,14 @@ cmd_init() {
   flixbox_sync_access_profile_env "${ROOT_DIR}/.env"
   ensure_first_run_secrets
   load_env
-  chown -R "${PUID}:${PGID}" "${CONFIG_DIR}" 2>/dev/null || warn "Could not chown CONFIG_DIR (may need sudo)."
   # shellcheck disable=SC1091
   source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
+  if ! flixbox_chown_tree "${CONFIG_DIR}" "${PUID}" "${PGID}"; then
+    warn "Could not chown CONFIG_DIR to ${PUID}:${PGID} (may need sudo)."
+  fi
+  if ! flixbox_chown_tree "${DATA_DIR}" "${PUID}" "${PGID}"; then
+    warn "Could not chown DATA_DIR to ${PUID}:${PGID} — *arr may reject root folders."
+  fi
   flixbox_ensure_seerr_config_owner || warn "Seerr config may not be writable by UID 1000"
   ok "Init complete."
   log "Access profile: $(flixbox_access_profile) (*arr UI auth — ADR 0015)"
