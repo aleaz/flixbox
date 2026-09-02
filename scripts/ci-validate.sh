@@ -226,8 +226,10 @@ grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/downloaders-vpn.yml || \
 grep -q 'FLIXBOX_ADMIN_BIND_IP' compose/optimization.yml || \
   fail C-24c 'optimization.yml missing FLIXBOX_ADMIN_BIND_IP on Maintainerr'
 grep -q 'healthcheck:' compose/servarr.yml || fail C-24c 'servarr.yml missing byparr healthcheck'
-grep -A12 '^  byparr:' compose/servarr.yml | grep -q '8191/health' || \
-  fail C-24c 'byparr healthcheck must probe /health with short timeout'
+grep -A14 '^  byparr:' compose/servarr.yml | grep -q '8191/' || \
+  fail C-24c 'byparr healthcheck must probe container port 8191'
+grep -A14 '^  byparr:' compose/servarr.yml | grep -q -- '-m 3' || \
+  fail C-24c 'byparr healthcheck must use short curl max-time (avoid /health hang)'
 grep -q 'FLIXBOX_ADMIN_BIND_IP' scripts/lib/access-profile.sh || \
   fail C-24c 'access-profile.sh missing FLIXBOX_ADMIN_BIND_IP sync'
 grep -q 'flixbox_env_file_exports' scripts/lib/env-file.sh || \

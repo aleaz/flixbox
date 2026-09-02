@@ -95,18 +95,35 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   done
   $ready || fail "core containers not up within 600s"
 
+  dump_health() {
+    echo "[configure-smoke] Health dump:" >&2
+    for c in "${core[@]}"; do
+      status=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$c" 2>/dev/null || echo missing)
+      running=$(docker inspect -f '{{.State.Status}}' "$c" 2>/dev/null || echo missing)
+      printf '  %s: state=%s health=%s\n' "$c" "$running" "$status" >&2
+      if [[ "$status" != "healthy" && "$status" != "none" && "$status" != "missing" ]]; then
+        docker inspect -f '{{range .State.Health.Log}}{{.ExitCode}} {{.Output}}{{end}}' "$c" 2>/dev/null \
+          | tail -c 800 >&2 || true
+        echo >&2
+      fi
+    done
+  }
+
   log "Waiting for core healthchecks..."
   deadline=$((SECONDS + 600))
   while (( SECONDS < deadline )); do
     healthy=0
     for c in "${core[@]}"; do
-      status=$(docker inspect -f '{{.State.Health.Status}}' "$c" 2>/dev/null || echo none)
+      status=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$c" 2>/dev/null || echo none)
       [[ "$status" == "healthy" || "$status" == "none" ]] && healthy=$((healthy + 1))
     done
     [[ "$healthy" -eq ${#core[@]} ]] && break
     sleep 5
   done
-  [[ "$healthy" -eq ${#core[@]} ]] || fail "core containers not healthy within 600s"
+  if [[ "$healthy" -ne ${#core[@]} ]]; then
+    dump_health
+    fail "core containers not healthy within 600s"
+  fi
 
   log "Running configure (preflight budget=${preflight_timeout}s)..."
   set +e
