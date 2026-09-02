@@ -113,7 +113,10 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   out="$(CONFIGURE_PREFLIGHT_TIMEOUT="${preflight_timeout}" WAIT_TIMEOUT="${wait_timeout}" ./bin/flixbox configure 2>&1)"
   rc=$?
   set -e
-  [[ "$rc" -eq 0 ]] || fail "configure failed (rc=${rc}): ${out:0:500}"
+  if [[ "$rc" -ne 0 ]]; then
+    printf '%s\n' "$out" | tail -n 80 >&2
+    fail "configure failed (rc=${rc})"
+  fi
 
   echo "$out" | grep -qE 'Done: [0-9]+ configured,' || \
     fail "configure missing Done summary"

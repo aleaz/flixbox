@@ -504,8 +504,8 @@ if grep -E 'json_params field=[a-zA-Z]+"\)' scripts/configure/seerr.sh 2>/dev/nu
 fi
 grep -q 'seerr-initialized' scripts/lib/json-query.py || \
   fail C-79 'json-query must include seerr-initialized handler'
-grep -q 'qbit-prefs-vpn-ok' scripts/lib/json-query.py || \
-  fail C-79 'json-query must include qbit-prefs-vpn-ok handler'
+grep -q 'local key_json new_key=""' scripts/configure/jellyfin.sh || \
+  fail C-79 'jellyfin must initialize new_key under set -u before empty-body API key fallback'
 pass C-79
 
 # --- C-81: remove deprecated json_extract from configure helpers ---

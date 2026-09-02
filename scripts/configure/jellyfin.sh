@@ -146,7 +146,7 @@ configure_jellyfin() {
   if [[ -n "${JELLYFIN_API_KEY:-}" ]]; then
     skip "Jellyfin: API key (.env already set)"
   else
-    local key_json new_key
+    local key_json new_key=""
     key_json=$(curl -s -X POST "${base}/Auth/Keys?app=Flixbox" \
       -H "X-Emby-Token: ${token}" 2>/dev/null || true)
     if [[ -n "$key_json" ]]; then
