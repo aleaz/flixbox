@@ -43,15 +43,17 @@ Switching to VPN:
 
 1. In `.env` **[REQUIRED]** (top): `FLIXBOX_MODE=vpn` and `VPN_ENABLED=true` (not only the Gluetun block at the bottom).
 2. Fill Gluetun vars under **[VPN ONLY]** (native provider or `custom` + `OPENVPN_CUSTOM_CONFIG` — see [examples below](#vpn-provider-examples) and `.env.example`).
-3. `./bin/flixbox init --non-interactive` (updates `DECLUTTARR_QBIT_URL` and syncs `VPN_ENABLED`).
+3. `./bin/flixbox init --non-interactive` (updates `DECLUTTARR_QBIT_URL`, syncs `VPN_ENABLED`, installs VPN custom-services).
 4. **Recreate the stack** so Gluetun appears (Direct → VPN is a compose include change):
    - Preferred: `./bin/flixbox down` → `./bin/flixbox up`
    - Or: `./bin/flixbox reload` if the stack is already up (after host port preflight allows self-owned ports)
 5. Wait until Gluetun is **healthy** (`./bin/flixbox status` / `logs gluetun`).
-6. `./bin/flixbox configure` (wires apps; does **not** start Gluetun by itself).
+6. `./bin/flixbox configure --sync-qbit-auth` — re-aligns qBit WebUI password + *arr/Decluttarr after recreate (ADR 0019 also heals Host-header / Docker whitelist in the background).
 7. `./bin/flixbox vpn-test`.
 
 If you run `configure` right after editing `.env` without `down`/`up`, you will see *Gluetun container not running* — that is expected.
+
+After **any** Direct↔VPN switch or qBit recreate: prefer `configure --sync-qbit-auth` once Gluetun/qBit are healthy. If WebUI logins were banned, `./bin/flixbox restart qbittorrent` clears the in-memory ban, then re-run configure.
 
 ### VPN bring-up (dependency chain)
 

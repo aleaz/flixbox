@@ -27,10 +27,13 @@ Each ADR uses:
 | [0010](0010-mit-and-image-tags.md) | MIT license + image tags | Accepted |
 | [0011](0011-documentation-i18n.md) | Documentation i18n (EN/ES) | Accepted |
 | [0012](0012-notifications-apprise-hub.md) | Notifications via Apprise hub | Accepted |
-| [0013](0013-vpn-resilience-no-direct-fallback.md) | VPN resilience (no Direct fallback) | Proposed |
+| [0013](0013-vpn-resilience-no-direct-fallback.md) | VPN resilience (no Direct fallback) | Accepted |
 | [0014](0014-stable-qbit-download-hostname.md) | Stable `qbittorrent` download host | Accepted |
 | [0015](0015-access-profiles.md) | Access profiles (`trusted` / `shared`) | Accepted |
 | [0016](0016-configure-state-machine.md) | Configure readiness state machine | Accepted |
+| [0017](0017-compose-health-and-start-order.md) | Compose healthchecks + Bazarr start order | Accepted |
+| [0018](0018-runtime-secrets-and-lan-trust.md) | Runtime secrets + LAN trust | Accepted |
+| [0019](0019-qbit-webui-runtime-contract.md) | qBit WebUI runtime security contract | Accepted |
 
 ## Rules
 

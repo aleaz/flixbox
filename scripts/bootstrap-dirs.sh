@@ -23,6 +23,7 @@ mkdir -p \
   "${DATA_DIR}/media/tv" \
   "${CONFIG_DIR}/qbittorrent" \
   "${CONFIG_DIR}/qbittorrent-cont-init" \
+  "${CONFIG_DIR}/qbittorrent-custom-services" \
   "${CONFIG_DIR}/gluetun" \
   "${CONFIG_DIR}/prowlarr" \
   "${CONFIG_DIR}/radarr" \

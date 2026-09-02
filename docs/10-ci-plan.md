@@ -187,6 +187,8 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-22 | Gluetun publishes qBit ports | ports on `gluetun` service in vpn module |
 | C-23 | Gluetun healthy before qBit | healthcheck on `gluetun`; qBit `depends_on` healthy |
 | C-24 | qBit cont-init at `/custom-cont-init.d` | `qbittorrent-cont-init:/custom-cont-init.d` in both downloader modules + template present |
+| C-24b | VPN tun0 bind custom-service | template + VPN compose mount; init installs only when `FLIXBOX_MODE=vpn` |
+| C-84 | qBit WebUI runtime contract (ADR 0019) | `98-flixbox-webui-contract.sh` + custom-services mount + `QBITTORRENT_PASSWORD` in both downloader modules; ADR present |
 | C-25 | `flixbox_net` subnet + qBit whitelist | `172.30.42.0/24` in `network-base.yml` + AuthSubnetWhitelist in cont-init template |
 | C-26 | Decluttarr idle entrypoint | `templates/decluttarr/entrypoint.sh` mounted; no password in Compose `command` |
 | C-27 | qBit healthy before peers | healthcheck on both downloader modules; `depends_on` in servarr + optimization |
@@ -233,6 +235,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-82 | CLI output fallbacks | `cli-output.sh` sourced by configure-entry for up/reload |
 | C-83 | Port preflight UX | per-service port hints; Jellyfin/Seerr probe on 0.0.0.0 |
 | C-80 | VPN ops docs | ADR 0013 Accepted; VPN drop + Gluetun recreate troubleshooting |
+| C-84 | qBit WebUI runtime contract | ADR 0019; custom-service in both downloader modes |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 

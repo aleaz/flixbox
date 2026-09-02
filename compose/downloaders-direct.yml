@@ -2,9 +2,8 @@
 # Included when FLIXBOX_MODE=direct (see root compose.yaml).
 # Servarr / Decluttarr download client: http://qbittorrent:8080
 #
-# Paths/WebUI: linuxserver runs scripts from /custom-cont-init.d (not /config/...).
-# init installs ${CONFIG_DIR}/qbittorrent-cont-init/99-flixbox-qbittorrent.sh
-#   Default: /data/torrents ; Incomplete: /data/torrents/incomplete
+# Paths/WebUI: linuxserver runs /custom-cont-init.d + /custom-services.d (not under /config).
+# init installs cont-init paths script + webui-contract custom-service (ADR 0019).
 
 services:
   qbittorrent:
@@ -18,9 +17,13 @@ services:
       WEBUI_PORT: 8080
       TORRENTING_PORT: ${QBITTORRENT_BT_PORT:-6881}
       FLIXBOX_QBIT_FORCE_PATHS: ${FLIXBOX_QBIT_FORCE_PATHS:-false}
+      # webui-contract custom-service (ADR 0019) — same creds as Decluttarr/configure
+      QBITTORRENT_USERNAME: ${QBITTORRENT_USERNAME:-}
+      QBITTORRENT_PASSWORD: ${QBITTORRENT_PASSWORD:-}
     volumes:
       - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent:/config
       - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent-cont-init:/custom-cont-init.d:ro
+      - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent-custom-services:/custom-services.d:ro
       - ${DATA_DIR:?set DATA_DIR}:/data
     ports:
       - ${FLIXBOX_ADMIN_BIND_IP:-0.0.0.0}:${QBITTORRENT_PORT:-8080}:8080

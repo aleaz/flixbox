@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+# Host-side qBit WebUI bootstrap (ADR 0019).
+# Session temp passwords appear in docker logs; optional file for in-container reconciler.
+# shellcheck shell=bash
+
+flixbox_qbit_webui_bootstrap() {
+  local container="${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}"
+  local user="${QBITTORRENT_USERNAME:-admin}"
+  local pass="${QBITTORRENT_PASSWORD:-}"
+  local config_dir="${CONFIG_DIR:-}"
+  local temp_file temp prefs_json
+  local api="http://127.0.0.1:8080/api/v2"
+  local cookie="/tmp/flixbox-host-bootstrap-cookie.txt"
+
+  if [[ -z "$config_dir" ]] || ! docker inspect "$container" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  # Wait briefly for WebUI (health may already be green).
+  local i
+  for i in $(seq 1 30); do
+    if docker exec "$container" curl -fsS -o /dev/null --max-time 3 http://127.0.0.1:8080/ 2>/dev/null; then
+      break
+    fi
+    sleep 2
+  done
+
+  mkdir -p "${config_dir}/qbittorrent/.flixbox"
+  temp_file="${config_dir}/qbittorrent/.flixbox/session-temp-password"
+  temp="$(
+    docker logs "$container" 2>&1 \
+      | grep -iE 'temporary password is provided for this session:' \
+      | tail -1 \
+      | awk '{print $NF}' || true
+  )"
+  if [[ -n "$temp" ]]; then
+    printf '%s\n' "$temp" >"$temp_file"
+    chmod 600 "$temp_file" 2>/dev/null || true
+  fi
+
+  if [[ -z "$pass" ]]; then
+    if command -v warn >/dev/null 2>&1; then
+      warn "qBit WebUI bootstrap: QBITTORRENT_PASSWORD empty — skip"
+    fi
+    return 0
+  fi
+
+  _flixbox_bootstrap_login() {
+    local try_pass="$1" body code
+    docker exec "$container" rm -f "$cookie" 2>/dev/null || true
+    # Credentials via stdin to login helper — never on docker exec argv.
+    if ! printf '%s\n%s\n' "$user" "$try_pass" | docker exec -i "$container" \
+      /config/.flixbox/qbit-api-login.sh "$cookie" "http://127.0.0.1:8080" 2>/dev/null; then
+      body="$(docker exec "$container" curl -s --max-time 10 -X POST "${api}/auth/login" \
+        --data-urlencode "username=${user}" \
+        --data-urlencode "password=x" 2>/dev/null || true)"
+      # Ban check without using the real password on argv (dummy password only).
+      if printf '%s\n' "$body" | grep -qi 'banned'; then
+        return 2
+      fi
+      return 1
+    fi
+    return 0
+  }
+
+  local rc=1
+  _flixbox_bootstrap_login "$pass"
+  rc=$?
+  if [[ "$rc" -eq 2 ]]; then
+    if command -v warn >/dev/null 2>&1; then
+      warn "qBit WebUI banned — ./bin/flixbox restart qbittorrent then re-run up/configure"
+    fi
+    return 1
+  fi
+  if [[ "$rc" -ne 0 && -n "$temp" && "$temp" != "$pass" ]]; then
+    _flixbox_bootstrap_login "$temp"
+    rc=$?
+    if [[ "$rc" -eq 0 ]]; then
+      # JSON via host python3 (same as configure); pipe to curl json@- (no password on argv).
+      local pw_json
+      pw_json="$(PASSWORD="$pass" python3 -c 'import json,os; print(json.dumps({"web_ui_password":os.environ["PASSWORD"]}))')"
+      printf '%s' "$pw_json" | docker exec -i "$container" sh -c \
+        "curl -sf -b '$cookie' -o /dev/null --max-time 15 -X POST --data-urlencode json@- '${api}/app/setPreferences'" \
+        >/dev/null 2>&1 || true
+      docker exec "$container" rm -f "$cookie" 2>/dev/null || true
+      _flixbox_bootstrap_login "$pass"
+      rc=$?
+      if [[ "$rc" -eq 0 ]]; then
+        if command -v ok >/dev/null 2>&1; then
+          ok "qBit WebUI password aligned from temporary session"
+        fi
+        rm -f "$temp_file"
+      fi
+    fi
+  fi
+
+  if [[ "$rc" -ne 0 ]]; then
+    if command -v warn >/dev/null 2>&1; then
+      warn "qBit WebUI bootstrap: auth pending — configure --sync-qbit-auth"
+    fi
+    return 1
+  fi
+
+  prefs_json='{"web_ui_host_header_validation_enabled":false,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"172.30.42.0/24","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300}'
+  if [[ "${VPN_PORT_FORWARDING:-off}" == "on" ]]; then
+    prefs_json='{"web_ui_host_header_validation_enabled":false,"bypass_local_auth":true,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"172.30.42.0/24","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300}'
+  fi
+  if printf '%s' "$prefs_json" | docker exec -i "$container" sh -c \
+    "curl -sf -b '$cookie' -o /dev/null --max-time 15 -X POST --data-urlencode json@- '${api}/app/setPreferences'" \
+    >/dev/null 2>&1; then
+    if command -v ok >/dev/null 2>&1; then
+      ok "qBit WebUI security contract applied"
+    fi
+  else
+    if command -v warn >/dev/null 2>&1; then
+      warn "qBit WebUI bootstrap: security prefs not applied"
+    fi
+  fi
+  docker exec "$container" rm -f "$cookie" 2>/dev/null || true
+  return 0
+}

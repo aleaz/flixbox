@@ -107,18 +107,15 @@ If the WebUI shows plain `Unauthorized` with a remapped host port, see [§2b.1](
 
 Flixbox maps `${QBITTORRENT_PORT}:8080`. qBit 5.x may reject `Host: localhost:<mapped-port>` when `HostHeaderValidation` expects `:8080`.
 
-`flixbox init` installs cont-init that sets:
-
-```ini
-WebUI\HostHeaderValidation=false
-WebUI\LocalHostAuth=false
-```
+`flixbox init` installs cont-init that sets `WebUI\HostHeaderValidation=false` and `WebUI\LocalHostAuth=false`, and a **runtime custom-service** ([ADR 0019](../adr/0019-qbit-webui-runtime-contract.md)) re-applies the WebUI security contract via API because qBit may discard Preferences on start.
 
 Re-run init and recreate qBit if your install predates that mount:
 
 ```bash
 ./bin/flixbox init --non-interactive
-docker compose up -d --force-recreate qbittorrent
+./bin/flixbox reload
+# If password / *arr clients drifted after recreate:
+./bin/flixbox configure --sync-qbit-auth
 ```
 
 ### 2d. VPN port forwarding

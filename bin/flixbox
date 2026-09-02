@@ -15,6 +15,8 @@ source "${ROOT_DIR}/scripts/lib/flixbox-env.sh"
 source "${ROOT_DIR}/scripts/lib/access-profile.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/preflight-host.sh"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/qbit-webui-bootstrap.sh"
 
 NO_COLOR="${NO_COLOR:-}"
 if [[ -t 1 && -z "${NO_COLOR}" ]]; then
@@ -172,9 +174,18 @@ copy_templates() {
   cp -f "${ROOT_DIR}/templates/qbittorrent/flixbox-qbit-api-login.sh" \
     "${CONFIG_DIR}/qbittorrent/.flixbox/qbit-api-login.sh"
   chmod 700 "${CONFIG_DIR}/qbittorrent/.flixbox/qbit-api-login.sh"
-  cp -f "${ROOT_DIR}/templates/qbittorrent/custom-services.d/99-flixbox-bind-vpn-interface.sh" \
-    "${CONFIG_DIR}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh"
-  chmod +x "${CONFIG_DIR}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh"
+  # WebUI contract reconciler — Direct + VPN (ADR 0019)
+  cp -f "${ROOT_DIR}/templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh" \
+    "${CONFIG_DIR}/qbittorrent-custom-services/98-flixbox-webui-contract.sh"
+  chmod +x "${CONFIG_DIR}/qbittorrent-custom-services/98-flixbox-webui-contract.sh"
+  # tun0 bind — VPN only (ADR 0002); remove in Direct so the loop does not run
+  if [[ "${FLIXBOX_MODE:-direct}" == "vpn" ]]; then
+    cp -f "${ROOT_DIR}/templates/qbittorrent/custom-services.d/99-flixbox-bind-vpn-interface.sh" \
+      "${CONFIG_DIR}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh"
+    chmod +x "${CONFIG_DIR}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh"
+  else
+    rm -f "${CONFIG_DIR}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh"
+  fi
   # Decluttarr idle-gate entrypoint (runtime env; not Compose-interpolated command)
   cp -f "${ROOT_DIR}/templates/decluttarr/entrypoint.sh" \
     "${CONFIG_DIR}/decluttarr-entrypoint.sh"
@@ -279,7 +290,9 @@ cmd_up() {
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
   ok "Stack started. ./bin/flixbox status"
+  flixbox_qbit_webui_bootstrap || true
   log "Next: ./bin/flixbox configure  (then add Prowlarr indexers)"
+  log "After Direct↔VPN or qBit recreate: ./bin/flixbox configure --sync-qbit-auth"
   log "Guide: docs/user/05-first-run.md · Cheat sheet: docs/user/REFERENCE.md"
 }
 
@@ -330,6 +343,8 @@ cmd_reload() {
   log "Tip: prefer reload over down when you only changed config."
   compose "${profiles[@]}" up -d --force-recreate
   ok "Stack reloaded. ./bin/flixbox status"
+  flixbox_qbit_webui_bootstrap || true
+  log "If qBit auth or remapped-port WebUI broke: ./bin/flixbox configure --sync-qbit-auth"
 }
 
 cmd_configure() {

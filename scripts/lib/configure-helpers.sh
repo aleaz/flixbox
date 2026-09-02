@@ -488,7 +488,7 @@ qbit_webui_bypass_local_auth_expected() {
   [[ "${VPN_PORT_FORWARDING:-off}" == "on" ]]
 }
 
-# JSON blob for qBit WebUI security prefs (configure + GET-skip must agree).
+# JSON blob for qBit WebUI security prefs (configure + ADR 0019 reconciler must agree).
 qbit_webui_security_prefs_json() {
   local bypass="false"
   qbit_webui_bypass_local_auth_expected && bypass="true"

@@ -2,8 +2,10 @@
 # shellcheck shell=bash
 # Flixbox VPN: keep qBittorrent BitTorrent traffic on Gluetun's tunnel interface.
 #
-# Installed to ${CONFIG_DIR}/qbittorrent-custom-services/ (VPN mode only) and
+# Installed to ${CONFIG_DIR}/qbittorrent-custom-services/ (VPN mode only via init) and
 # mounted at /custom-services.d. Runs after qbittorrent-nox is up.
+#
+# Direct mode: init removes this script so only 98-flixbox-webui-contract.sh remains.
 #
 # Why: shared Gluetun netns has lo + bridge + tun0. Without binding, libtorrent
 # announces from bridge addresses; Gluetun's firewall drops them (EPERM) →
@@ -25,6 +27,7 @@ COOKIE="/tmp/.flixbox-qbprefs-cookie"
 PREFS="/tmp/.flixbox-qbprefs"
 QBIT_USER="${QBITTORRENT_USERNAME:-admin}"
 QBIT_PASS="${QBITTORRENT_PASSWORD:-}"
+LOGIN_FAILED=false
 
 log() { echo "[flixbox-bind-vpn] $*"; }
 
@@ -34,10 +37,12 @@ API_BASE="http://127.0.0.1:${WEBUI_PORT:-8080}"
 qbit_login() {
   [[ -x "$QBIT_LOGIN_SCRIPT" ]] || return 1
   [[ -n "$QBIT_PASS" ]] || return 1
+  [[ "$LOGIN_FAILED" == true ]] && return 1
   rm -f "$COOKIE"
   if printf '%s\n%s\n' "$QBIT_USER" "$QBIT_PASS" | "$QBIT_LOGIN_SCRIPT" "$COOKIE" "$API_BASE"; then
     return 0
   fi
+  LOGIN_FAILED=true
   return 1
 }
 
@@ -83,26 +88,40 @@ correct_bind_if_needed() {
   return 1
 }
 
-# Wait for WebUI + credentials (configure may run after first boot).
-for _ in $(seq 1 90); do
+# Wait for WebUI + credentials (configure / host bootstrap may run after first boot).
+# Do not hammer login — wrong .env password while temp session is active bans 127.0.0.1.
+LOGIN_ATTEMPTED=false
+for _ in $(seq 1 45); do
+  if [[ -z "$QBIT_PASS" ]]; then
+    sleep 4
+    continue
+  fi
   if ensure_session; then
     correct_bind_if_needed || true
     break
   fi
-  sleep 2
+  # After first failed login window, back off hard until password is aligned.
+  if [[ "$LOGIN_ATTEMPTED" == true ]]; then
+    sleep 15
+  else
+    LOGIN_ATTEMPTED=true
+    sleep 4
+  fi
 done
 
 if ! ensure_session; then
   if [[ -z "$QBIT_PASS" ]]; then
     log "QBITTORRENT_PASSWORD not set — waiting for .env + container recreate."
   else
-    log "WebUI login failed — check QBITTORRENT_* in .env, then ./bin/flixbox configure"
+    log "WebUI login failed — host bootstrap or ./bin/flixbox configure --sync-qbit-auth"
   fi
 fi
 
 log "watching interface bind → ${IFACE} (every ${INTERVAL}s)"
 
 while true; do
+  # Allow retry after host bootstrap aligned the password.
+  LOGIN_FAILED=false
   if ensure_session; then
     correct_bind_if_needed || true
   else

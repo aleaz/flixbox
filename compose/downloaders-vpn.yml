@@ -76,13 +76,14 @@ services:
       WEBUI_PORT: 8080
       TORRENTING_PORT: ${QBITTORRENT_BT_PORT:-6881}
       FLIXBOX_QBIT_FORCE_PATHS: ${FLIXBOX_QBIT_FORCE_PATHS:-false}
-      # bind-vpn custom-service (ADR 0002) — same creds as Decluttarr/configure
+      # webui-contract + bind-vpn custom-services (ADR 0019 / 0002) — same creds as Decluttarr/configure
       QBITTORRENT_USERNAME: ${QBITTORRENT_USERNAME:-}
       QBITTORRENT_PASSWORD: ${QBITTORRENT_PASSWORD:-}
+      VPN_PORT_FORWARDING: ${VPN_PORT_FORWARDING:-off}
     volumes:
       - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent:/config
       - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent-cont-init:/custom-cont-init.d:ro
-      # Post-start loop: keep BitTorrent bound to tun0 (ADR 0002). cont-init alone is rewritten by qBit.
+      # Post-start: WebUI contract (ADR 0019) + tun0 bind (ADR 0002). cont-init alone is rewritten by qBit.
       - ${CONFIG_DIR:?set CONFIG_DIR}/qbittorrent-custom-services:/custom-services.d:ro
       - ${DATA_DIR:?set DATA_DIR}:/data
     # WebUI readiness (shared Gluetun netns) — peers wait via depends_on service_healthy

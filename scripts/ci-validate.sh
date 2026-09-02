@@ -124,17 +124,43 @@ done
   fail C-24 'missing templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh'
 pass C-24
 
-# --- C-24b: VPN-only tun0 bind sidecar (ADR 0002) ---
+# --- C-24b: VPN tun0 bind sidecar (ADR 0002); Direct must not install it ---
 grep -q 'qbittorrent-custom-services:/custom-services.d' compose/downloaders-vpn.yml || \
   fail C-24b 'downloaders-vpn.yml missing qbittorrent-custom-services mount'
 grep -q 'QBITTORRENT_PASSWORD' compose/downloaders-vpn.yml || \
-  fail C-24b 'downloaders-vpn.yml qbittorrent missing QBITTORRENT_PASSWORD for bind-vpn sidecar'
+  fail C-24b 'downloaders-vpn.yml qbittorrent missing QBITTORRENT_PASSWORD for custom-services'
 [[ -f templates/qbittorrent/custom-services.d/99-flixbox-bind-vpn-interface.sh ]] || \
   fail C-24b 'missing VPN bind-vpn-interface custom-services script'
-if grep -q 'qbittorrent-custom-services' compose/downloaders-direct.yml; then
-  fail C-24b 'tun0 sidecar must not mount in Direct mode'
-fi
+# init installs bind-vpn only when FLIXBOX_MODE=vpn
+grep -q '99-flixbox-bind-vpn-interface.sh' bin/flixbox || \
+  fail C-24b 'bin/flixbox must install/remove bind-vpn custom-service by mode'
 pass C-24b
+
+# --- C-84: qBit WebUI contract reconciler (ADR 0019) — Direct + VPN ---
+for f in compose/downloaders-direct.yml compose/downloaders-vpn.yml; do
+  grep -q 'qbittorrent-custom-services:/custom-services.d' "${f}" || \
+    fail C-84 "${f} missing qbittorrent-custom-services mount for WebUI contract"
+  grep -q 'QBITTORRENT_PASSWORD' "${f}" || \
+    fail C-84 "${f} qbittorrent missing QBITTORRENT_PASSWORD for webui-contract"
+done
+[[ -f templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh ]] || \
+  fail C-84 'missing templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh'
+grep -q 'web_ui_host_header_validation_enabled' \
+  templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh || \
+  fail C-84 'webui-contract must set web_ui_host_header_validation_enabled'
+grep -q '172.30.42.0/24' templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh || \
+  fail C-84 'webui-contract must whitelist flixbox_net 172.30.42.0/24'
+grep -q '98-flixbox-webui-contract.sh' bin/flixbox || \
+  fail C-84 'bin/flixbox must install webui-contract custom-service'
+grep -q 'flixbox_qbit_webui_bootstrap' bin/flixbox || \
+  fail C-84 'bin/flixbox must call flixbox_qbit_webui_bootstrap after up/reload'
+[[ -f scripts/lib/qbit-webui-bootstrap.sh ]] || \
+  fail C-84 'missing scripts/lib/qbit-webui-bootstrap.sh'
+grep -q 'session-temp-password' templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh || \
+  fail C-84 'webui-contract must read session-temp-password from host bootstrap'
+[[ -f docs/adr/0019-qbit-webui-runtime-contract.md ]] || \
+  fail C-84 'missing ADR 0019 qBit WebUI runtime contract'
+pass C-84
 
 # --- C-24c: Servarr External auth + API key env (ADR 0005 / 0015) ---
 for app in RADARR SONARR PROWLARR; do
