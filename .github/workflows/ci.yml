@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # Weekly image CVE refresh (docs/10-ci-plan.md §4.3)
+    - cron: '0 6 * * 1'
 
 permissions:
   contents: read
@@ -28,24 +31,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compose config (direct)
-        run: docker compose --env-file .env.example config --quiet
-
-      - name: Compose config (vpn)
-        run: FLIXBOX_MODE=vpn docker compose --env-file .env.example config --quiet
-
-      - name: Compose config (profiles)
-        run: >-
-          docker compose --env-file .env.example
-          --profile plex --profile proxy --profile socket-proxy --profile recyclarr
-          config --quiet
+      - name: Compose render (direct, vpn, profiles, access profiles)
+        run: ./scripts/ci-compose-render.sh
 
       - name: Install ShellCheck
         run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
 
       - name: ShellCheck
         run: |
-          shellcheck -e SC1091 bin/flixbox scripts/*.sh scripts/lib/*.sh scripts/ci-validate.sh scripts/ci-smoke-init.sh
+          shellcheck -e SC1091 bin/flixbox scripts/*.sh scripts/lib/*.sh scripts/configure/*.sh \
+            scripts/ci-validate.sh scripts/ci-smoke-init.sh scripts/ci-compose-render.sh scripts/ci-trivy.sh
           shellcheck templates/qbittorrent/custom-services.d/*.sh
           shellcheck templates/qbittorrent/flixbox-qbit-api-login.sh
           shellcheck templates/qbittorrent/custom-cont-init.d/*.sh
@@ -56,3 +51,23 @@ jobs:
 
       - name: Init smoke (C-50–52 + env-file)
         run: ./scripts/ci-smoke-init.sh
+
+  security:
+    name: security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq wget gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor \
+            | sudo tee /usr/share/keyrings/trivy.gpg >/dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" \
+            | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq trivy
+
+      - name: Trivy scan (warn-only)
+        run: ./scripts/ci-trivy.sh

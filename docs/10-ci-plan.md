@@ -124,11 +124,10 @@ flowchart TB
 | Step | Command / check |
 | --- | --- |
 | Checkout | `actions/checkout@v4` |
-| Compose direct | `docker compose --env-file .env.example config --quiet` |
-| Compose VPN | `FLIXBOX_MODE=vpn docker compose --env-file .env.example config --quiet` |
-| Compose profiles | `docker compose --env-file .env.example --profile plex --profile proxy --profile socket-proxy --profile recyclarr config --quiet` |
-| ShellCheck | `shellcheck bin/flixbox scripts/*.sh` |
-| Contract script | `./scripts/ci-validate.sh` |
+| Compose render | `./scripts/ci-compose-render.sh` (direct, VPN, profiles, shared access profile) |
+| ShellCheck | `shellcheck bin/flixbox scripts/*.sh scripts/configure/*.sh …` |
+| Contract script | `./scripts/ci-validate.sh` (includes compose render + C-01…C-64) |
+| Init smoke | `./scripts/ci-smoke-init.sh` |
 
 **Env for CI:** Use `.env.example` as-is with `DATA_DIR` / `CONFIG_DIR` overridden inside `ci-validate.sh` to `/tmp/flixbox-ci/{data,config}` so runners never touch `/srv/flixbox`.
 
@@ -211,6 +210,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-61 | Configure JSON payload contract | `json-payload.py` + `configure-runtime.sh`; no shell-interpolated secrets in `configure-apps.sh`; qBit login via stdin script (not `docker exec` argv) |
 | C-62 | Configure module layout | `scripts/configure/*.sh` sourced from `configure-apps.sh`; unified `scripts/lib/flixbox-env.sh` |
 | C-63 | Access profile recreate + UI sync | `recreate_admin_bound_services` on derived-key drift; `FLIXBOX_ARR_UI_*` sync in `shared`; ADR 0015 admin matrix |
+| C-64 | CI workflow alignment | `ci-compose-render.sh` shared render; `security` job + `ci-trivy.sh`; Dependabot for Actions |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 
@@ -254,16 +254,19 @@ scripts/ci-smoke-init.sh          # C-50–52 + env-file unit + configure dry-ru
 **Deliverables:**
 
 ```
-.github/workflows/ci.yml          # add job: security (Trivy)
+.github/workflows/ci.yml          # jobs: secrets, validate, security (Trivy)
+scripts/ci-compose-render.sh      # shared compose config render
+scripts/ci-trivy.sh               # Trivy config + image scan (warn-only)
 .github/dependabot.yml            # GitHub Actions ecosystem
 ```
 
 **Exit criteria:**
 
-- [ ] Trivy config scan runs without error
-- [ ] Image scan lists all MVP images
-- [ ] Policy documented: warn-only until pins
-- [x] C-50–52 init smoke (moved into phase 1 validate job)
+- [x] Trivy config scan runs without error (warn-only on findings)
+- [x] Image scan lists all MVP images from `docker compose config --images`
+- [x] Policy documented: warn-only until pins (`TRIVY_BLOCK=1` to fail locally)
+- [x] C-50–52 init smoke (in validate job)
+- [x] Shared compose render includes `shared` access profile (C-64)
 ### Phase 3 — Docs and release hygiene (v0.2)
 
 **Deliverables:**
@@ -300,10 +303,12 @@ Add `security` as required only after Trivy policy moves from warn to block.
 Before opening a PR, operators and agents should run:
 
 ```bash
-docker compose --env-file .env.example config --quiet
-FLIXBOX_MODE=vpn docker compose --env-file .env.example config --quiet
-shellcheck bin/flixbox scripts/*.sh
+./scripts/ci-compose-render.sh
 ./scripts/ci-validate.sh
+./scripts/ci-smoke-init.sh
+shellcheck bin/flixbox scripts/*.sh scripts/configure/*.sh
+# Optional when trivy is installed:
+./scripts/ci-trivy.sh
 ```
 
 Optional: install [gitleaks](https://github.com/gitleaks/gitleaks) locally for pre-push scanning.

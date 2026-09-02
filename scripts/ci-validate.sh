@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Enforce Flixbox architecture contracts in CI and locally.
-# See docs/10-ci-plan.md for check IDs (C-01 … C-42).
+# See docs/10-ci-plan.md for check IDs (C-01 … C-63).
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -306,10 +306,22 @@ grep -q 'Admin surface matrix' docs/adr/0015-access-profiles.md || \
   fail C-63 'ADR 0015 missing admin surface matrix'
 pass C-63
 
-# --- Compose quiet config (direct + vpn + profiles) ---
-"${COMPOSE[@]}" config --quiet
-FLIXBOX_MODE=vpn "${COMPOSE[@]}" config --quiet
-"${COMPOSE[@]}" --profile plex --profile proxy --profile socket-proxy --profile recyclarr config --quiet
+# --- C-64: CI workflow alignment + shared compose render + Trivy (R4) ---
+[[ -f scripts/ci-compose-render.sh ]] || fail C-64 'missing scripts/ci-compose-render.sh'
+[[ -f scripts/ci-trivy.sh ]] || fail C-64 'missing scripts/ci-trivy.sh'
+[[ -f .github/dependabot.yml ]] || fail C-64 'missing .github/dependabot.yml'
+grep -q 'ci-compose-render.sh' .github/workflows/ci.yml || \
+  fail C-64 'ci.yml must call scripts/ci-compose-render.sh'
+grep -qE '^  security:' .github/workflows/ci.yml || \
+  fail C-64 'ci.yml missing security job'
+grep -q 'ci-trivy.sh' .github/workflows/ci.yml || \
+  fail C-64 'ci.yml must call scripts/ci-trivy.sh'
+grep -q 'access profile shared' scripts/ci-compose-render.sh || \
+  fail C-64 'ci-compose-render must test shared access profile'
+pass C-64
+
+# --- Compose render (shared script — R4) ---
+"${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1
 pass compose-config
 
 printf 'All contract checks passed.\n'

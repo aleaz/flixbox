@@ -15,6 +15,7 @@ Versions below are planning labels, not semver promises until the first public t
 - [ ] Key screenshots in `docs/images/en/`
 - [x] Spanish user guide (`README.es.md` + `docs/es/user/`) — partial (REFERENCE + INDEX); full mirror before v0.1 tag
 - [x] CI phase 1 (gitleaks + validate) — [10-ci-plan.md](10-ci-plan.md)
+- [x] CI phase 2 (Trivy warn-only + compose render) — [10-ci-plan.md](10-ci-plan.md)
 - [x] `bin/flixbox configure` + `reload` — API wiring (roots, clients, Byparr, Bazarr, Jellyfin/Seerr, secret loop)
 - [x] Image tag pins before public v0.1 tag — [14-image-pins.md](user/14-image-pins.md)
 
@@ -34,7 +35,7 @@ Deliverables:
 
 - CLI: `sync-profiles`, `backup`, `restore`, `update`
 - Stronger init validation (hardlink probe, config-on-NFS guard, exFAT guard)
-- CI phase 2: Trivy — [10-ci-plan.md](10-ci-plan.md)
+- [x] CI phase 2: Trivy (warn-only) + shared compose render — [10-ci-plan.md](10-ci-plan.md)
 - Optional digest pins (`@sha256:`) for stricter supply chain
 - **Notifications:** optional Apprise API profile (Telegram via Apprise URL, not a Flixbox bot) — [ADR 0012](adr/0012-notifications-apprise-hub.md)
 - **VPN resilience docs + optional heal:** document Gluetun internal reconnect/killswitch; evaluate optional `vpn-heal` watchdog profile; **never** auto-fallback to Direct — [ADR 0013](adr/0013-vpn-resilience-no-direct-fallback.md)
