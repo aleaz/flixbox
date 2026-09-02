@@ -23,11 +23,14 @@ After changing profile:
 
 ```bash
 # up / reload / configure auto-sync derived bind + auth keys into .env
+# and force-recreate admin-bound services when derived keys drifted
 ./bin/flixbox reload
-# Optional: also re-run init so shared UI password placeholders are generated if empty
+# Optional: re-run init so shared FLIXBOX_ARR_UI_* placeholders are generated if empty
 ./bin/flixbox init --non-interactive
 ./bin/flixbox reload
 ```
+
+When switching to **`shared`**, `up` / `configure` / `reload` also ensure **`FLIXBOX_ARR_UI_USER`** and **`FLIXBOX_ARR_UI_PASSWORD`** exist in `.env` (generated if empty). Use those values when creating Forms users manually.
 
 `./bin/flixbox configure` uses **API keys** on `127.0.0.1` — it does not create *arr Forms users or need UI passwords.
 

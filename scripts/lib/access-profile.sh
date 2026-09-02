@@ -71,3 +71,14 @@ flixbox_access_profile_drift_message() {
   [[ ${#parts[@]} -eq 0 ]] && return 0
   echo "Access profile ${profile} out of sync: ${parts[*]}"
 }
+
+# Compose service names whose host publish or *arr auth env depend on the access profile.
+# VPN: WebUI publish is on gluetun; qBit container must follow gluetun recreate.
+flixbox_access_profile_admin_services() {
+  local mode="${FLIXBOX_MODE:-direct}"
+  if [[ "$mode" == "vpn" ]]; then
+    printf '%s\n' gluetun qbittorrent prowlarr byparr radarr sonarr bazarr maintainerr
+  else
+    printf '%s\n' qbittorrent prowlarr byparr radarr sonarr bazarr maintainerr
+  fi
+}

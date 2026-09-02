@@ -125,7 +125,14 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   [[ "$bind_ip" == "127.0.0.1" ]] || fail "shared bind (got ${bind_ip})"
   [[ "$method" == "Forms" ]] || fail "shared auth method (got ${method})"
   [[ "$required" == "Enabled" ]] || fail "shared auth required (got ${required})"
-  pass "access profile shared sync (empty → 127.0.0.1/Forms)"
+  ui_user="$(flixbox_env_file_get .env FLIXBOX_ARR_UI_USER)"
+  ui_pass="$(flixbox_env_file_get .env FLIXBOX_ARR_UI_PASSWORD)"
+  [[ -n "$ui_user" ]] || flixbox_env_file_set_if_empty .env FLIXBOX_ARR_UI_USER admin
+  [[ -n "$ui_pass" ]] || flixbox_env_file_set_if_empty .env FLIXBOX_ARR_UI_PASSWORD 'smoke-shared-ui-pass'
+  ui_user="$(flixbox_env_file_get .env FLIXBOX_ARR_UI_USER)"
+  ui_pass="$(flixbox_env_file_get .env FLIXBOX_ARR_UI_PASSWORD)"
+  [[ -n "$ui_user" && -n "$ui_pass" ]] || fail "shared profile FLIXBOX_ARR_UI_* placeholders"
+  pass "access profile shared sync (empty → 127.0.0.1/Forms + UI placeholders)"
 )
 
 # Optional: configure idempotency when operator stack is already up

@@ -107,6 +107,14 @@ env_set_if_empty() {
   [[ -n "$after" ]] && ok "Generated ${key} in .env (was empty)"
 }
 
+ensure_shared_ui_credentials() {
+  if [[ "$(flixbox_access_profile)" != "shared" ]]; then
+    return 0
+  fi
+  env_set_if_empty FLIXBOX_ARR_UI_USER admin
+  env_set_if_empty FLIXBOX_ARR_UI_PASSWORD "$(generate_password)"
+}
+
 ensure_first_run_secrets() {
   local key
   for key in RADARR_API_KEY SONARR_API_KEY PROWLARR_API_KEY; do
@@ -117,10 +125,7 @@ ensure_first_run_secrets() {
   # Optional shared admin for Jellyfin/Seerr automation (configure)
   env_set_if_empty FLIXBOX_ADMIN_USER admin
   env_set_if_empty FLIXBOX_ADMIN_PASSWORD "$(generate_password)"
-  if [[ "$(flixbox_access_profile)" == "shared" ]]; then
-    env_set_if_empty FLIXBOX_ARR_UI_USER admin
-    env_set_if_empty FLIXBOX_ARR_UI_PASSWORD "$(generate_password)"
-  fi
+  ensure_shared_ui_credentials
 }
 
 copy_templates() {
@@ -246,16 +251,39 @@ cmd_init() {
   log "Reference: docs/user/REFERENCE.md · First-run: docs/user/05-first-run.md"
 }
 
+recreate_admin_bound_services() {
+  local svc services=()
+  while IFS= read -r svc; do
+    [[ -n "$svc" ]] && services+=("$svc")
+  done < <(flixbox_access_profile_admin_services)
+  [[ ${#services[@]} -gt 0 ]] || return 0
+  log "Recreating admin-bound services (access profile derived keys changed)..."
+  if compose up -d --force-recreate "${services[@]}" >/dev/null 2>&1; then
+    ok "Admin-bound services recreated (FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP})"
+  else
+    warn "Could not recreate all admin-bound services — run: ./bin/flixbox reload"
+    return 1
+  fi
+}
+
 ensure_access_profile() {
   flixbox_validate_access_profile || \
     die "Fix FLIXBOX_ACCESS_PROFILE in .env (trusted or shared)."
-  local drift
+  local drift synced=false
   drift="$(flixbox_access_profile_drift_message || true)"
   if [[ -n "$drift" ]]; then
     warn "${drift} — syncing derived keys into .env"
     flixbox_sync_access_profile_env "${ROOT_DIR}/.env"
+    synced=true
     load_env
     ok "Access profile $(flixbox_access_profile) synced (FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP})"
+  fi
+  if [[ "$(flixbox_access_profile)" == "shared" ]]; then
+    ensure_shared_ui_credentials
+    load_env
+  fi
+  if $synced; then
+    recreate_admin_bound_services || true
   fi
   return 0
 }

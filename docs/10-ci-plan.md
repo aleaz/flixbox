@@ -210,6 +210,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-43 | No `:latest` image tags | grep `compose/*.yml` for `:latest` (ADR 0010) |
 | C-61 | Configure JSON payload contract | `json-payload.py` + `configure-runtime.sh`; no shell-interpolated secrets in `configure-apps.sh`; qBit login via stdin script (not `docker exec` argv) |
 | C-62 | Configure module layout | `scripts/configure/*.sh` sourced from `configure-apps.sh`; unified `scripts/lib/flixbox-env.sh` |
+| C-63 | Access profile recreate + UI sync | `recreate_admin_bound_services` on derived-key drift; `FLIXBOX_ARR_UI_*` sync in `shared`; ADR 0015 admin matrix |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 

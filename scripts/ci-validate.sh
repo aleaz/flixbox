@@ -295,6 +295,17 @@ grep -q 'flixbox_load_env' bin/flixbox || \
   fail C-62 'bin/flixbox must use flixbox_load_env'
 pass C-62
 
+# --- C-63: access profile recreate + UI credential sync (R3) ---
+grep -q 'flixbox_access_profile_admin_services' scripts/lib/access-profile.sh || \
+  fail C-63 'access-profile.sh missing admin service list'
+grep -q 'recreate_admin_bound_services' bin/flixbox || \
+  fail C-63 'bin/flixbox missing recreate_admin_bound_services'
+grep -q 'ensure_shared_ui_credentials' bin/flixbox || \
+  fail C-63 'bin/flixbox missing ensure_shared_ui_credentials'
+grep -q 'Admin surface matrix' docs/adr/0015-access-profiles.md || \
+  fail C-63 'ADR 0015 missing admin surface matrix'
+pass C-63
+
 # --- Compose quiet config (direct + vpn + profiles) ---
 "${COMPOSE[@]}" config --quiet
 FLIXBOX_MODE=vpn "${COMPOSE[@]}" config --quiet
