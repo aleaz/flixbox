@@ -61,7 +61,7 @@ jobs:
         run: ./scripts/ci-pin-digests.sh
 
       - name: Upload digest lock artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: image-digests
           path: compose/lock/digests.txt
