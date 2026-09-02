@@ -12,22 +12,46 @@ configure_init_qbit_context() {
 }
 
 # Post-upgrade: ensure login + prefs helpers exist under CONFIG_DIR (mounted into qBit).
+# After qBit first start, linuxserver may own .flixbox as PUID — host cp can fail in CI.
 configure_ensure_qbit_webui_helpers() {
-  local dest_dir src_login dest_login
+  local dest_dir src_login dest_login tpl
   [[ -n "${CONFIG_DIR:-}" && -n "${ROOT_DIR:-}" ]] || return 0
   dest_dir="${CONFIG_DIR}/qbittorrent/.flixbox"
-  src_login="${ROOT_DIR}/templates/qbittorrent/flixbox-qbit-api-login.sh"
+  tpl="${ROOT_DIR}/templates/qbittorrent"
+  src_login="${tpl}/flixbox-qbit-api-login.sh"
   dest_login="${dest_dir}/qbit-api-login.sh"
   [[ -f "$src_login" ]] || return 0
   mkdir -p "$dest_dir"
-  if [[ ! -f "$dest_login" ]] || ! cmp -s "$src_login" "$dest_login" 2>/dev/null; then
-    cp -f "$src_login" "$dest_login"
-    chmod 700 "$dest_login"
+
+  _qbit_helper_install() {
+    local src="$1" dest="$2" mode="${3:-}"
+    local src_base dest_base
+    if [[ -f "$dest" ]] && cmp -s "$src" "$dest" 2>/dev/null; then
+      return 0
+    fi
+    if cp -f "$src" "$dest" 2>/dev/null; then
+      [[ -n "$mode" ]] && chmod "$mode" "$dest" 2>/dev/null || true
+      return 0
+    fi
+    command -v docker >/dev/null 2>&1 || return 1
+    src_base=$(basename "$src")
+    dest_base=$(basename "$dest")
+    docker run --rm \
+      -v "$(dirname "$src"):/src:ro" \
+      -v "$(dirname "$dest"):/dest" \
+      alpine:3.20 \
+      sh -c "cp -f \"/src/${src_base}\" \"/dest/${dest_base}\" && if [ -n \"${mode}\" ]; then chmod \"${mode}\" \"/dest/${dest_base}\"; fi" \
+      >/dev/null 2>&1
+  }
+
+  if ! _qbit_helper_install "$src_login" "$dest_login" 700; then
+    fail "qBittorrent: could not install .flixbox/qbit-api-login.sh under CONFIG_DIR"
+    return 1
   fi
   local f
   for f in webui-security-prefs.json webui-security-prefs-portforward.json; do
-    if [[ -f "${ROOT_DIR}/templates/qbittorrent/${f}" ]]; then
-      cp -f "${ROOT_DIR}/templates/qbittorrent/${f}" "${dest_dir}/${f}"
+    if [[ -f "${tpl}/${f}" ]]; then
+      _qbit_helper_install "${tpl}/${f}" "${dest_dir}/${f}" || true
     fi
   done
 }
