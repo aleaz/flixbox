@@ -197,7 +197,10 @@ Defaults match [09-hygiene-defaults.md](../09-hygiene-defaults.md). Protected ta
 | Variable | Default | Notes |
 | --- | --- | --- |
 | `HOMEPAGE_ALLOWED_HOSTS` | `localhost:3000,127.0.0.1:3000` | Add `host:port` when accessing Homepage by LAN IP or DNS. |
-| `JELLYFIN_PUBLISHED_URL` | (empty) | Public URL for Jellyfin when behind Caddy/reverse proxy. |
+| `JELLYFIN_PUBLISHED_URL` | (empty) | Public URL for Jellyfin when behind Caddy/reverse proxy (e.g. `http://jellyfin.local` or `https://jellyfin.example.com`). |
+| `JELLYFIN_DOMAIN` | `jellyfin.local` | Custom domain/host for Caddy reverse proxy (profile `proxy`). |
+| `SEERR_DOMAIN` | `requests.local` | Custom domain/host for Seerr in Caddy (profile `proxy`). |
+| `HOMEPAGE_DOMAIN` | `home.local` | Custom domain/host for Homepage in Caddy (profile `proxy`). |
 | `SEERR_LOG_LEVEL` | `info` | `error`, `warn`, `info`, `debug`. |
 | `PLEX_CLAIM` | (empty) | One-time claim token from [plex.tv/claim](https://www.plex.tv/claim/) (profile `plex`). |
 

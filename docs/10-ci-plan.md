@@ -220,7 +220,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-68 | Configure readiness state machine | `configure-state.sh` + `configure-entry.sh`; Jellyfin in core assert; soft VPN retry; wiring skips duplicate waits after preflight |
 | C-69 | Configure pre-release hardening | `--dry-run` entry guard; parallel preflight waits; `fail()` returns 1; Bazarr post-restart wait; ADR 0016 |
 | C-70 | Configure follow-ups | `json-query.py` param-safe queries; `configure-context.sh`; `ci-smoke-configure.sh` (Seerr, Byparr, remapped qBit port) |
-| C-71 | Configure audit guards | `json_query` pipe/params; dynamic *arr ports; qBit API key prefs fallback |
+| C-71 | Configure audit guards | `json_query` pipe/params; host probe vs canonical container ports; qBit API key prefs fallback |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 

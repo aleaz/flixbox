@@ -1,18 +1,21 @@
-# LAN-only starter Caddyfile — copy to ${CONFIG_DIR}/caddy/Caddyfile
-# Enable with: COMPOSE_PROFILES=proxy (or flixbox up --profile proxy)
+# Flixbox starter Caddyfile — copy to ${CONFIG_DIR}/caddy/Caddyfile
+# Enable with: COMPOSE_PROFILES=proxy (or ./bin/flixbox up proxy)
 #
-# Replace hostnames and enable TLS when exposing beyond localhost.
+# Default: LAN virtual hosts on port 80 (HTTP).
+# For public HTTPS, replace domain prefixes with your public FQDN (e.g. jellyfin.yourdomain.com)
+# and Caddy will automatically manage Let's Encrypt / ZeroSSL TLS certificates on port 443.
+
+http://{$JELLYFIN_DOMAIN:jellyfin.local} {
+	encode gzip
+	reverse_proxy jellyfin:8096
+}
+
+http://{$SEERR_DOMAIN:requests.local} {
+	encode gzip
+	reverse_proxy seerr:5055
+}
 
 :80 {
 	encode gzip
-
-	handle_path /jellyfin* {
-		reverse_proxy jellyfin:8096
-	}
-	handle_path /seerr* {
-		reverse_proxy seerr:5055
-	}
-	handle / {
-		reverse_proxy homepage:3000
-	}
+	reverse_proxy homepage:3000
 }

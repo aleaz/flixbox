@@ -1,4 +1,6 @@
 # Media servers. Jellyfin is default; Plex is optional (profile: plex).
+# Transcoding: /dev/shm uses host RAM (reduces SSD wear; recommended on >=8GB RAM hosts).
+# On low-memory hosts (<8GB RAM), remap to disk (e.g. ${CONFIG_DIR}/jellyfin/transcode:/transcode).
 # For Intel/AMD GPU transcode, add under jellyfin:
 #   devices:
 #     - /dev/dri:/dev/dri

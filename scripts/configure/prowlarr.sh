@@ -44,16 +44,18 @@ configure_prowlarr() {
     fi
   fi
 
-  local apps arr_name arr_port arr_key arr_categories name_lower app_payload existing_app_id existing_app stored_key
+  local apps arr_name arr_probe_port arr_container_port arr_key arr_categories name_lower app_payload existing_app_id existing_app stored_key
   apps=$(api_get "${base}/api/v1/applications" "$auth") || true
 
   for arr_name in Sonarr Radarr; do
     if [[ "$arr_name" == "Sonarr" ]]; then
-      arr_port="$SONARR_PORT"
+      arr_probe_port="$SONARR_PORT"
+      arr_container_port=8989
       arr_key="$SONARR_API_KEY"
       arr_categories="[5000, 5010, 5020, 5030, 5040, 5045, 5050, 5060, 5070, 5080]"
     else
-      arr_port="$RADARR_PORT"
+      arr_probe_port="$RADARR_PORT"
+      arr_container_port=7878
       arr_key="$RADARR_API_KEY"
       arr_categories="[2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060, 2070, 2080]"
     fi
@@ -66,7 +68,7 @@ configure_prowlarr() {
       fi
       existing_app=$(api_get "${base}/api/v1/applications/${existing_app_id}" "$auth") || true
       stored_key=$(json_query prowlarr-app-api-key "$existing_app" '{}')
-      if prowlarr_app_api_key_in_sync "$stored_key" "$arr_key" "$arr_port" "v3"; then
+      if prowlarr_app_api_key_in_sync "$stored_key" "$arr_key" "$arr_probe_port" "v3"; then
         skip "Prowlarr: ${arr_name} application"
       else
         app_payload=$(echo "$existing_app" | API_KEY="$arr_key" flixbox_json prowlarr-patch-api-key)
@@ -79,7 +81,7 @@ configure_prowlarr() {
     elif [[ -z "$arr_key" ]]; then
       fail "Prowlarr: add ${arr_name} (no API key)"
     else
-      app_payload=$(ARR_NAME="$arr_name" PORT="$arr_port" API_KEY="$arr_key" \
+      app_payload=$(ARR_NAME="$arr_name" PORT="$arr_container_port" API_KEY="$arr_key" \
         CATEGORIES="$arr_categories" TAG_ID="$cf_tag_id" flixbox_json prowlarr-arr-app)
       if api_post "${base}/api/v1/applications" "application/json" "$app_payload" "$auth" >/dev/null 2>&1; then
         ok "Prowlarr: added ${arr_name} application sync"

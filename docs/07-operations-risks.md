@@ -101,9 +101,10 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 
 - **Mitigation (enforce):** Refuse/warn if `CONFIG_DIR` looks remote.
 
-### 4.3 `/dev/shm` too small for transcode
+### 4.3 `/dev/shm` transcode vs. memory exhaustion
 
-- **Mitigation (enforce):** Mount host `/dev/shm` into Jellyfin transcode path.
+- **Risk:** Mounting `/dev/shm:/transcode` keeps temporary video chunks in host RAM (reducing SSD write wear). On servers with ≤8 GB RAM, concurrent high-bitrate transcodes can consume available tmpfs memory and trigger the Linux OOM Killer.
+- **Mitigation (document/optional):** Recommended on hosts with ≥8–16 GB RAM. On low-memory hosts (≤8 GB RAM), remap the transcode volume to local disk (e.g. `${CONFIG_DIR}/jellyfin/transcode:/transcode` in `compose/media-servers.yml`).
 
 ### 4.4 Hardlink verification
 

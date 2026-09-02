@@ -29,8 +29,7 @@ configure_bazarr() {
   local needs_restart=false
   local conn_state _bazarr_params
   _bazarr_params="$(SONARR_API_KEY="$SONARR_API_KEY" RADARR_API_KEY="$RADARR_API_KEY" \
-    SONARR_PORT="$SONARR_PORT" RADARR_PORT="$RADARR_PORT" \
-    json_params sonarr_key=SONARR_API_KEY,radarr_key=RADARR_API_KEY,sonarr_port=SONARR_PORT,radarr_port=RADARR_PORT)"
+    json_params sonarr_key=SONARR_API_KEY,radarr_key=RADARR_API_KEY)"
   conn_state=$(json_query bazarr-conn-diff "$settings" "$_bazarr_params")
 
   if [[ -z "$conn_state" ]]; then
@@ -41,13 +40,13 @@ configure_bazarr() {
     local conn_keys=(
       "settings-general-use_sonarr=true"
       "settings-sonarr-ip=sonarr"
-      "settings-sonarr-port=${SONARR_PORT}"
+      "settings-sonarr-port=8989"
       "settings-sonarr-base_url="
       "settings-sonarr-ssl=false"
       "settings-sonarr-apikey=${SONARR_API_KEY}"
       "settings-general-use_radarr=true"
       "settings-radarr-ip=radarr"
-      "settings-radarr-port=${RADARR_PORT}"
+      "settings-radarr-port=7878"
       "settings-radarr-base_url="
       "settings-radarr-ssl=false"
       "settings-radarr-apikey=${RADARR_API_KEY}"

@@ -60,7 +60,7 @@ configure_seerr() {
 
   # Radarr / Sonarr services
   add_seerr_arr() {
-    local kind="$1" host="$2" port="$3" api_key="$4" root="$5" is_default="${6:-false}"
+    local kind="$1" host="$2" probe_port="$3" container_port="$4" api_key="$5" root="$6" is_default="${7:-false}"
     local list profiles profile_id profile_name lang_profile_id payload http_code existing_id stored_key
     list=$(curl -s -b "$cookie" "${base}/api/v1/settings/${kind}" 2>/dev/null || true)
     existing_id=$(json_extract "$list" "
@@ -87,7 +87,7 @@ print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
       return
     fi
     local arr_base arr_auth
-    arr_base="http://127.0.0.1:${port}"
+    arr_base="http://127.0.0.1:${probe_port}"
     arr_auth="X-Api-Key: ${api_key}"
     profiles=$(api_get "${arr_base}/api/v3/qualityprofile" "$arr_auth") || true
     profile_id=$(json_extract "$profiles" "print(data[0]['id'] if data else '')" || true)
@@ -97,7 +97,7 @@ print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
       return
     fi
     if [[ "$kind" == "radarr" ]]; then
-      payload=$(HOST="$host" PORT="$port" API_KEY="$api_key" PROFILE_ID="$profile_id" \
+      payload=$(HOST="$host" PORT="$container_port" API_KEY="$api_key" PROFILE_ID="$profile_id" \
         PROFILE_NAME="$profile_name" ROOT="$root" IS_DEFAULT="$is_default" \
         flixbox_json seerr-radarr-service)
     else
@@ -106,7 +106,7 @@ print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
       # The endpoint returns 404 on v4 (handled by || true); defaulting to 1 is correct for v4.
       lang_profiles=$(api_get "${arr_base}/api/v3/languageprofile" "$arr_auth") || true
       lang_profile_id=$(json_extract "$lang_profiles" "print(data[0]['id'] if data else 1)" || echo 1)
-      payload=$(HOST="$host" PORT="$port" API_KEY="$api_key" PROFILE_ID="$profile_id" \
+      payload=$(HOST="$host" PORT="$container_port" API_KEY="$api_key" PROFILE_ID="$profile_id" \
         PROFILE_NAME="$profile_name" ROOT="$root" LANG_PROFILE_ID="$lang_profile_id" \
         IS_DEFAULT="$is_default" flixbox_json seerr-sonarr-service)
     fi
@@ -124,8 +124,8 @@ print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
     fi
   }
 
-  add_seerr_arr radarr radarr "$RADARR_PORT" "$RADARR_API_KEY" "/data/media/movies" true
-  add_seerr_arr sonarr sonarr "$SONARR_PORT" "$SONARR_API_KEY" "/data/media/tv" false
+  add_seerr_arr radarr radarr "$RADARR_PORT" 7878 "$RADARR_API_KEY" "/data/media/movies" true
+  add_seerr_arr sonarr sonarr "$SONARR_PORT" 8989 "$SONARR_API_KEY" "/data/media/tv" false
 
   if [[ "$init_flag" == "true" ]]; then
     skip "Seerr: initialize"

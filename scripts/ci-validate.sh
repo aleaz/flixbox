@@ -422,10 +422,16 @@ if grep -E 'JSON_QUERY_PARAMS="\$params" echo' scripts/lib/configure-helpers.sh;
 fi
 grep -q 'echo "\$json" | JSON_QUERY_PARAMS=' scripts/lib/configure-helpers.sh || \
   fail C-71 'json_query must pipe JSON stdin to python3 with JSON_QUERY_PARAMS on python'
-grep -q 'sonarr_port=SONARR_PORT' scripts/configure/bazarr.sh || \
-  fail C-71 'bazarr must pass SONARR_PORT/RADARR_PORT to bazarr-conn-diff'
-grep -q '"\$RADARR_PORT"' scripts/configure/seerr.sh || \
-  fail C-71 'seerr must use RADARR_PORT/SONARR_PORT from env'
+grep -q 'settings-sonarr-port=8989' scripts/configure/bazarr.sh || \
+  fail C-71 'bazarr must use internal port 8989 for Sonarr'
+grep -q 'settings-radarr-port=7878' scripts/configure/bazarr.sh || \
+  fail C-71 'bazarr must use internal port 7878 for Radarr'
+grep -q 'add_seerr_arr radarr radarr "\$RADARR_PORT" 7878' scripts/configure/seerr.sh || \
+  fail C-71 'seerr must use probe port with internal port 7878 for Radarr'
+grep -q 'add_seerr_arr sonarr sonarr "\$SONARR_PORT" 8989' scripts/configure/seerr.sh || \
+  fail C-71 'seerr must use probe port with internal port 8989 for Sonarr'
+grep -q 'arr_container_port=7878' scripts/configure/prowlarr.sh || \
+  fail C-71 'prowlarr must use internal port 7878 for Radarr'
 grep -q 'web_ui_api_key' scripts/lib/configure-helpers.sh || \
   fail C-71 'qbit_api_key_from_config must read web_ui_api_key fallback'
 pass C-71

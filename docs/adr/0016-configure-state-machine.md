@@ -64,7 +64,9 @@ Configure modules use `scripts/lib/json-query.py` with parameters in `JSON_QUERY
 
 `*arr` download client may use qBit **API key** (preferred) or **WebUI password** when the API key is not yet in `qBittorrent.conf`. `configure_qbittorrent` runs before *arr wiring and refreshes `QBIT_API_KEY` after password setup (conf file, then WebUI preferences JSON when authenticated).
 
-Internal *arr/Bazarr/Seerr/Prowlarr app ports use `SONARR_PORT` / `RADARR_PORT` from `.env` (defaults 8989/7878), not hardcoded literals.
+### Service Ports: Host Probe vs. Internal Network
+
+Host probe functions in `configure` (`wait_for_arr_api`, `configure_ensure_http`) dynamically use `SONARR_PORT` / `RADARR_PORT` / `QBITTORRENT_PORT` from `.env` to connect to `127.0.0.1:${PORT}` on the host. In contrast, inter-service URLs in Docker network `flixbox_net` (e.g. Seerr/Prowlarr/Bazarr connecting to `radarr` and `sonarr`) strictly use the canonical container listening ports (`7878` for Radarr, `8989` for Sonarr, `8080` for qBittorrent) matching the internal hostname contract in [REFERENCE](../user/REFERENCE.md).
 
 ## Consequences
 
