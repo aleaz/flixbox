@@ -440,6 +440,10 @@ pass C-71
 [[ -f scripts/lib/preflight-host.sh ]] || fail C-72 'missing scripts/lib/preflight-host.sh'
 grep -q 'flixbox_preflight_host_ports' bin/flixbox || \
   fail C-72 'bin/flixbox must call flixbox_preflight_host_ports'
+grep -q '_flixbox_port_is_free' scripts/lib/preflight-host.sh || \
+  fail C-72 'preflight-host must probe port availability before bind'
+grep -q 'if ! _flixbox_port_is_free' scripts/lib/preflight-host.sh || \
+  fail C-72 'preflight-host must warn only when port bind fails (in use)'
 grep -q 'Host port conflicts' docs/user/05-first-run.md || \
   fail C-72 'first-run doc must document host port conflicts'
 pass C-72

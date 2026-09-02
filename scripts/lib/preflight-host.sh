@@ -7,7 +7,8 @@ flixbox_preflight_host_ports() {
   local bind_ip="${FLIXBOX_ADMIN_BIND_IP:-0.0.0.0}"
   local failed=0
 
-  _flixbox_port_in_use() {
+  # Returns 0 when the port is free on bind_ip, 1 when already bound.
+  _flixbox_port_is_free() {
     local port="$1"
     python3 - "$bind_ip" "$port" <<'PY'
 import socket, sys
@@ -21,13 +22,14 @@ except OSError:
     sys.exit(1)
 finally:
     s.close()
+sys.exit(0)
 PY
   }
 
   _flixbox_check_port() {
     local env_var="$1" port="$2" service="$3"
     [[ -n "$port" ]] || return 0
-    if _flixbox_port_in_use "$port"; then
+    if ! _flixbox_port_is_free "$port"; then
       warn "Port ${port} (${service}) is already in use (bind ${bind_ip})."
       warn "  Set a free port in .env, e.g. ${env_var}=9898, then: ./bin/flixbox reload"
       warn "  Guide: docs/user/05-first-run.md#host-port-conflicts"
