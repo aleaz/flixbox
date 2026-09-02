@@ -432,9 +432,83 @@ grep -q 'add_seerr_arr sonarr sonarr "\$SONARR_PORT" 8989' scripts/configure/see
   fail C-71 'seerr must use probe port with internal port 8989 for Sonarr'
 grep -q 'arr_container_port=7878' scripts/configure/prowlarr.sh || \
   fail C-71 'prowlarr must use internal port 7878 for Radarr'
-grep -q 'web_ui_api_key' scripts/lib/configure-helpers.sh || \
-  fail C-71 'qbit_api_key_from_config must read web_ui_api_key fallback'
+grep -q 'qbit-web-ui-api-key' scripts/lib/configure-helpers.sh || \
+  fail C-71 'qbit_api_key_from_config must read web_ui_api_key via json_query fallback'
 pass C-71
+
+# --- C-72: host port preflight before up/reload ---
+[[ -f scripts/lib/preflight-host.sh ]] || fail C-72 'missing scripts/lib/preflight-host.sh'
+grep -q 'flixbox_preflight_host_ports' bin/flixbox || \
+  fail C-72 'bin/flixbox must call flixbox_preflight_host_ports'
+grep -q 'Host port conflicts' docs/user/05-first-run.md || \
+  fail C-72 'first-run doc must document host port conflicts'
+pass C-72
+
+# --- C-73: configure smoke on pull requests ---
+grep -q 'configure-smoke-pr' .github/workflows/ci.yml || \
+  fail C-73 'ci.yml must define configure-smoke-pr job for pull_request'
+grep -q 'CI_CONFIGURE_SMOKE_PR' scripts/ci-smoke-configure.sh || \
+  fail C-73 'ci-smoke-configure must support CI_CONFIGURE_SMOKE_PR subset'
+pass C-73
+
+# --- C-74: VPN structural smoke ---
+[[ -f scripts/ci-smoke-vpn.sh ]] || fail C-74 'missing scripts/ci-smoke-vpn.sh'
+grep -q 'CI_VPN_SMOKE' .github/workflows/ci.yml || \
+  fail C-74 'ci.yml must run ci-smoke-vpn.sh'
+grep -q 'network_mode: service:gluetun' compose/downloaders-vpn.yml || \
+  fail C-74 'VPN compose must use gluetun netns for qbittorrent'
+pass C-74
+
+# --- C-75: release gate (Trivy block + digests) ---
+[[ -f .github/workflows/release.yml ]] || fail C-75 'missing .github/workflows/release.yml'
+grep -q 'TRIVY_BLOCK' .github/workflows/release.yml || \
+  fail C-75 'release workflow must set TRIVY_BLOCK=1'
+[[ -f scripts/ci-pin-digests.sh ]] || fail C-75 'missing scripts/ci-pin-digests.sh'
+pass C-75
+
+# --- C-76: core MVP HTTP healthchecks ---
+for _svc in prowlarr radarr sonarr bazarr; do
+  grep -A25 "  ${_svc}:" compose/servarr.yml | grep -q 'healthcheck:' || \
+    fail C-76 "compose/servarr.yml ${_svc} must define healthcheck"
+done
+grep -A25 '  jellyfin:' compose/media-servers.yml | grep -q 'healthcheck:' || \
+  fail C-76 'compose/media-servers.yml jellyfin must define healthcheck'
+[[ -f docs/adr/0017-compose-health-and-start-order.md ]] || \
+  fail C-76 'missing ADR 0017 compose healthchecks'
+pass C-76
+
+# --- C-77: Bazarr depends_on Sonarr/Radarr healthy ---
+grep -A20 '  bazarr:' compose/servarr.yml | grep -q 'condition: service_healthy' || \
+  fail C-77 'bazarr must depend_on sonarr/radarr with service_healthy'
+pass C-77
+
+# --- C-78: runtime secrets + LAN trust documentation ---
+[[ -f docs/adr/0018-runtime-secrets-and-lan-trust.md ]] || \
+  fail C-78 'missing ADR 0018 runtime secrets'
+grep -q 'Threat model' docs/user/13-access-profiles.md || \
+  fail C-78 'access profiles doc must include threat model section'
+grep -q '0018-runtime-secrets' docs/user/06-configuration.md || \
+  fail C-78 'configuration doc must reference ADR 0018'
+pass C-78
+
+# --- C-79: configure modules use json_query only (no json_extract) ---
+if grep -r 'json_extract' scripts/configure/ 2>/dev/null; then
+  fail C-79 'scripts/configure must not use json_extract (use json_query)'
+fi
+grep -q 'seerr-initialized' scripts/lib/json-query.py || \
+  fail C-79 'json-query must include seerr-initialized handler'
+grep -q 'qbit-prefs-vpn-ok' scripts/lib/json-query.py || \
+  fail C-79 'json-query must include qbit-prefs-vpn-ok handler'
+pass C-79
+
+# --- C-80: ADR 0013 Accepted + VPN operator docs ---
+grep -qE 'Status:\*\* Accepted' docs/adr/0013-vpn-resilience-no-direct-fallback.md || \
+  fail C-80 'ADR 0013 must be Accepted'
+grep -q 'What happens when the VPN drops' docs/user/07-vpn-and-direct.md || \
+  fail C-80 'VPN doc must explain VPN drop behavior'
+grep -q 'Gluetun recreate' docs/user/10-troubleshooting.md || \
+  fail C-80 'troubleshooting must cover Gluetun recreate'
+pass C-80
 
 # --- Compose render (shared script — R4) ---
 "${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1
