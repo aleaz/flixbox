@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-27
+- **Updated:** 2026-09-02 — pins applied for pre-release
 
 ## Context
 
@@ -10,12 +11,12 @@ Flixbox needs a public license and a clear Docker image tagging policy before im
 ## Decision
 
 1. **License:** MIT (see root `LICENSE`), copyright Alejandro Azario.
-2. **Image tags during development / early MVP:** use vendor **`latest`** (or the image’s documented rolling default, e.g. Seerr `latest`) so bootstrap stays simple.
-3. **Before public v0.1 release (or when stability matters):** pin images to explicit version tags or digests; document the pin list in [docs/user/14-image-pins.md](../user/14-image-pins.md) and release notes. `:latest` is not the long-term production recommendation.
-4. **CI:** `scripts/ci-validate.sh` fails if any Compose `image:` line still uses `:latest`.
+2. **Image tags:** pin to explicit semver tags in `compose/*.yml` for pre-release and v0.1.0 onward. The pin table lives in [docs/user/14-image-pins.md](../user/14-image-pins.md).
+3. **`:latest` is forbidden** in tracked Compose files — enforced by CI rule C-43.
+4. **Release hygiene:** optional digest lock file via `scripts/ci-pin-digests.sh` on version tags (see [10-ci-plan.md](../10-ci-plan.md) C-75).
 
 ## Consequences
 
-- Early compose files may use `:latest` without violating standards **until** the v0.1 pin set.
-- Phase 7 / release hygiene requires pinning — applied for `v0.1.0` (see pin table).
-- Downstream users who need reproducibility should keep pins even when bumping versions.
+- Compose files use pinned semver tags; operators bump via release notes and the pin table.
+- CI fails on `:latest` in `compose/`.
+- Downstream users who need reproducibility should keep pins (and optionally digests) when bumping versions.

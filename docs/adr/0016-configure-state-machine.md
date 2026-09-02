@@ -47,7 +47,7 @@ Must not mutate runtime state:
 
 ### JSON queries
 
-Configure modules use `scripts/lib/json-query.py` with parameters in `JSON_QUERY_PARAMS` (never shell-interpolated Python). Legacy `json_extract` remains for static expressions only.
+Configure modules use `scripts/lib/json-query.py` with parameters in `JSON_QUERY_PARAMS` (never shell-interpolated Python). `json_extract` is deprecated — configure modules must use named `json_query` handlers only (CI C-79).
 
 ### Wiring context
 

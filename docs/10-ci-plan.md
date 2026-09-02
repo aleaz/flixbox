@@ -218,9 +218,18 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-66 | `.env.example` access-profile keys | Active `FLIXBOX_ARR_AUTH_*`, `FLIXBOX_ADMIN_BIND_IP`, `FLIXBOX_ARR_UI_*` assignments (in-place sync) |
 | C-67 | Configure first-start wait order | `configure_wait_for_first_start` before API key discovery in preflight |
 | C-68 | Configure readiness state machine | `configure-state.sh` + `configure-entry.sh`; Jellyfin in core assert; soft VPN retry; wiring skips duplicate waits after preflight |
-| C-69 | Configure pre-release hardening | `--dry-run` entry guard; parallel preflight waits; `fail()` returns 1; Bazarr post-restart wait; ADR 0016 |
+| C-69 | Configure pre-release hardening | `--dry-run` entry guard; parallel preflight waits; `fail()` returns 0 under `set -e` (PARTIAL wiring; ADR 0016); Bazarr post-restart wait |
 | C-70 | Configure follow-ups | `json-query.py` param-safe queries; `configure-context.sh`; `ci-smoke-configure.sh` (Seerr, Byparr, remapped qBit port) |
 | C-71 | Configure audit guards | `json_query` pipe/params; host probe vs canonical container ports; qBit API key prefs fallback |
+| C-72 | Host port preflight | `preflight-host.sh`; `up`/`reload` call before compose; first-run doc |
+| C-73 | Configure smoke on PR | `configure-smoke-pr` job; `CI_CONFIGURE_SMOKE_PR` subset |
+| C-74 | VPN structural smoke | `ci-smoke-vpn.sh`; VPN netns + gluetun alias contract |
+| C-75 | Release gate | `release.yml` with `TRIVY_BLOCK=1`; `ci-pin-digests.sh` |
+| C-76 | Compose HTTP healthchecks | Prowlarr/Radarr/Sonarr/Bazarr/Jellyfin; ADR 0017 |
+| C-77 | Bazarr start order | `depends_on` Sonarr/Radarr `service_healthy` |
+| C-78 | Runtime secrets doc | ADR 0018; threat model in access profiles + configuration |
+| C-79 | json_query migration | no `json_extract` in `scripts/configure/`; named handlers in `json-query.py` |
+| C-80 | VPN ops docs | ADR 0013 Accepted; VPN drop + Gluetun recreate troubleshooting |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 
