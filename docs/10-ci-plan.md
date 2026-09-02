@@ -216,7 +216,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-67 | Configure first-start wait order | `configure_wait_for_first_start` before API key discovery in preflight |
 | C-68 | Configure readiness state machine | `configure-state.sh` + `configure-entry.sh`; Jellyfin in core assert; soft VPN retry; wiring skips duplicate waits after preflight |
 | C-69 | Configure pre-release hardening | `--dry-run` entry guard; parallel preflight waits; `fail()` returns 1; Bazarr post-restart wait; ADR 0016 |
-| C-70 | Configure follow-ups | `json-query.py` param-safe queries; `configure-context.sh`; `ci-smoke-configure.sh` (optional job) |
+| C-70 | Configure follow-ups | `json-query.py` param-safe queries; `configure-context.sh`; `ci-smoke-configure.sh` (Seerr, Byparr, remapped qBit port) |
 | C-71 | Configure audit guards | `json_query` pipe/params; dynamic *arr ports; qBit API key prefs fallback |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
@@ -245,7 +245,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 .github/workflows/ci.yml          # jobs: secrets, validate (+ init smoke C-50–52)
 scripts/ci-validate.sh            # C-01 through C-42
 scripts/ci-smoke-init.sh          # C-50–52 + env-file unit + configure dry-run gate
-scripts/ci-smoke-configure.sh     # C-70 / D5 — ephemeral stack configure (CI_CONFIGURE_SMOKE=1)
+scripts/ci-smoke-configure.sh     # C-70 / D5 — ephemeral stack configure (Seerr, Byparr, dynamic qBit port)
 ```
 
 **Estimated runner time:** ~2–5 minutes per PR.

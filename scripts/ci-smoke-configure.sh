@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Ephemeral-stack configure smoke (D5 / C-70).
-# Brings up MVP core services in direct mode, runs configure once, tears down.
+# Brings up MVP core + Seerr + Byparr in direct mode (random free QBITTORRENT_PORT),
+# runs configure twice (idempotency), tears down.
 #
 # Usage:
 #   CI_CONFIGURE_SMOKE=1 ./scripts/ci-smoke-configure.sh
@@ -49,18 +50,22 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   flixbox_env_file_set .env FLIXBOX_MODE direct
   flixbox_env_file_set .env VPN_ENABLED false
   flixbox_env_file_set .env FLIXBOX_ACCESS_PROFILE trusted
-  flixbox_env_file_set .env QBITTORRENT_PORT 18080
+  SMOKE_QBIT_PORT="$(python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')"
+  flixbox_env_file_set .env QBITTORRENT_PORT "${SMOKE_QBIT_PORT}"
 
   ./bin/flixbox init --non-interactive
 
   log() { echo "[configure-smoke] $*"; }
-  log "Starting core stack (direct mode)..."
+  log "Starting core stack (direct mode, QBITTORRENT_PORT=${SMOKE_QBIT_PORT}, Seerr + Byparr)..."
   docker compose --project-directory . up -d \
-    qbittorrent radarr sonarr prowlarr bazarr jellyfin
+    qbittorrent radarr sonarr prowlarr bazarr jellyfin seerr byparr
 
   log "Waiting for containers..."
   deadline=$((SECONDS + 600))
-  core=(flixbox-qbittorrent flixbox-radarr flixbox-sonarr flixbox-prowlarr flixbox-bazarr flixbox-jellyfin)
+  core=(
+    flixbox-qbittorrent flixbox-radarr flixbox-sonarr flixbox-prowlarr
+    flixbox-bazarr flixbox-jellyfin flixbox-seerr flixbox-byparr
+  )
   while (( SECONDS < deadline )); do
     ready=true
     for c in "${core[@]}"; do
@@ -80,6 +85,12 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
 
   echo "$out" | grep -qE 'Done: [0-9]+ configured,' || \
     fail "configure missing Done summary"
+  echo "$out" | grep -q 'Configuring Seerr' || \
+    fail "configure did not run Seerr wiring"
+  echo "$out" | grep -q 'Seerr:' || \
+    fail "configure missing Seerr outcome line"
+  echo "$out" | grep -qE 'Prowlarr: (added Byparr|Byparr/FlareSolverr proxy)' || \
+    fail "configure missing Prowlarr Byparr proxy outcome"
   pass "configure on ephemeral stack (rc=0)"
 
   log "Idempotent re-run..."
@@ -88,6 +99,8 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   rc2=$?
   set -e
   [[ "$rc2" -eq 0 ]] || fail "configure idempotent re-run failed (rc=${rc2})"
+  echo "$out2" | grep -qE 'Done: [0-9]+ configured,' || \
+    fail "idempotent re-run missing Done summary"
   pass "configure idempotent re-run on ephemeral stack"
 )
 
