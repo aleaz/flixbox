@@ -70,6 +70,69 @@ Gluetun reconnects **inside the same container** (upstream default). While the t
 
 Flixbox will **never** auto-switch `FLIXBOX_MODE` to Direct on VPN failure ([ADR 0013](../adr/0013-vpn-resilience-no-direct-fallback.md)).
 
+## VPN provider examples
+
+After setting `FLIXBOX_MODE=vpn` and `VPN_ENABLED=true`, fill the **[VPN ONLY]** block in `.env`. Use the Gluetun provider id from the [Gluetun wiki](https://github.com/qdm12/gluetun-wiki). Never commit real keys.
+
+Then: `./bin/flixbox init --non-interactive` → `docker compose down` → `./bin/flixbox up` → `./bin/flixbox vpn-test`.
+
+### WireGuard (native provider)
+
+Typical for Proton, Mullvad, and most modern providers. Get the private key and address from the provider’s WireGuard config (or account UI).
+
+```env
+FLIXBOX_MODE=vpn
+VPN_ENABLED=true
+
+VPN_SERVICE_PROVIDER=protonvpn
+VPN_TYPE=wireguard
+WIREGUARD_PRIVATE_KEY=your_private_key_here
+WIREGUARD_ADDRESSES=10.2.0.2/32
+# Optional filters (provider-dependent):
+# SERVER_COUNTRIES=Netherlands
+# SERVER_CITIES=Amsterdam
+VPN_PORT_FORWARDING=off
+```
+
+### OpenVPN (native provider)
+
+Use when your provider issues OpenVPN credentials instead of WireGuard.
+
+```env
+FLIXBOX_MODE=vpn
+VPN_ENABLED=true
+
+VPN_SERVICE_PROVIDER=protonvpn
+VPN_TYPE=openvpn
+OPENVPN_USER=your_openvpn_username
+OPENVPN_PASSWORD=your_openvpn_password
+# Optional filters:
+# SERVER_COUNTRIES=Netherlands
+VPN_PORT_FORWARDING=off
+```
+
+### Custom OpenVPN file (lab / special configs)
+
+For a `.ovpn` you supply yourself (not a substitute for a commercial no-logs provider):
+
+1. Place the file under `${CONFIG_DIR}/gluetun/` (volume already mounted).
+2. In the `.ovpn`, `remote` must be an **IP address** (not a hostname) — Gluetun requirement.
+3. Set:
+
+```env
+FLIXBOX_MODE=vpn
+VPN_ENABLED=true
+
+VPN_SERVICE_PROVIDER=custom
+VPN_TYPE=openvpn
+OPENVPN_CUSTOM_CONFIG=/gluetun/custom.conf
+# OPENVPN_USER=…
+# OPENVPN_PASSWORD=…
+VPN_PORT_FORWARDING=off
+```
+
+Full comment block and variable list: [`.env.example`](../../.env.example) **[VPN ONLY]**.
+
 ## VPN mode essentials
 
 1. Only **qBittorrent** uses `network_mode: service:gluetun`.
@@ -78,7 +141,7 @@ Flixbox will **never** auto-switch `FLIXBOX_MODE` to Direct on VPN failure ([ADR
 4. IPv6 blocked by default (`BLOCK_IPV6=on`); DNS over TLS on (`DOT=on`).
 5. Optional port forwarding: `VPN_PORT_FORWARDING=on` (supported providers). `./bin/flixbox configure` sets qBittorrent **Bypass authentication for clients on localhost** when port forwarding is enabled (Gluetun hooks need unauthenticated localhost API access).
 6. Put provider credentials only in `.env` or files under `${CONFIG_DIR}/gluetun` — never in git.
-7. Custom OpenVPN (e.g. a VPNGate `.ovpn` for lab tests): `VPN_SERVICE_PROVIDER=custom`, file under `${CONFIG_DIR}/gluetun/`, `OPENVPN_CUSTOM_CONFIG=/gluetun/<file>`, and `remote` must be an **IP** (Gluetun). Free relays are not a privacy substitute for a real no-logs provider.
+7. Prefer WireGuard when the provider supports it (simpler keys, usually faster). Use OpenVPN when that is all the account offers.
 
 ## Direct mode essentials
 
