@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Enforce Flixbox architecture contracts in CI and locally.
-# See docs/10-ci-plan.md for check IDs (C-01 … C-69).
+# See docs/10-ci-plan.md for check IDs (C-01 … C-70).
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -398,6 +398,21 @@ grep -q 'wait_for_bazarr_api' scripts/configure/bazarr.sh || \
 [[ -f docs/adr/0016-configure-state-machine.md ]] || \
   fail C-69 'missing ADR 0016 configure state machine'
 pass C-69
+
+# --- C-70: configure hardening follow-ups (json-query, context, stack smoke script) ---
+[[ -f scripts/lib/json-query.py ]] || fail C-70 'missing scripts/lib/json-query.py'
+[[ -f scripts/lib/configure-context.sh ]] || fail C-70 'missing scripts/lib/configure-context.sh'
+[[ -f scripts/ci-smoke-configure.sh ]] || fail C-70 'missing scripts/ci-smoke-configure.sh'
+grep -q 'json_query' scripts/lib/configure-helpers.sh || \
+  fail C-70 'configure-helpers must expose json_query'
+grep -q 'configure_context_reset' scripts/configure-apps.sh || \
+  fail C-70 'configure-apps must reset context at start'
+grep -q 'json_query bazarr-conn-diff' scripts/configure/bazarr.sh || \
+  fail C-70 'bazarr must use json_query for API key compare'
+if grep -E 'json_extract.*\$\{' scripts/configure/arr-common.sh scripts/configure/bazarr.sh 2>/dev/null; then
+  fail C-70 'arr/bazarr must not shell-interpolate into json_extract'
+fi
+pass C-70
 
 # --- Compose render (shared script — R4) ---
 "${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1

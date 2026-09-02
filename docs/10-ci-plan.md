@@ -126,7 +126,7 @@ flowchart TB
 | Checkout | `actions/checkout@v4` |
 | Compose render | `./scripts/ci-compose-render.sh` (direct, VPN, profiles, shared access profile) |
 | ShellCheck | `shellcheck bin/flixbox scripts/*.sh scripts/configure/*.sh …` |
-| Contract script | `./scripts/ci-validate.sh` (includes compose render + C-01…C-69) |
+| Contract script | `./scripts/ci-validate.sh` (includes compose render + C-01…C-70) |
 | Init smoke | `./scripts/ci-smoke-init.sh` |
 
 **Env for CI:** Use `.env.example` as-is with `DATA_DIR` / `CONFIG_DIR` overridden inside `ci-validate.sh` to `/tmp/flixbox-ci/{data,config}` so runners never touch `/srv/flixbox`.
@@ -216,6 +216,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-67 | Configure first-start wait order | `configure_wait_for_first_start` before API key discovery in preflight |
 | C-68 | Configure readiness state machine | `configure-state.sh` + `configure-entry.sh`; Jellyfin in core assert; soft VPN retry; wiring skips duplicate waits after preflight |
 | C-69 | Configure pre-release hardening | `--dry-run` entry guard; parallel preflight waits; `fail()` returns 1; Bazarr post-restart wait; ADR 0016 |
+| C-70 | Configure follow-ups | `json-query.py` param-safe queries; `configure-context.sh`; `ci-smoke-configure.sh` (optional job) |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 
@@ -243,6 +244,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 .github/workflows/ci.yml          # jobs: secrets, validate (+ init smoke C-50–52)
 scripts/ci-validate.sh            # C-01 through C-42
 scripts/ci-smoke-init.sh          # C-50–52 + env-file unit + configure dry-run gate
+scripts/ci-smoke-configure.sh     # C-70 / D5 — ephemeral stack configure (CI_CONFIGURE_SMOKE=1)
 ```
 
 **Estimated runner time:** ~2–5 minutes per PR.

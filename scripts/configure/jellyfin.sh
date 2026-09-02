@@ -115,7 +115,8 @@ print(__import__('json').dumps(data.get('Policy', {})))" || true)
 
   ensure_jf_library() {
     local lib_name="$1" collection_type="$2" path="$3"
-    if json_extract "$libs" "sys.exit(0 if any(p.get('Name','').lower()=='''${lib_name}'''.lower() or '''${path}''' in (p.get('Locations') or []) for p in data) else 1)" 2>/dev/null; then
+    LIB_NAME="$lib_name" LIB_PATH="$path"
+    if json_query jellyfin-library-exists "$libs" "$(json_params lib_name=LIB_NAME,path=LIB_PATH)" >/dev/null 2>&1; then
       skip "Jellyfin: library ${lib_name}"
       return
     fi

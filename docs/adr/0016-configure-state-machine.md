@@ -45,6 +45,14 @@ Must not mutate runtime state:
 - Entry and preflight emit `[dry-run]` previews only.
 - Core stack assert still runs (D4 CI gate: fails cleanly without stack).
 
+### JSON queries
+
+Configure modules use `scripts/lib/json-query.py` with parameters in `JSON_QUERY_PARAMS` (never shell-interpolated Python). Legacy `json_extract` remains for static expressions only.
+
+### Wiring context
+
+`scripts/lib/configure-context.sh` documents and resets counters/flags at configure start. API keys and qBit context are populated during preflight and qBit wiring (bash dynamic scope).
+
 ### Failure model
 
 - **Preflight fatal:** missing tools/stack, `.env` not writable, global timeout, VPN hard-fail → `exit 1`.

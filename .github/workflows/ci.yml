@@ -52,6 +52,19 @@ jobs:
       - name: Init smoke (C-50–52 + env-file)
         run: ./scripts/ci-smoke-init.sh
 
+  configure-smoke:
+    name: configure-smoke
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure on ephemeral stack (C-70 / D5)
+        env:
+          CI_CONFIGURE_SMOKE: "1"
+        run: ./scripts/ci-smoke-configure.sh
+
   security:
     name: security
     runs-on: ubuntu-latest

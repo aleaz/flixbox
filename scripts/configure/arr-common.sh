@@ -17,16 +17,14 @@ ensure_custom_format() {
   local base="$1" auth="$2" name="$3" cf_name="$4" cf_score="$5" cf_specs="$6"
   local formats cf_id
   formats=$(api_get "${base}/api/v3/customformat" "$auth") || true
-  cf_id=$(json_extract "$formats" "
-ids = [c['id'] for c in data if c.get('name') == '''${cf_name}''']
-print(ids[0] if ids else '')")
+  CF_NAME="$cf_name" cf_id=$(json_query arr-cf-id-by-name "$formats" "$(json_params cf_name=CF_NAME)")
   if [[ -n "$cf_id" ]]; then
     skip "${name}: ${cf_name} custom format"
   else
     local cf_payload cf_result
     cf_payload="{\"name\":\"${cf_name}\",\"includeCustomFormatWhenRenaming\":false,\"specifications\":${cf_specs}}"
     cf_result=$(api_post "${base}/api/v3/customformat" "application/json" "$cf_payload" "$auth") || true
-    cf_id=$(json_extract "$cf_result" "print(data.get('id', ''))")
+    cf_id=$(json_query print-field "$cf_result" '{"field":"id"}')
     if [[ -n "$cf_id" ]]; then
       ok "${name}: added ${cf_name} custom format"
     else
@@ -36,23 +34,16 @@ print(ids[0] if ids else '')")
   fi
   local profiles profile_ids
   profiles=$(api_get "${base}/api/v3/qualityprofile" "$auth") || true
-  profile_ids=$(json_extract "$profiles" "
-for p in data:
-    print(p['id'])")
+  profile_ids=$(json_query arr-profile-ids "$profiles" '{}')
   local pid profile updated_profile
   for pid in $profile_ids; do
     profile=$(api_get "${base}/api/v3/qualityprofile/${pid}" "$auth") || continue
-    if json_extract "$profile" "
-items = data.get('formatItems', [])
-match = [i for i in items if i.get('format') == ${cf_id}]
-sys.exit(0 if match and match[0].get('score') == ${cf_score} else 1)"; then
+    CF_ID="$cf_id" CF_SCORE="$cf_score" _cf_params="$(CF_ID="$cf_id" CF_SCORE="$cf_score" json_params cf_id=CF_ID,cf_score=CF_SCORE)"
+    if json_query arr-cf-scored-in-profile "$profile" "$_cf_params" >/dev/null 2>&1; then
       continue
     fi
-    updated_profile=$(json_extract "$profile" "
-items = [i for i in data.get('formatItems', []) if i.get('format') != ${cf_id}]
-items.insert(0, {'format': ${cf_id}, 'name': '''${cf_name}''', 'score': ${cf_score}})
-data['formatItems'] = items
-print(json.dumps(data))")
+    CF_ID="$cf_id" CF_NAME="$cf_name" CF_SCORE="$cf_score" _cf_params="$(CF_ID="$cf_id" CF_NAME="$cf_name" CF_SCORE="$cf_score" json_params cf_id=CF_ID,cf_name=CF_NAME,cf_score=CF_SCORE)"
+    updated_profile=$(json_query arr-cf-patch-profile "$profile" "$_cf_params")
     if api_put "${base}/api/v3/qualityprofile/${pid}" "application/json" "$updated_profile" "$auth" >/dev/null 2>&1; then
       ok "${name}: scored ${cf_name} at ${cf_score} in profile ${pid}"
     else
@@ -100,7 +91,8 @@ configure_arr_service() {
 
   local roots
   roots=$(api_get "${base}/api/v3/rootfolder" "$auth") || true
-  if json_extract "$roots" "sys.exit(0 if any(r.get('path') == '${root_path}' for r in data) else 1)"; then
+  ROOT_PATH="$root_path"
+  if json_query arr-root-folder-exists "$roots" "$(json_params root_path=ROOT_PATH)" >/dev/null 2>&1; then
     skip "${name}: root folder ${root_path}"
   else
     if api_post "${base}/api/v3/rootfolder" "application/json" "{\"path\":\"${root_path}\"}" "$auth" >/dev/null 2>&1; then
@@ -112,9 +104,7 @@ configure_arr_service() {
 
   local clients existing_id
   clients=$(api_get "${base}/api/v3/downloadclient" "$auth") || true
-  existing_id=$(json_extract "$clients" "
-ids = [c['id'] for c in data if c.get('name','').lower() == 'qbittorrent' or c.get('implementation') == 'QBittorrent']
-print(ids[0] if ids else '')")
+  existing_id=$(json_query arr-qbit-client-id "$clients" '{}')
 
   if [[ -z "$qbit_api_key" && -z "$qbit_pass" ]]; then
     fail "${name}: add/update qBittorrent (need API key or QBITTORRENT_PASSWORD)"
@@ -128,10 +118,7 @@ print(ids[0] if ids else '')")
       existing_client=$(api_get "${base}/api/v3/downloadclient/${existing_id}" "$auth") || true
       # Accidental qBit API key regen: password auth can still make Test pass while apiKey is stale.
       if [[ -n "$existing_client" && -n "$qbit_api_key" ]]; then
-        stored_api_key=$(json_extract "$existing_client" "
-fields = data.get('fields') or []
-vals = [f.get('value') for f in fields if f.get('name') == 'apiKey']
-print('' if not vals or vals[0] is None else vals[0])")
+        stored_api_key=$(json_query arr-qbit-client-api-key "$existing_client" '{}')
         if [[ -n "$stored_api_key" && "$stored_api_key" != "$qbit_api_key" ]]; then
           key_drift=true
         fi
@@ -167,13 +154,9 @@ print('' if not vals or vals[0] is None else vals[0])")
   # NFO metadata (Kodi/XBMC) — helps Jellyfin
   local metadata meta_id meta_enabled
   metadata=$(api_get "${base}/api/v3/metadata" "$auth") || true
-  meta_id=$(json_extract "$metadata" "
-xbmc = [m for m in data if m.get('implementation') == 'XbmcMetadata']
-print(xbmc[0]['id'] if xbmc else '')")
+  meta_id=$(json_query arr-xbmc-meta-id "$metadata" '{}')
   if [[ -n "$meta_id" ]]; then
-    meta_enabled=$(json_extract "$metadata" "
-xbmc = [m for m in data if m.get('implementation') == 'XbmcMetadata']
-print(str(xbmc[0].get('enable', False)).lower() if xbmc else 'false')")
+    meta_enabled=$(json_query arr-xbmc-enabled "$metadata" '{}')
     if [[ "$meta_enabled" == "true" ]]; then
       skip "${name}: NFO metadata"
     else

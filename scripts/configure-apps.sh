@@ -47,6 +47,7 @@ done
 flixbox_load_configure_env
 
 configure_runtime_init
+configure_context_reset
 QBIT_COOKIE=$(configure_tmpfile)
 
 # shellcheck disable=SC1091

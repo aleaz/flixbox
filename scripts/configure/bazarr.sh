@@ -27,27 +27,10 @@ configure_bazarr() {
   fi
 
   local needs_restart=false
-  local conn_state
-  conn_state=$(json_extract "$settings" "
-want = {
-    'sonarr': {'ip': 'sonarr', 'port': 8989, 'base_url': '', 'ssl': False, 'apikey': '''${SONARR_API_KEY}'''},
-    'radarr': {'ip': 'radarr', 'port': 7878, 'base_url': '', 'ssl': False, 'apikey': '''${RADARR_API_KEY}'''},
-}
-general = data.get('general', {})
-diff = []
-for section, fields in sorted(want.items()):
-    current = data.get(section, {})
-    if not general.get('use_' + section):
-        diff.append('general.use_' + section)
-    for field, expected in sorted(fields.items()):
-        if field == 'apikey' and not expected:
-            continue
-        actual = current.get(field)
-        if field == 'port':
-            actual = int(actual) if str(actual).isdigit() else actual
-        if actual != expected:
-            diff.append(section + '.' + field)
-print(' '.join(diff) if diff else 'MATCH')")
+  local conn_state _bazarr_params
+  _bazarr_params="$(SONARR_API_KEY="$SONARR_API_KEY" RADARR_API_KEY="$RADARR_API_KEY" \
+    json_params sonarr_key=SONARR_API_KEY,radarr_key=RADARR_API_KEY)"
+  conn_state=$(json_query bazarr-conn-diff "$settings" "$_bazarr_params")
 
   if [[ -z "$conn_state" ]]; then
     fail "Bazarr: could not compare Sonarr/Radarr connections"
@@ -77,12 +60,7 @@ print(' '.join(diff) if diff else 'MATCH')")
   fi
 
   local subsync_state
-  subsync_state=$(json_extract "$settings" "
-want = {'use_subsync': True, 'use_subsync_threshold': True, 'subsync_threshold': 90,
-        'use_subsync_movie_threshold': True, 'subsync_movie_threshold': 70}
-current = data.get('subsync', {})
-diff = [k for k, v in sorted(want.items()) if current.get(k) != v]
-print(' '.join(diff) if diff else 'MATCH')")
+  subsync_state=$(json_query bazarr-subsync-diff "$settings" '{}')
   if [[ "$subsync_state" == "MATCH" ]]; then
     skip "Bazarr: subtitle sync"
   elif [[ -n "$subsync_state" ]]; then

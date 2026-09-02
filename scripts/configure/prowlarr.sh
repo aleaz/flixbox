@@ -29,7 +29,7 @@ configure_prowlarr() {
 
   local proxies
   proxies=$(api_get "${base}/api/v1/indexerProxy" "$auth") || true
-  if json_extract "$proxies" "sys.exit(0 if any('byparr' in p.get('name','').lower() or 'flaresolverr' in p.get('name','').lower() for p in data) else 1)"; then
+  if json_query prowlarr-has-cf-proxy "$proxies" '{}' >/dev/null 2>&1; then
     skip "Prowlarr: Byparr/FlareSolverr proxy"
   elif ! flixbox_container_running flixbox-byparr; then
     info "Prowlarr: Byparr not running — skipping CF proxy (start with profile proxy or add manually)"
@@ -58,19 +58,14 @@ configure_prowlarr() {
       arr_categories="[2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060, 2070, 2080]"
     fi
     name_lower=$(echo "$arr_name" | tr '[:upper:]' '[:lower:]')
-    existing_app_id=$(json_extract "$apps" "
-ids = [a['id'] for a in data if a.get('name','').lower() == '${name_lower}']
-print(ids[0] if ids else '')")
+    NAME_LOWER="$name_lower" existing_app_id=$(json_query prowlarr-app-id-by-name "$apps" "$(json_params name_lower=NAME_LOWER)")
     if [[ -n "$existing_app_id" ]]; then
       if [[ -z "$arr_key" ]]; then
         skip "Prowlarr: ${arr_name} application"
         continue
       fi
       existing_app=$(api_get "${base}/api/v1/applications/${existing_app_id}" "$auth") || true
-      stored_key=$(json_extract "$existing_app" "
-fields = data.get('fields') or []
-vals = [f.get('value') for f in fields if f.get('name') == 'apiKey']
-print('' if not vals or vals[0] is None else vals[0])")
+      stored_key=$(json_query prowlarr-app-api-key "$existing_app" '{}')
       if prowlarr_app_api_key_in_sync "$stored_key" "$arr_key" "$arr_port" "v3"; then
         skip "Prowlarr: ${arr_name} application"
       else

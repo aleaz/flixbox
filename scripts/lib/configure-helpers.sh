@@ -10,7 +10,10 @@ source "${FLIXBOX_LIB}/env-file.sh"
 source "${FLIXBOX_LIB}/configure-runtime.sh"
 # shellcheck disable=SC1091
 source "${FLIXBOX_LIB}/configure-state.sh"
+# shellcheck disable=SC1091
+source "${FLIXBOX_LIB}/configure-context.sh"
 FLIXBOX_JSON_PAYLOAD="${FLIXBOX_LIB}/json-payload.py"
+FLIXBOX_JSON_QUERY="${FLIXBOX_LIB}/json-query.py"
 
 flixbox_json() {
   python3 "${FLIXBOX_JSON_PAYLOAD}" "$@"
@@ -32,6 +35,28 @@ import sys, json
 data = json.load(sys.stdin)
 ${expr}
 " 2>/dev/null
+}
+
+# Build JSON_QUERY_PARAMS from param_key=ENV_VAR pairs (comma-separated spec).
+# Example: CF_NAME="$cf_name" json_params cf_name=CF_NAME
+json_params() {
+  python3 -c '
+import json, os, sys
+out = {}
+for spec in sys.argv[1].split(","):
+    spec = spec.strip()
+    if not spec:
+        continue
+    key, env_name = spec.split("=", 1)
+    out[key.strip()] = os.environ.get(env_name.strip(), "")
+print(json.dumps(out))
+' "$1"
+}
+
+# Named query (scripts/lib/json-query.py) — parameters via JSON, never shell-interpolated Python.
+json_query() {
+  local query="$1" json="$2" params="${3:-{}}"
+  JSON_QUERY_PARAMS="$params" echo "$json" | python3 "${FLIXBOX_JSON_QUERY}" "$query"
 }
 
 log()  { echo "[configure] $*"; }
@@ -192,16 +217,14 @@ prowlarr_ensure_tag_id() {
   local base="$1" auth_header="$2" label="$3"
   local tags tag_id result
   tags=$(api_get "${base}/api/v1/tag" "$auth_header") || return 1
-  tag_id=$(json_extract "$tags" "
-ids = [t['id'] for t in data if t.get('label', '').lower() == '''${label}'''.lower()]
-print(ids[0] if ids else '')")
+  tag_id=$(json_query prowlarr-tag-id-by-label "$tags" "$(LABEL="$label" json_params label=LABEL)")
   if [[ -n "$tag_id" ]]; then
     echo "$tag_id"
     return 0
   fi
   result=$(api_post "${base}/api/v1/tag" "application/json" \
     "$(LABEL="$label" flixbox_json prowlarr-tag)" "$auth_header") || return 1
-  tag_id=$(json_extract "$result" "print(data.get('id', ''))")
+  tag_id=$(json_query print-field "$result" '{"field":"id"}')
   if [[ -n "$tag_id" ]]; then
     echo "$tag_id"
     return 0
