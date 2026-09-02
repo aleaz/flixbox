@@ -32,7 +32,7 @@ source "${ROOT_DIR}/scripts/lib/configure-helpers.sh"
 DRY_RUN=false
 VERBOSE=false
 SYNC_QBIT_AUTH=false
-QBIT_COOKIE="/tmp/flixbox_qbit_configure_cookie.txt"
+QBIT_COOKIE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -71,6 +71,9 @@ container_running() {
 }
 
 load_env
+
+configure_runtime_init
+QBIT_COOKIE=$(configure_tmpfile)
 
 if [[ "${FLIXBOX_ACCESS_PROFILE:-trusted}" == "shared" ]]; then
   info "Access profile: shared — admin ports on 127.0.0.1; after configure, create Forms users with FLIXBOX_ARR_UI_* (docs/user/13-access-profiles.md#create-arr-login-shared)"
@@ -361,7 +364,7 @@ configure_prowlarr() {
     skip "Prowlarr: Byparr/FlareSolverr proxy"
   else
     local proxy_payload
-    proxy_payload="{\"name\":\"Byparr\",\"implementation\":\"FlareSolverr\",\"configContract\":\"FlareSolverrSettings\",\"fields\":[{\"name\":\"host\",\"value\":\"http://byparr:8191\"},{\"name\":\"requestTimeout\",\"value\":60}],\"tags\":[${cf_tag_id}]}"
+    proxy_payload=$(TAG_ID="$cf_tag_id" flixbox_json prowlarr-byparr-proxy)
     if api_post "${base}/api/v1/indexerProxy" "application/json" "$proxy_payload" "$auth" >/dev/null 2>&1; then
       ok "Prowlarr: added Byparr proxy (tag: cf)"
     else
@@ -399,11 +402,7 @@ print('' if not vals or vals[0] is None else vals[0])")
       if prowlarr_app_api_key_in_sync "$stored_key" "$arr_key" "$arr_port" "v3"; then
         skip "Prowlarr: ${arr_name} application"
       else
-        app_payload=$(json_extract "$existing_app" "
-for f in data.get('fields') or []:
-    if f.get('name') == 'apiKey':
-        f['value'] = '''${arr_key}'''
-print(json.dumps(data))")
+        app_payload=$(echo "$existing_app" | API_KEY="$arr_key" flixbox_json prowlarr-patch-api-key)
         if api_put "${base}/api/v1/applications/${existing_app_id}" "application/json" "$app_payload" "$auth" >/dev/null 2>&1; then
           ok "Prowlarr: refreshed ${arr_name} API key"
         else
@@ -413,7 +412,8 @@ print(json.dumps(data))")
     elif [[ -z "$arr_key" ]]; then
       fail "Prowlarr: add ${arr_name} (no API key)"
     else
-      app_payload="{\"name\":\"${arr_name}\",\"syncLevel\":\"fullSync\",\"implementation\":\"${arr_name}\",\"configContract\":\"${arr_name}Settings\",\"fields\":[{\"name\":\"prowlarrUrl\",\"value\":\"http://prowlarr:9696\"},{\"name\":\"baseUrl\",\"value\":\"http://${name_lower}:${arr_port}\"},{\"name\":\"apiKey\",\"value\":\"${arr_key}\"},{\"name\":\"syncCategories\",\"value\":${arr_categories}}],\"tags\":[${cf_tag_id}]}"
+      app_payload=$(ARR_NAME="$arr_name" PORT="$arr_port" API_KEY="$arr_key" \
+        CATEGORIES="$arr_categories" TAG_ID="$cf_tag_id" flixbox_json prowlarr-arr-app)
       if api_post "${base}/api/v1/applications" "application/json" "$app_payload" "$auth" >/dev/null 2>&1; then
         ok "Prowlarr: added ${arr_name} application sync"
       else
@@ -566,9 +566,11 @@ configure_jellyfin() {
       -d '{"UICulture":"en-US","MetadataCountryCode":"US","PreferredDisplayLanguage":"en"}' || true
     curl -s -o /dev/null "${base}/Startup/User" || true
     local user_code
+    local startup_payload
+    startup_payload=$(NAME="$admin_user" PASSWORD="$admin_pass" flixbox_json jellyfin-startup-user)
     user_code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${base}/Startup/User" \
       -H 'Content-Type: application/json' \
-      -d "{\"Name\":\"${admin_user}\",\"Password\":\"${admin_pass}\"}")
+      -d "$startup_payload")
     if [[ "$user_code" =~ ^2 ]]; then
       ok "Jellyfin: startup user ${admin_user} configured"
     else
@@ -577,10 +579,12 @@ configure_jellyfin() {
     fi
     # Seerr bootstrap requires Jellyfin admin; ensure flag on first user (Jellyfin 10.11 quirk).
     local jf_auth_json jf_token jf_user_id jf_is_admin
+    local jf_auth_body
+    jf_auth_body=$(USERNAME="$admin_user" PASSWORD="$admin_pass" flixbox_json jellyfin-auth)
     jf_auth_json=$(curl -s -X POST "${base}/Users/AuthenticateByName" \
       -H 'Content-Type: application/json' \
       -H 'X-Emby-Authorization: MediaBrowser Client="Flixbox", Device="configure", DeviceId="flixbox-configure", Version="1.0.0"' \
-      -d "{\"Username\":\"${admin_user}\",\"Pw\":\"${admin_pass}\"}" 2>/dev/null || true)
+      -d "$jf_auth_body" 2>/dev/null || true)
     jf_token=$(json_extract "$jf_auth_json" "print(data.get('AccessToken',''))" || true)
     jf_user_id=$(json_extract "$jf_auth_json" "print(data.get('User', {}).get('Id', ''))" || true)
     jf_is_admin=$(json_extract "$jf_auth_json" "print(str(data.get('User', {}).get('Policy', {}).get('IsAdministrator', False)).lower())" || echo false)
@@ -624,11 +628,12 @@ print(__import__('json').dumps(data.get('Policy', {})))" || true)
     return
   fi
 
-  local auth_json token
+  local auth_body auth_json token
+  auth_body=$(USERNAME="$admin_user" PASSWORD="$admin_pass" flixbox_json jellyfin-auth)
   auth_json=$(curl -s -X POST "${base}/Users/AuthenticateByName" \
     -H 'Content-Type: application/json' \
     -H 'X-Emby-Authorization: MediaBrowser Client="Flixbox", Device="configure", DeviceId="flixbox-configure", Version="1.0.0"' \
-    -d "{\"Username\":\"${admin_user}\",\"Pw\":\"${admin_pass}\"}" 2>/dev/null || true)
+    -d "$auth_body" 2>/dev/null || true)
   token=$(json_extract "$auth_json" "print(data.get('AccessToken',''))" || true)
   if [[ -z "$token" ]]; then
     fail "Jellyfin: login failed (check FLIXBOX_ADMIN_USER/PASSWORD)"
@@ -644,18 +649,20 @@ print(__import__('json').dumps(data.get('Policy', {})))" || true)
       skip "Jellyfin: library ${lib_name}"
       return
     fi
-    local code
+    local code lib_body lib_q
+    lib_body=$(PATH="$path" flixbox_json jellyfin-library-options)
+    lib_q=$(VALUE="$lib_name" flixbox_json jellyfin-url-quote)
     code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
-      "${base}/Library/VirtualFolders?name=$(python3 -c "import urllib.parse; print(urllib.parse.quote('''${lib_name}'''))")&collectionType=${collection_type}&refreshLibrary=true" \
+      "${base}/Library/VirtualFolders?name=${lib_q}&collectionType=${collection_type}&refreshLibrary=true" \
       -H "X-Emby-Token: ${token}" \
       -H 'Content-Type: application/json' \
-      -d "{\"LibraryOptions\":{\"PathInfos\":[{\"Path\":\"${path}\"}]}}")
+      -d "$lib_body")
     if [[ "$code" =~ ^2 ]]; then
       ok "Jellyfin: added library ${lib_name} → ${path}"
     else
       # Alternate body shape
       code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
-        "${base}/Library/VirtualFolders?name=$(python3 -c "import urllib.parse; print(urllib.parse.quote('''${lib_name}'''))")&collectionType=${collection_type}&paths=${path}&refreshLibrary=true" \
+        "${base}/Library/VirtualFolders?name=${lib_q}&collectionType=${collection_type}&paths=${path}&refreshLibrary=true" \
         -H "X-Emby-Token: ${token}")
       if [[ "$code" =~ ^2 ]]; then
         ok "Jellyfin: added library ${lib_name} → ${path}"
@@ -727,28 +734,30 @@ configure_seerr() {
   init_flag=$(json_extract "$public" "print(str(data.get('initialized', False)).lower())" || echo false)
 
   # Login / create admin via Jellyfin
-  local cookie="/tmp/flixbox_seerr_configure_cookie.txt"
+  local cookie seerr_login_resp seerr_arr_resp
+  cookie=$(configure_tmpfile)
+  seerr_login_resp=$(configure_tmpfile)
+  seerr_arr_resp=$(configure_tmpfile)
   local login_code login_body
   if [[ "$init_flag" == "true" ]]; then
     login_body=$(seerr_login_json false "$admin_user" "$admin_pass")
   else
     login_body=$(seerr_login_json true "$admin_user" "$admin_pass")
   fi
-  login_code=$(curl -s -o /tmp/flixbox_seerr_login.json -w '%{http_code}' -c "$cookie" \
+  login_code=$(curl -s -o "$seerr_login_resp" -w '%{http_code}' -c "$cookie" \
     -X POST "${base}/api/v1/auth/jellyfin" \
     -H 'Content-Type: application/json' \
     -d "$login_body")
 
   if [[ ! "$login_code" =~ ^2 ]]; then
     local login_msg
-    login_msg=$(json_extract "$(cat /tmp/flixbox_seerr_login.json 2>/dev/null || echo '{}')" \
+    login_msg=$(json_extract "$(cat "$seerr_login_resp" 2>/dev/null || echo '{}')" \
       "print(data.get('message') or data.get('error') or '')" 2>/dev/null || true)
     if [[ -n "$login_msg" ]]; then
       fail "Seerr: Jellyfin auth failed (HTTP ${login_code}: ${login_msg})"
     else
       fail "Seerr: Jellyfin auth failed (HTTP ${login_code}) — check FLIXBOX_ADMIN_USER/PASSWORD"
     fi
-    rm -f "$cookie" /tmp/flixbox_seerr_login.json
     return
   fi
   info "Seerr: Jellyfin session ready"
@@ -769,12 +778,8 @@ print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
         skip "Seerr: ${kind} service"
         return
       fi
-      payload=$(json_extract "$list" "
-items = data if isinstance(data, list) else []
-item = dict(items[0])
-item['apiKey'] = '''${api_key}'''
-print(json.dumps(item))")
-      http_code=$(curl -s -o /tmp/flixbox_seerr_arr.json -w '%{http_code}' -b "$cookie" -X PUT \
+      payload=$(echo "$list" | API_KEY="$api_key" flixbox_json seerr-patch-arr-api-key)
+      http_code=$(curl -s -o "$seerr_arr_resp" -w '%{http_code}' -b "$cookie" -X PUT \
         "${base}/api/v1/settings/${kind}/${existing_id}" \
         -H 'Content-Type: application/json' \
         -d "$payload")
@@ -796,20 +801,18 @@ print(json.dumps(item))")
       return
     fi
     if [[ "$kind" == "radarr" ]]; then
-      payload=$(cat <<EOF
-{"name":"Radarr","hostname":"${host}","port":${port},"apiKey":"${api_key}","useSsl":false,"baseUrl":"","activeProfileId":${profile_id},"activeProfileName":"${profile_name}","activeDirectory":"${root}","is4k":false,"minimumAvailability":"released","isDefault":${is_default},"syncEnabled":true,"preventSearch":false}
-EOF
-)
+      payload=$(HOST="$host" PORT="$port" API_KEY="$api_key" PROFILE_ID="$profile_id" \
+        PROFILE_NAME="$profile_name" ROOT="$root" IS_DEFAULT="$is_default" \
+        flixbox_json seerr-radarr-service)
     else
       local lang_profiles
       lang_profiles=$(api_get "${arr_base}/api/v3/languageprofile" "$arr_auth") || true
       lang_profile_id=$(json_extract "$lang_profiles" "print(data[0]['id'] if data else 1)" || echo 1)
-      payload=$(cat <<EOF
-{"name":"Sonarr","hostname":"${host}","port":${port},"apiKey":"${api_key}","useSsl":false,"baseUrl":"","activeProfileId":${profile_id},"activeProfileName":"${profile_name}","activeDirectory":"${root}","activeLanguageProfileId":${lang_profile_id},"activeAnimeProfileId":null,"activeAnimeLanguageProfileId":null,"activeAnimeDirectory":"","is4k":false,"enableSeasonFolders":true,"isDefault":${is_default},"syncEnabled":true,"preventSearch":false}
-EOF
-)
+      payload=$(HOST="$host" PORT="$port" API_KEY="$api_key" PROFILE_ID="$profile_id" \
+        PROFILE_NAME="$profile_name" ROOT="$root" LANG_PROFILE_ID="$lang_profile_id" \
+        IS_DEFAULT="$is_default" flixbox_json seerr-sonarr-service)
     fi
-    http_code=$(curl -s -o /tmp/flixbox_seerr_arr.json -w '%{http_code}' -b "$cookie" -X POST \
+    http_code=$(curl -s -o "$seerr_arr_resp" -w '%{http_code}' -b "$cookie" -X POST \
       "${base}/api/v1/settings/${kind}" \
       -H 'Content-Type: application/json' \
       -d "$payload")
@@ -817,7 +820,7 @@ EOF
       ok "Seerr: added ${kind}"
     else
       if [[ "${VERBOSE:-false}" == "true" ]]; then
-        info "Seerr ${kind} response (HTTP ${http_code}): $(cat /tmp/flixbox_seerr_arr.json 2>/dev/null || true)"
+        info "Seerr ${kind} response (HTTP ${http_code}): $(cat "$seerr_arr_resp" 2>/dev/null | configure_redact || true)"
       fi
       fail "Seerr: add ${kind} (HTTP ${http_code})"
     fi
@@ -836,8 +839,6 @@ EOF
       info "Seerr: initialize skipped or failed (may already be done)"
     fi
   fi
-
-  rm -f "$cookie" /tmp/flixbox_seerr_login.json
 }
 
 reload_hygiene_if_needed() {
@@ -887,8 +888,6 @@ info "  • Prowlarr: add your indexers (tag cf on Cloudflare indexers)"
 info "  • Maintainerr: connect services + enable rules deliberately"
 info "  • Optional: docker compose --profile recyclarr run --rm recyclarr sync"
 info "  • Guide: docs/user/05-first-run.md"
-
-rm -f "$QBIT_COOKIE"
 
 if [[ "$FAILED" -gt 0 ]]; then
   exit 1

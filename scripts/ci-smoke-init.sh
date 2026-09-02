@@ -21,7 +21,7 @@ fail() { printf 'FAIL %s\n' "$*" >&2; exit 1; }
 
 cleanup_worktree() {
   if [[ -n "${SMOKE_WORKTREE}" && -d "${SMOKE_WORKTREE}" ]]; then
-    git -C "${ROOT_DIR}" worktree remove --force "${SMOKE_WORKTREE}" 2>/dev/null || rm -rf "${SMOKE_WORKTREE}"
+    rm -rf "${SMOKE_WORKTREE}"
   fi
 }
 trap cleanup_worktree EXIT
@@ -60,9 +60,20 @@ eval "$(flixbox_env_file_exports "${unit}")"
 rm -f "${unit}"
 pass "env-file helpers (special chars + safe exports)"
 
-# --- C-50–C-52 + access profile sync: isolated worktree (never touch operator .env) ---
+# --- json-payload: secrets with shell metacharacters ---
+jp="${ROOT_DIR}/scripts/lib/json-payload.py"
+special_pw='p|"&/$`'\''\\'
+got=$(USERNAME='admin' PASSWORD="${special_pw}" python3 "${jp}" jellyfin-auth)
+echo "${got}" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["Pw"]==sys.argv[1]' "${special_pw}" || \
+  fail "json-payload jellyfin-auth special chars"
+got=$(BOOTSTRAP=1 USERNAME='u' PASSWORD="${special_pw}" python3 "${jp}" seerr-login)
+echo "${got}" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["password"]==sys.argv[1]' "${special_pw}" || \
+  fail "json-payload seerr-login special chars"
+pass "json-payload (special-char passwords)"
+
+# --- C-50–C-52 + access profile sync: isolated copy (never touch operator .env) ---
 SMOKE_WORKTREE="$(mktemp -d /tmp/flixbox-smoke-wt.XXXXXX)"
-git -C "${ROOT_DIR}" worktree add --detach "${SMOKE_WORKTREE}" HEAD >/dev/null
+rsync -a --exclude='.git' --exclude='.env' "${ROOT_DIR}/" "${SMOKE_WORKTREE}/"
 
 rm -rf "${SMOKE_ROOT}"
 mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
@@ -85,6 +96,8 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   [[ -f "${SMOKE_CONFIG}/homepage/services.yaml" ]] || fail "C-51 missing homepage/services.yaml"
   [[ -f "${SMOKE_CONFIG}/recyclarr/recyclarr.yml" ]] || fail "C-51 missing recyclarr/recyclarr.yml"
   [[ -d "${SMOKE_DATA}/torrents/incomplete" ]] || fail "C-51 missing torrents/incomplete"
+  [[ -f "${SMOKE_CONFIG}/qbittorrent/.flixbox/qbit-api-login.sh" ]] || \
+    fail "C-51 missing qbittorrent/.flixbox/qbit-api-login.sh"
   pass "C-51 templates + incomplete dir"
 
   qbit_url="$(flixbox_env_file_get .env DECLUTTARR_QBIT_URL)"

@@ -28,20 +28,17 @@ QBIT_PASS="${QBITTORRENT_PASSWORD:-}"
 
 log() { echo "[flixbox-bind-vpn] $*"; }
 
+QBIT_LOGIN_SCRIPT="/config/.flixbox/qbit-api-login.sh"
+API_BASE="http://127.0.0.1:${WEBUI_PORT:-8080}"
+
 qbit_login() {
-  local code
+  [[ -x "$QBIT_LOGIN_SCRIPT" ]] || return 1
   [[ -n "$QBIT_PASS" ]] || return 1
   rm -f "$COOKIE"
-  code=$(curl -s -c "$COOKIE" -w '%{http_code}' --max-time 15 \
-    -X POST "${API}/auth/login" \
-    --data-urlencode "username=${QBIT_USER}" \
-    --data-urlencode "password=${QBIT_PASS}" 2>/dev/null || echo 000)
-  case "$code" in
-    200|204) ;;
-    *) return 1 ;;
-  esac
-  chmod 600 "$COOKIE" 2>/dev/null || true
-  return 0
+  if printf '%s\n%s\n' "$QBIT_USER" "$QBIT_PASS" | "$QBIT_LOGIN_SCRIPT" "$COOKIE" "$API_BASE"; then
+    return 0
+  fi
+  return 1
 }
 
 prefs_code() {

@@ -3,8 +3,16 @@
 # Shared helpers for scripts/configure-apps.sh (sourced, not executed).
 # Requires python3 for JSON parsing.
 
+FLIXBOX_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/env-file.sh"
+source "${FLIXBOX_LIB}/env-file.sh"
+# shellcheck disable=SC1091
+source "${FLIXBOX_LIB}/configure-runtime.sh"
+FLIXBOX_JSON_PAYLOAD="${FLIXBOX_LIB}/json-payload.py"
+
+flixbox_json() {
+  python3 "${FLIXBOX_JSON_PAYLOAD}" "$@"
+}
 
 # shellcheck disable=SC2034 # read by configure-apps.sh when sourced
 CONFIGURED=0
@@ -56,7 +64,7 @@ _api_request() {
   [[ "$method" != "GET" ]] && echo "$body"
   if [[ "${VERBOSE:-false}" == "true" ]]; then
     echo "  [verbose] ${method} ${url} → HTTP ${code}" >&2
-    echo "  [verbose] Response: ${body}" >&2
+    echo "  [verbose] Response: $(printf '%s' "$body" | configure_redact)" >&2
   fi
   return 1
 }
@@ -174,7 +182,8 @@ print(ids[0] if ids else '')")
     echo "$tag_id"
     return 0
   fi
-  result=$(api_post "${base}/api/v1/tag" "application/json" "{\"label\":\"${label}\"}" "$auth_header") || return 1
+  result=$(api_post "${base}/api/v1/tag" "application/json" \
+    "$(LABEL="$label" flixbox_json prowlarr-tag)" "$auth_header") || return 1
   tag_id=$(json_extract "$result" "print(data.get('id', ''))")
   if [[ -n "$tag_id" ]]; then
     echo "$tag_id"
@@ -191,24 +200,9 @@ jellyfin_startup_wizard_pending() {
 
 seerr_login_json() {
   local bootstrap="$1" admin_user="$2" admin_pass="$3"
-  SEERR_BOOTSTRAP="$([[ "$bootstrap" == "true" ]] && echo 1 || echo 0)" \
-  SEERR_ADMIN_USER="$admin_user" SEERR_ADMIN_PASS="$admin_pass" python3 <<'PY'
-import json, os
-payload = {
-    "username": os.environ["SEERR_ADMIN_USER"],
-    "password": os.environ["SEERR_ADMIN_PASS"],
-}
-if os.environ.get("SEERR_BOOTSTRAP") == "1":
-    payload.update({
-        "hostname": "jellyfin",
-        "port": 8096,
-        "useSsl": False,
-        "urlBase": "",
-        "email": f"{os.environ['SEERR_ADMIN_USER']}@localhost",
-        "serverType": 2,
-    })
-print(json.dumps(payload))
-PY
+  BOOTSTRAP="$([[ "$bootstrap" == "true" ]] && echo 1 || echo 0)" \
+  USERNAME="$admin_user" PASSWORD="$admin_pass" \
+  flixbox_json seerr-login
 }
 
 qbit_auth() {
@@ -216,36 +210,27 @@ qbit_auth() {
   local container="${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}"
   local api_url="${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}"
   local cookie_path="${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}"
-  local response http_code body verify_code
+  local login_script="/config/.flixbox/qbit-api-login.sh"
+  local response http_code body verify_code form_file
 
   # Prefer in-container API (port 8080). Host-published QBITTORRENT_PORT sends a
   # Host header qBit 5.x rejects remapped ports unless web_ui_host_header_validation_enabled=false.
+  # Credentials via stdin to qbit-api-login.sh — never on docker exec argv.
   if docker ps --format '{{.Names}}' | grep -qx "$container"; then
     docker exec "$container" rm -f "$cookie_path" 2>/dev/null || true
-    response=$(docker exec "$container" curl -s -m 20 -w '\n%{http_code}' \
-      -c "$cookie_path" \
-      --data-urlencode "username=${username}" \
-      --data-urlencode "password=${password}" \
-      "${api_url}/api/v2/auth/login")
-    http_code=$(echo "$response" | tail -1)
-    body=$(echo "$response" | head -1)
-    case "$http_code" in
-      200) [[ "$body" == "Ok." ]] || return 1 ;;
-      204) ;;
-      *) return 1 ;;
-    esac
-    docker exec "$container" chmod 600 "$cookie_path" 2>/dev/null || true
-    verify_code=$(docker exec "$container" curl -s -m 20 -o /dev/null -w '%{http_code}' \
-      -b "$cookie_path" "${api_url}/api/v2/app/version")
-    [[ "$verify_code" == "200" ]]
-    return
+    if ! printf '%s\n%s\n' "$username" "$password" | docker exec -i "$container" \
+      "$login_script" "$cookie_path" "$api_url" 2>/dev/null; then
+      return 1
+    fi
+    return 0
   fi
 
+  form_file=$(configure_tmpfile)
+  QBIT_USER="$username" QBIT_PASS="$password" flixbox_json qbit-login-form >"$form_file"
   response=$(curl -s -m 20 -w '\n%{http_code}' \
     -c "$cookie_file" \
     -H 'Host: localhost:8080' \
-    --data-urlencode "username=${username}" \
-    --data-urlencode "password=${password}" \
+    -d @"$form_file" \
     "${url}/api/v2/auth/login")
   http_code=$(echo "$response" | tail -1)
   body=$(echo "$response" | head -1)
@@ -286,7 +271,7 @@ qbit_curl_authed_code() {
 qbit_set_webui_password() {
   local password="$1"
   local json api_url="${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}"
-  json=$(PASSWORD="$password" python3 -c 'import json,os; print(json.dumps({"web_ui_password": os.environ["PASSWORD"]}))')
+  json=$(PASSWORD="$password" flixbox_json qbit-webui-password)
   qbit_curl_authed_code -X POST --data-urlencode "json=${json}" "${api_url}/api/v2/app/setPreferences"
 }
 
@@ -415,38 +400,10 @@ build_qbit_download_client_json() {
   local qbit_host="$1" qbit_user="$2" qbit_pass="$3" qbit_api_key="$4"
   local cat_field="$5" category="$6" priority_recent="$7" priority_older="$8"
   local existing_id="${9:-}"
-  QBIT_DC_HOST="$qbit_host" QBIT_DC_USER="$qbit_user" QBIT_DC_PASS="$qbit_pass" \
-  QBIT_DC_API_KEY="$qbit_api_key" QBIT_DC_CAT_FIELD="$cat_field" QBIT_DC_CATEGORY="$category" \
-  QBIT_DC_PRIO_RECENT="$priority_recent" QBIT_DC_PRIO_OLDER="$priority_older" \
-  QBIT_DC_EXISTING_ID="$existing_id" python3 <<'PY'
-import json, os
-
-payload = {
-    "enable": True,
-    "protocol": "torrent",
-    "priority": 1,
-    "name": "qBittorrent",
-    "implementation": "QBittorrent",
-    "configContract": "QBittorrentSettings",
-    "fields": [
-        {"name": "host", "value": os.environ["QBIT_DC_HOST"]},
-        {"name": "port", "value": 8080},
-        {"name": "username", "value": os.environ["QBIT_DC_USER"]},
-        {"name": "password", "value": os.environ["QBIT_DC_PASS"]},
-        {"name": "apiKey", "value": os.environ["QBIT_DC_API_KEY"]},
-        {"name": os.environ["QBIT_DC_CAT_FIELD"], "value": os.environ["QBIT_DC_CATEGORY"]},
-        {"name": os.environ["QBIT_DC_PRIO_RECENT"], "value": 0},
-        {"name": os.environ["QBIT_DC_PRIO_OLDER"], "value": 0},
-        {"name": "initialState", "value": 0},
-        {"name": "sequentialOrder", "value": False},
-        {"name": "firstAndLast", "value": False},
-    ],
-}
-existing = os.environ.get("QBIT_DC_EXISTING_ID", "")
-if existing:
-    payload["id"] = int(existing)
-print(json.dumps(payload))
-PY
+  HOST="$qbit_host" USER="$qbit_user" PASS="$qbit_pass" API_KEY="$qbit_api_key" \
+  CAT_FIELD="$cat_field" CATEGORY="$category" PRIO_RECENT="$priority_recent" \
+  PRIO_OLDER="$priority_older" EXISTING_ID="$existing_id" \
+  flixbox_json qbit-download-client
 }
 
 # Ensure a Reject ISO-style custom format exists and is scored (idempotent).

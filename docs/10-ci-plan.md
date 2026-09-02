@@ -207,13 +207,15 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-40 | Decluttarr protect tag | `PROTECTED_TAG: flixbox-keep` (Decluttarr v2) or legacy `NO_STALLED_REMOVAL_QBIT_TAG` in `optimization.yml` |
 | C-41 | Decluttarr unmonitored off | `REMOVE_UNMONITORED: "False"` |
 | C-42 | Stateful `stop_grace_period` | grep count ≥ expected minimum on long-running services |
+| C-43 | No `:latest` image tags | grep `compose/*.yml` for `:latest` (ADR 0010) |
+| C-61 | Configure JSON payload contract | `json-payload.py` + `configure-runtime.sh`; no shell-interpolated secrets in `configure-apps.sh`; qBit login via stdin script (not `docker exec` argv) |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 
 | ID | Rule | Validation |
 | --- | --- | --- |
 | C-50 | `init --non-interactive` succeeds | temp `.env` with `/tmp/flixbox-ci-smoke/*` paths |
-| C-51 | Templates copied | `homepage/services.yaml`, `recyclarr/recyclarr.yml`, `torrents/incomplete` |
+| C-51 | Templates copied | `homepage/services.yaml`, `recyclarr/recyclarr.yml`, `torrents/incomplete`, `qbittorrent/.flixbox/qbit-api-login.sh` |
 | C-52 | Decluttarr qBit URL | `DECLUTTARR_QBIT_URL` is `http://qbittorrent:8080` after init (ADR 0014) |
 
 ### 5.7 Documentation links (phase 3 — optional)

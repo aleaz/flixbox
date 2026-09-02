@@ -267,6 +267,22 @@ fi
 [[ -f docs/user/14-image-pins.md ]] || fail C-43 'missing docs/user/14-image-pins.md'
 pass C-43
 
+# --- C-61: configure JSON payload contract (R1 — no shell-interpolated secrets) ---
+[[ -f scripts/lib/json-payload.py ]] || fail C-61 'missing scripts/lib/json-payload.py'
+[[ -f scripts/lib/configure-runtime.sh ]] || fail C-61 'missing scripts/lib/configure-runtime.sh'
+[[ -f templates/qbittorrent/flixbox-qbit-api-login.sh ]] || fail C-61 'missing qbit-api-login.sh template'
+grep -q 'flixbox_json' scripts/lib/configure-helpers.sh || \
+  fail C-61 'configure-helpers must use flixbox_json'
+grep -q 'configure_runtime_init' scripts/configure-apps.sh || \
+  fail C-61 'configure-apps must call configure_runtime_init'
+if grep -E '(-d "\{.*\$\{|cat <<EOF.*\{")' scripts/configure-apps.sh; then
+  fail C-61 'configure-apps.sh must not interpolate secrets into JSON strings'
+fi
+if grep -E 'docker exec .*--data-urlencode "password=\$\{' scripts/lib/configure-helpers.sh; then
+  fail C-61 'qbit_auth must not pass password on docker exec argv'
+fi
+pass C-61
+
 # --- Compose quiet config (direct + vpn + profiles) ---
 "${COMPOSE[@]}" config --quiet
 FLIXBOX_MODE=vpn "${COMPOSE[@]}" config --quiet

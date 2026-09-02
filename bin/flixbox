@@ -164,10 +164,14 @@ copy_templates() {
     cp "${ROOT_DIR}/templates/maintainerr/README.md" "${CONFIG_DIR}/maintainerr/README.md"
   # linuxserver runs /custom-cont-init.d (separate mount), not /config/custom-cont-init.d
   mkdir -p "${CONFIG_DIR}/qbittorrent-cont-init" \
-    "${CONFIG_DIR}/qbittorrent-custom-services"
+    "${CONFIG_DIR}/qbittorrent-custom-services" \
+    "${CONFIG_DIR}/qbittorrent/.flixbox"
   cp -f "${ROOT_DIR}/templates/qbittorrent/custom-cont-init.d/99-flixbox-qbittorrent.sh" \
     "${CONFIG_DIR}/qbittorrent-cont-init/99-flixbox-qbittorrent.sh"
   chmod +x "${CONFIG_DIR}/qbittorrent-cont-init/99-flixbox-qbittorrent.sh"
+  cp -f "${ROOT_DIR}/templates/qbittorrent/flixbox-qbit-api-login.sh" \
+    "${CONFIG_DIR}/qbittorrent/.flixbox/qbit-api-login.sh"
+  chmod 700 "${CONFIG_DIR}/qbittorrent/.flixbox/qbit-api-login.sh"
   cp -f "${ROOT_DIR}/templates/qbittorrent/custom-services.d/99-flixbox-bind-vpn-interface.sh" \
     "${CONFIG_DIR}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh"
   chmod +x "${CONFIG_DIR}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh"
