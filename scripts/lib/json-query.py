@@ -208,6 +208,130 @@ def prowlarr_tag_id_by_label(data: list, params: dict[str, Any]) -> str:
     return str(ids[0]) if ids else ""
 
 
+def arr_first_list_field(data: list, params: dict[str, Any]) -> str:
+    p = _require_param(params, "field")
+    items = data if isinstance(data, list) else []
+    if not items:
+        return ""
+    value = items[0].get(p["field"], "")
+    return "" if value is None else str(value)
+
+
+def arr_first_lang_profile_id(data: list, _params: dict[str, Any]) -> str:
+    if not data:
+        return "1"
+    return str(data[0].get("id", 1))
+
+
+def jellyfin_auth_access_token(data: dict, _params: dict[str, Any]) -> str:
+    return str(data.get("AccessToken") or "")
+
+
+def jellyfin_auth_user_id(data: dict, _params: dict[str, Any]) -> str:
+    user = data.get("User") or {}
+    return str(user.get("Id") or "")
+
+
+def jellyfin_auth_is_admin(data: dict, _params: dict[str, Any]) -> str:
+    user = data.get("User") or {}
+    policy = user.get("Policy") or {}
+    return str(bool(policy.get("IsAdministrator", False))).lower()
+
+
+def jellyfin_policy_admin_patch(data: dict, _params: dict[str, Any]) -> str:
+    policy = dict(data.get("Policy") or {})
+    policy["IsAdministrator"] = True
+    return json.dumps(policy)
+
+
+def jellyfin_api_key_from_create(data: dict, _params: dict[str, Any]) -> str:
+    return str(data.get("AccessToken") or data.get("Key") or "")
+
+
+def jellyfin_flixbox_api_key(data: Any, _params: dict[str, Any]) -> str:
+    if isinstance(data, list):
+        items = data
+    elif isinstance(data, dict):
+        items = data.get("Items") or data.get("items") or []
+    else:
+        items = []
+    flix = [
+        item
+        for item in items
+        if "flixbox" in str(item.get("AppName") or item.get("Name") or "").lower()
+    ]
+    if not flix:
+        return ""
+    return str(flix[0].get("AccessToken") or flix[0].get("Key") or "")
+
+
+def qbit_web_ui_api_key(data: dict, _params: dict[str, Any]) -> str:
+    return str(data.get("web_ui_api_key") or "")
+
+
+def qbit_prefs_vpn_ok(data: dict, _params: dict[str, Any]) -> None:
+    p = data
+    if not p.get("auto_tmm_enabled", False):
+        sys.exit(1)
+    if p.get("upnp", True):
+        sys.exit(1)
+    if p.get("encryption", 0) != 1:
+        sys.exit(1)
+    if not p.get("limit_utp_rate", False):
+        sys.exit(1)
+    if not p.get("limit_lan_peers", False):
+        sys.exit(1)
+    if p.get("current_network_interface", "") != "tun0":
+        sys.exit(1)
+    sys.exit(0)
+
+
+def qbit_prefs_direct_ok(data: dict, _params: dict[str, Any]) -> None:
+    p = data
+    if not p.get("auto_tmm_enabled", False):
+        sys.exit(1)
+    if p.get("upnp", True):
+        sys.exit(1)
+    if p.get("encryption", 0) != 1:
+        sys.exit(1)
+    if not p.get("limit_utp_rate", False):
+        sys.exit(1)
+    if not p.get("limit_lan_peers", False):
+        sys.exit(1)
+    sys.exit(0)
+
+
+def qbit_webui_security_ok(data: dict, params: dict[str, Any]) -> None:
+    expect_bypass = str(params.get("expect_bypass_local", "false")).lower() == "true"
+    p = data
+    if p.get("web_ui_host_header_validation_enabled", True):
+        sys.exit(1)
+    if bool(p.get("bypass_local_auth", False)) != expect_bypass:
+        sys.exit(1)
+    if not p.get("bypass_auth_subnet_whitelist_enabled", False):
+        sys.exit(1)
+    if p.get("bypass_auth_subnet_whitelist", "") != "172.30.42.0/24":
+        sys.exit(1)
+    if p.get("web_ui_max_auth_fail_count", 5) != 20:
+        sys.exit(1)
+    if p.get("web_ui_ban_duration", 3600) != 300:
+        sys.exit(1)
+    sys.exit(0)
+
+
+def seerr_error_message(data: dict, _params: dict[str, Any]) -> str:
+    return str(data.get("message") or data.get("error") or "")
+
+
+def seerr_initialized(data: dict, _params: dict[str, Any]) -> str:
+    return str(bool(data.get("initialized", False))).lower()
+
+
+def print_bool_field(data: dict, params: dict[str, Any]) -> str:
+    p = _require_param(params, "field")
+    return str(bool(data.get(p["field"], False))).lower()
+
+
 def print_field(data: Any, params: dict[str, Any]) -> str:
     p = _require_param(params, "field")
     field = p["field"]
@@ -230,13 +354,28 @@ QUERIES: dict[str, QueryFn] = {
     "arr-xbmc-meta-id": arr_xbmc_meta_id,
     "arr-xbmc-enabled": arr_xbmc_enabled,
     "arr-profile-ids": arr_profile_ids,
+    "arr-first-list-field": arr_first_list_field,
+    "arr-first-lang-profile-id": arr_first_lang_profile_id,
     "bazarr-conn-diff": bazarr_conn_diff,
     "bazarr-subsync-diff": bazarr_subsync_diff,
     "jellyfin-library-exists": jellyfin_library_exists,
+    "jellyfin-auth-access-token": jellyfin_auth_access_token,
+    "jellyfin-auth-user-id": jellyfin_auth_user_id,
+    "jellyfin-auth-is-admin": jellyfin_auth_is_admin,
+    "jellyfin-policy-admin-patch": jellyfin_policy_admin_patch,
+    "jellyfin-api-key-from-create": jellyfin_api_key_from_create,
+    "jellyfin-flixbox-api-key": jellyfin_flixbox_api_key,
     "prowlarr-has-cf-proxy": prowlarr_has_cf_proxy,
     "prowlarr-app-id-by-name": prowlarr_app_id_by_name,
     "prowlarr-app-api-key": prowlarr_app_api_key,
     "prowlarr-tag-id-by-label": prowlarr_tag_id_by_label,
+    "qbit-web-ui-api-key": qbit_web_ui_api_key,
+    "qbit-prefs-vpn-ok": qbit_prefs_vpn_ok,
+    "qbit-prefs-direct-ok": qbit_prefs_direct_ok,
+    "qbit-webui-security-ok": qbit_webui_security_ok,
+    "seerr-error-message": seerr_error_message,
+    "seerr-initialized": seerr_initialized,
+    "print-bool-field": print_bool_field,
     "print-field": print_field,
 }
 

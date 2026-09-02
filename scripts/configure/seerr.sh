@@ -27,7 +27,7 @@ configure_seerr() {
 
   local public init_flag
   public=$(curl -s "${base}/api/v1/settings/public" 2>/dev/null || true)
-  init_flag=$(json_extract "$public" "print(str(data.get('initialized', False)).lower())" || echo false)
+  init_flag=$(json_query seerr-initialized "$public" || echo false)
 
   # Login / create admin via Jellyfin
   local cookie seerr_login_resp seerr_arr_resp
@@ -47,8 +47,7 @@ configure_seerr() {
 
   if [[ ! "$login_code" =~ ^2 ]]; then
     local login_msg
-    login_msg=$(json_extract "$(cat "$seerr_login_resp" 2>/dev/null || echo '{}')" \
-      "print(data.get('message') or data.get('error') or '')" 2>/dev/null || true)
+    login_msg=$(json_query seerr-error-message "$(cat "$seerr_login_resp" 2>/dev/null || echo '{}')" 2>/dev/null || true)
     if [[ -n "$login_msg" ]]; then
       fail "Seerr: Jellyfin auth failed (HTTP ${login_code}: ${login_msg})"
     else
@@ -63,13 +62,9 @@ configure_seerr() {
     local kind="$1" host="$2" probe_port="$3" container_port="$4" api_key="$5" root="$6" is_default="${7:-false}"
     local list profiles profile_id profile_name lang_profile_id payload http_code existing_id stored_key
     list=$(curl -s -b "$cookie" "${base}/api/v1/settings/${kind}" 2>/dev/null || true)
-    existing_id=$(json_extract "$list" "
-items = data if isinstance(data, list) else []
-print(items[0]['id'] if items else '')" 2>/dev/null || true)
+    existing_id=$(json_query arr-first-list-field "$list" "$(json_params field=id)" 2>/dev/null || true)
     if [[ -n "$existing_id" ]]; then
-      stored_key=$(json_extract "$list" "
-items = data if isinstance(data, list) else []
-print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
+      stored_key=$(json_query arr-first-list-field "$list" "$(json_params field=apiKey)" 2>/dev/null || true)
       if [[ "$stored_key" == "$api_key" ]]; then
         skip "Seerr: ${kind} service"
         return
@@ -90,8 +85,8 @@ print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
     arr_base="http://127.0.0.1:${probe_port}"
     arr_auth="X-Api-Key: ${api_key}"
     profiles=$(api_get "${arr_base}/api/v3/qualityprofile" "$arr_auth") || true
-    profile_id=$(json_extract "$profiles" "print(data[0]['id'] if data else '')" || true)
-    profile_name=$(json_extract "$profiles" "print(data[0]['name'] if data else '')" || true)
+    profile_id=$(json_query arr-first-list-field "$profiles" "$(json_params field=id)" || true)
+    profile_name=$(json_query arr-first-list-field "$profiles" "$(json_params field=name)" || true)
     if [[ -z "$profile_id" ]]; then
       fail "Seerr: add ${kind} (no quality profile from ${kind})"
       return
@@ -105,7 +100,7 @@ print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
       # Sonarr v4 removed /api/v3/languageprofile (merged into quality profiles).
       # The endpoint returns 404 on v4 (handled by || true); defaulting to 1 is correct for v4.
       lang_profiles=$(api_get "${arr_base}/api/v3/languageprofile" "$arr_auth") || true
-      lang_profile_id=$(json_extract "$lang_profiles" "print(data[0]['id'] if data else 1)" || echo 1)
+      lang_profile_id=$(json_query arr-first-lang-profile-id "$lang_profiles" || echo 1)
       payload=$(HOST="$host" PORT="$container_port" API_KEY="$api_key" PROFILE_ID="$profile_id" \
         PROFILE_NAME="$profile_name" ROOT="$root" LANG_PROFILE_ID="$lang_profile_id" \
         IS_DEFAULT="$is_default" flixbox_json seerr-sonarr-service)

@@ -55,17 +55,13 @@ configure_jellyfin() {
       -H 'Content-Type: application/json' \
       -H 'X-Emby-Authorization: MediaBrowser Client="Flixbox", Device="configure", DeviceId="flixbox-configure", Version="1.0.0"' \
       -d "$jf_auth_body" 2>/dev/null || true)
-    jf_token=$(json_extract "$jf_auth_json" "print(data.get('AccessToken',''))" || true)
-    jf_user_id=$(json_extract "$jf_auth_json" "print(data.get('User', {}).get('Id', ''))" || true)
-    jf_is_admin=$(json_extract "$jf_auth_json" "print(str(data.get('User', {}).get('Policy', {}).get('IsAdministrator', False)).lower())" || echo false)
+    jf_token=$(json_query jellyfin-auth-access-token "$jf_auth_json" || true)
+    jf_user_id=$(json_query jellyfin-auth-user-id "$jf_auth_json" || true)
+    jf_is_admin=$(json_query jellyfin-auth-is-admin "$jf_auth_json" || echo false)
     if [[ -n "$jf_token" && -n "$jf_user_id" && "$jf_is_admin" != "true" ]]; then
       local policy_json policy_code
       policy_json=$(curl -s "${base}/Users/${jf_user_id}" -H "X-Emby-Token: ${jf_token}" 2>/dev/null || true)
-      policy_json=$(json_extract "$policy_json" "
-p = data.get('Policy', {})
-p['IsAdministrator'] = True
-data['Policy'] = p
-print(__import__('json').dumps(data.get('Policy', {})))" || true)
+      policy_json=$(json_query jellyfin-policy-admin-patch "$policy_json" || true)
       if [[ -n "$policy_json" ]]; then
         policy_code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${base}/Users/${jf_user_id}/Policy" \
           -H "X-Emby-Token: ${jf_token}" -H 'Content-Type: application/json' -d "$policy_json")
@@ -104,7 +100,7 @@ print(__import__('json').dumps(data.get('Policy', {})))" || true)
     -H 'Content-Type: application/json' \
     -H 'X-Emby-Authorization: MediaBrowser Client="Flixbox", Device="configure", DeviceId="flixbox-configure", Version="1.0.0"' \
     -d "$auth_body" 2>/dev/null || true)
-  token=$(json_extract "$auth_json" "print(data.get('AccessToken',''))" || true)
+  token=$(json_query jellyfin-auth-access-token "$auth_json" || true)
   if [[ -z "$token" ]]; then
     fail "Jellyfin: login failed (check FLIXBOX_ADMIN_USER/PASSWORD)"
     return
@@ -153,15 +149,12 @@ print(__import__('json').dumps(data.get('Policy', {})))" || true)
     local key_json new_key
     key_json=$(curl -s -X POST "${base}/Auth/Keys?app=Flixbox" \
       -H "X-Emby-Token: ${token}" 2>/dev/null || true)
-    new_key=$(json_extract "$key_json" "print(data.get('AccessToken') or data.get('Key') or '')" || true)
+    new_key=$(json_query jellyfin-api-key-from-create "$key_json" || true)
     if [[ -z "$new_key" ]]; then
       # List existing keys
       local keys
       keys=$(curl -s "${base}/Auth/Keys" -H "X-Emby-Token: ${token}" 2>/dev/null || true)
-      new_key=$(json_extract "$keys" "
-items = data if isinstance(data, list) else data.get('Items', data.get('items', []))
-flix = [i for i in items if 'flixbox' in str(i.get('AppName','') or i.get('Name','')).lower()]
-print((flix[0].get('AccessToken') or flix[0].get('Key') or '') if flix else '')" || true)
+      new_key=$(json_query jellyfin-flixbox-api-key "$keys" || true)
     fi
     if [[ -n "$new_key" ]]; then
       env_set_if_empty JELLYFIN_API_KEY "$new_key"

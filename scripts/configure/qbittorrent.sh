@@ -101,26 +101,11 @@ configure_qbittorrent() {
   local prefs_ok=false
   if [[ -n "$current_prefs" ]]; then
     if [[ "${FLIXBOX_MODE}" == "vpn" ]]; then
-      if json_extract "$current_prefs" "
-p = data
-if not p.get('auto_tmm_enabled', False): sys.exit(1)
-if p.get('upnp', True): sys.exit(1)
-if p.get('encryption', 0) != 1: sys.exit(1)
-if not p.get('limit_utp_rate', False): sys.exit(1)
-if not p.get('limit_lan_peers', False): sys.exit(1)
-if p.get('current_network_interface', '') != 'tun0': sys.exit(1)
-"; then
+      if json_query qbit-prefs-vpn-ok "$current_prefs" >/dev/null 2>&1; then
         prefs_ok=true
       fi
     else
-      if json_extract "$current_prefs" "
-p = data
-if not p.get('auto_tmm_enabled', False): sys.exit(1)
-if p.get('upnp', True): sys.exit(1)
-if p.get('encryption', 0) != 1: sys.exit(1)
-if not p.get('limit_utp_rate', False): sys.exit(1)
-if not p.get('limit_lan_peers', False): sys.exit(1)
-"; then
+      if json_query qbit-prefs-direct-ok "$current_prefs" >/dev/null 2>&1; then
         prefs_ok=true
       fi
     fi

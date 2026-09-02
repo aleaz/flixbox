@@ -365,7 +365,7 @@ qbit_api_key_from_config() {
   if docker exec "$container" test -f "$cookie_path" 2>/dev/null; then
     prefs=$(docker exec "$container" curl -s -b "$cookie_path" "${api_url}/api/v2/app/preferences" 2>/dev/null || true)
     if [[ -n "$prefs" ]]; then
-      key=$(json_extract "$prefs" "print(data.get('web_ui_api_key') or '')" 2>/dev/null || true)
+      key=$(json_query qbit-web-ui-api-key "$prefs" 2>/dev/null || true)
       if [[ -n "$key" ]]; then
         printf '%s' "$key"
       fi
@@ -517,15 +517,6 @@ qbit_webui_security_prefs_ok() {
   [[ -n "$prefs_json" ]] || return 1
   local expect_bypass="false"
   qbit_webui_bypass_local_auth_expected && expect_bypass="true"
-  QBIT_EXPECT_BYPASS_LOCAL="$expect_bypass" json_extract "$prefs_json" "
-import os
-p = data
-expect = os.environ['QBIT_EXPECT_BYPASS_LOCAL'] == 'true'
-if p.get('web_ui_host_header_validation_enabled', True): sys.exit(1)
-if bool(p.get('bypass_local_auth', False)) != expect: sys.exit(1)
-if not p.get('bypass_auth_subnet_whitelist_enabled', False): sys.exit(1)
-if p.get('bypass_auth_subnet_whitelist', '') != '172.30.42.0/24': sys.exit(1)
-if p.get('web_ui_max_auth_fail_count', 5) != 20: sys.exit(1)
-if p.get('web_ui_ban_duration', 3600) != 300: sys.exit(1)
-" >/dev/null
+  json_query qbit-webui-security-ok "$prefs_json" \
+    "$(EXPECT_BYPASS_LOCAL="$expect_bypass" json_params expect_bypass_local=EXPECT_BYPASS_LOCAL)" >/dev/null 2>&1
 }
