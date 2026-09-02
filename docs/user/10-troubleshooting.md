@@ -2,7 +2,8 @@
 
 | Symptom | Likely cause | What to try |
 | --- | --- | --- |
-| `Host port preflight failed` on `up` / `reload` | Host port from `.env` already bound (e.g. `8080` in use) | Change the matching `*_PORT` in `.env` (e.g. `QBITTORRENT_PORT=9898`) → `./bin/flixbox reload` — [First-run — port conflicts](05-first-run.md#host-port-conflicts) |
+| `Host port preflight failed` on `up` / `reload` | Host port from `.env` already bound by **another** process (not Flixbox) | Change the matching `*_PORT` in `.env` → `./bin/flixbox reload` — [First-run — port conflicts](05-first-run.md#host-port-conflicts). Ports already used by running `flixbox-*` containers are ignored (reload of the same stack is OK) |
+| `Gluetun container not running` during `configure` | Switched to VPN in `.env` but stack was never recreated | `docker compose down && ./bin/flixbox up`, wait for Gluetun healthy, then `configure` — [VPN switch](07-vpn-and-direct.md#choose-a-mode) |
 | `cannot create DATA_DIR at /srv/flixbox/data — cannot write under /srv` | Linux default paths; regular user cannot create `/srv` without `sudo` | Create parent dirs + `chown` to your user, or set custom paths in `.env` (e.g. `/data/flixbox/data`) — [Install — Storage paths](04-install.md#storage-paths-and-permissions); re-run `./bin/flixbox init --non-interactive` |
 | `Path validation failed` after `init`; `.env` exists | Writable paths not set before `--non-interactive` init | Edit `DATA_DIR` / `CONFIG_DIR` in `.env`, ensure parent is writable, re-run `init` (init incomplete — do not run `up` until init succeeds) |
 | `mkdir: /srv: Read-only file system` on init | Linux template paths on macOS without `init` | Run `./bin/flixbox init --force --non-interactive` or set `DATA_DIR`/`CONFIG_DIR` under `$HOME/flixbox/` |

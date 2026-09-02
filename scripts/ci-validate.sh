@@ -523,6 +523,8 @@ grep -q 'declare -f info' scripts/lib/cli-output.sh || \
 pass C-82
 
 # --- C-83: host port preflight hints and household app bind probe ---
+grep -q '_flixbox_port_owned_by_stack' scripts/lib/preflight-host.sh || \
+  fail C-83 'preflight must allow ports already published by flixbox-* containers'
 grep -q '_flixbox_port_hint' scripts/lib/preflight-host.sh || \
   fail C-83 'preflight-host must suggest per-service alternate ports'
 grep -q 'Jellyfin" "0.0.0.0"' scripts/lib/preflight-host.sh || \

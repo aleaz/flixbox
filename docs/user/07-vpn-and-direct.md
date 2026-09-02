@@ -42,11 +42,16 @@ There is no “Direct traffic with VPN still up” design. If you previously ran
 Switching to VPN:
 
 1. In `.env` **[REQUIRED]** (top): `FLIXBOX_MODE=vpn` and `VPN_ENABLED=true` (not only the Gluetun block at the bottom).
-2. Fill Gluetun vars under **[VPN ONLY]** (native provider or `custom` + `OPENVPN_CUSTOM_CONFIG` — see `.env.example`).
+2. Fill Gluetun vars under **[VPN ONLY]** (native provider or `custom` + `OPENVPN_CUSTOM_CONFIG` — see [examples below](#vpn-provider-examples) and `.env.example`).
 3. `./bin/flixbox init --non-interactive` (updates `DECLUTTARR_QBIT_URL` and syncs `VPN_ENABLED`).
-4. `docker compose down` → `./bin/flixbox up`.
-5. Point Radarr/Sonarr download client at host **`qbittorrent`**, port **8080** (same as Direct — no rename on mode switch).
-6. `./bin/flixbox vpn-test`.
+4. **Recreate the stack** so Gluetun appears (Direct → VPN is a compose include change):
+   - Preferred: `docker compose down` → `./bin/flixbox up`
+   - Or: `./bin/flixbox reload` if the stack is already up (after host port preflight allows self-owned ports)
+5. Wait until Gluetun is **healthy** (`./bin/flixbox status` / `logs gluetun`).
+6. `./bin/flixbox configure` (wires apps; does **not** start Gluetun by itself).
+7. `./bin/flixbox vpn-test`.
+
+If you run `configure` right after editing `.env` without `down`/`up`, you will see *Gluetun container not running* — that is expected.
 
 ### VPN bring-up (dependency chain)
 
