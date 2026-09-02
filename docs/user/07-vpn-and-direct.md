@@ -58,6 +58,18 @@ gluetun (healthy) → qbittorrent (WebUI healthy) → radarr / sonarr / declutta
 
 If Gluetun is unhealthy, qBit and those peers fail with dependency errors. That is intentional (fail closed for torrent path). Seerr, Jellyfin, Prowlarr, and similar apps do not depend on Gluetun and may still start. Fix Gluetun first (`docker compose logs gluetun`), then recreate; or roll back to Direct (`FLIXBOX_MODE=direct`, `VPN_ENABLED=false`, `init`, `down`, `up`, download client host `qbittorrent`).
 
+### What happens when the VPN drops
+
+Gluetun reconnects **inside the same container** (upstream default). While the tunnel is down, the killswitch blocks qBit egress — downloads stall, your home IP should stay masked. This is **fail closed**, not a fallback to Direct.
+
+| Event | Expected behavior |
+| --- | --- |
+| Brief tunnel blip | Gluetun auto-restarts VPN; qBit resumes when healthy |
+| Prolonged outage | Gluetun stays `unhealthy`; qBit and *arr health checks fail until VPN returns |
+| Gluetun **container recreated** | qBit may be **stranded** (netns changed) — see [Troubleshooting](10-troubleshooting.md) |
+
+Flixbox will **never** auto-switch `FLIXBOX_MODE` to Direct on VPN failure ([ADR 0013](../adr/0013-vpn-resilience-no-direct-fallback.md)).
+
 ## VPN mode essentials
 
 1. Only **qBittorrent** uses `network_mode: service:gluetun`.

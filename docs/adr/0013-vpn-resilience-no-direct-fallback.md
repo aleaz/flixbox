@@ -1,7 +1,8 @@
 # ADR 0013: VPN resilience — Gluetun heal, optional watchdog, no Direct fallback
 
-- **Status:** Proposed (post-MVP — target ~v0.2)
+- **Status:** Accepted (MVP scope: documentation + CI structural smoke; `vpn-heal` profile post-v0.1)
 - **Date:** 2026-08-29
+- **Updated:** 2026-09-02
 - **Related:** [0002](0002-vpn-gluetun-dual-mode.md), [0012](0012-notifications-apprise-hub.md)
 
 ## Context
@@ -39,7 +40,7 @@ Shared netns + Gluetun firewall = **killswitch**: when the tunnel is down, qBitt
    - Widen server filters within one trusted provider (`SERVER_COUNTRIES` / regions) for more reconnect targets.
    - Keep a second provider’s credentials ready; switch via `.env` + `init` + recreate (human-driven).
    - Explicit rollback to Direct only when the operator chooses privacy trade-off (lab / private trackers).
-4. **Future optional profile (working name `vpn-heal`):** evaluate a single maintained watchdog (prefer projects that recreate dependents with Compose, not only `docker restart`) behind Compose profile + **read/write Docker access minimized** (socket-proxy policy to be designed). Default **off**.
+4. **Future optional profile (working name `vpn-heal`, post-v0.1):** evaluate a single maintained watchdog (prefer projects that recreate dependents with Compose, not only `docker restart`) behind Compose profile + **read/write Docker access minimized** (socket-proxy policy to be designed). Default **off**.
 5. **Tune, don’t hide:** expose common Gluetun health env knobs in `.env.example` comments when implementing (`HEALTH_RESTART_VPN`, targets) — defaults remain upstream.
 6. **Notify, don’t silently open:** when ADR 0012 lands, optional alert on prolonged Gluetun unhealthy / heal actions via Apprise. Until then, Homepage widgets + `flixbox status` / logs remain the UX.
 7. **Not in scope:** multi-hop as Flixbox feature; VPNGate as secondary “safe” provider; shipping two Gluetun containers racing for qBit.
@@ -51,9 +52,10 @@ Shared netns + Gluetun firewall = **killswitch**: when the tunnel is down, qBitt
 - Watchdog profile increases blast radius (Docker socket); requires threat-model note and CI “profile off by default”.
 - ADR 0002 dual-mode remains exclusive; this ADR does not reopen “Direct + VPN side by side.”
 
-## Acceptance sketch (when implementing)
+## Acceptance (MVP v0.1)
 
-- [ ] User doc section: “What happens when VPN drops”
-- [ ] Troubleshooting: stranded qBit after Gluetun recreate
-- [ ] Optional profile compose + contract checks (absent from default services)
-- [ ] Explicit regression: no path auto-sets `FLIXBOX_MODE=direct` on health failure
+- [x] User doc section: “What happens when VPN drops” — [07-vpn-and-direct.md](../user/07-vpn-and-direct.md)
+- [x] Troubleshooting: stranded qBit after Gluetun recreate — [10-troubleshooting.md](../user/10-troubleshooting.md)
+- [x] CI structural smoke: `scripts/ci-smoke-vpn.sh` (compose VPN mode + netns contract)
+- [ ] Optional profile compose + contract checks (post-v0.1)
+- [x] Explicit regression: no path auto-sets `FLIXBOX_MODE=direct` on health failure (CI + code review)

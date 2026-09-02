@@ -124,7 +124,7 @@ Flixbox uses **five credential types** for inter-app wiring (plus per-indexer tr
 
 ### Runtime secrets in Docker
 
-Compose passes some credentials as **container environment variables** (for example `QBITTORRENT_PASSWORD`, `RADARR_API_KEY` on Decluttarr). Anyone who can run `docker inspect` or `docker exec` on the host can read them. That is normal for Compose homelab stacks — keep Docker socket access limited to the operator account. API keys also live under `${CONFIG_DIR}` in app config files; treat backups of `config/` like `.env`.
+Compose passes some credentials as **container environment variables** (for example `QBITTORRENT_PASSWORD`, `RADARR_API_KEY` on Decluttarr). Anyone who can run `docker inspect` or `docker exec` on the host can read them. That is normal for Compose homelab stacks — keep Docker socket access limited to the operator account. API keys also live under `${CONFIG_DIR}` in app config files; treat backups of `config/` like `.env`. See [ADR 0018](../adr/0018-runtime-secrets-and-lan-trust.md) and [Access profiles — threat model](13-access-profiles.md#threat-model-homelab).
 
 ### Accidental / intentional key changes
 

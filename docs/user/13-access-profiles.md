@@ -76,6 +76,19 @@ Always use per-person accounts on shared networks. Do not share `FLIXBOX_ADMIN_P
 
 Radarr, Sonarr, Prowlarr, and qBittorrent WebUI ports are for **LAN or localhost** only unless a future reverse-proxy design is implemented. Profile `trusted` on a shared Wi‑Fi is insecure — use `shared`.
 
+## Threat model (homelab)
+
+Flixbox MVP assumes **one trusted operator** on the Docker host:
+
+| Surface | Risk | Mitigation |
+| --- | --- | --- |
+| Docker socket / `docker inspect` | Env secrets (API keys, passwords) visible | Limit host access; treat `config/` backups like `.env` |
+| `trusted` profile + `0.0.0.0` bind | *arr admin UIs open on LAN without login | Use `shared` on guest Wi‑Fi; `./bin/flixbox up` warns on `trusted` + all interfaces |
+| Homepage | No authentication | Internal dashboard only — do not expose to WAN |
+| Jellyfin / Seerr | Household apps on LAN | Per-user accounts; do not share `FLIXBOX_ADMIN_PASSWORD` |
+
+See [ADR 0018](../adr/0018-runtime-secrets-and-lan-trust.md).
+
 ## Related
 
 - [Configuration reference](06-configuration.md)
