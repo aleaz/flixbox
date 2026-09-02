@@ -105,6 +105,9 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
         docker inspect -f '{{range .State.Health.Log}}{{.ExitCode}} {{.Output}}{{end}}' "$c" 2>/dev/null \
           | tail -c 800 >&2 || true
         echo >&2
+        echo "[configure-smoke] recent logs: ${c}" >&2
+        docker logs --tail 40 "$c" 2>&1 | tail -c 2000 >&2 || true
+        echo >&2
       fi
     done
   }

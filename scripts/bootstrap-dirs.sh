@@ -7,6 +7,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${ROOT_DIR}/scripts/lib/paths.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/flixbox-env.sh"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
 
 flixbox_load_env
 
@@ -55,5 +57,8 @@ if chown -R "${PUID}:${PGID}" "${DATA_DIR}" "${CONFIG_DIR}" 2>/dev/null; then
 else
   echo "Warning: could not chown (need permissions). Create dirs as your user or re-run with sudo." >&2
 fi
+
+# Seerr ignores PUID — must stay 1000:1000 after the bulk chown above.
+flixbox_ensure_seerr_config_owner || true
 
 echo "Bootstrap directories ready."
