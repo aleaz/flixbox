@@ -250,13 +250,6 @@ def qbit_download_client() -> str:
     return json.dumps(payload)
 
 
-def qbit_network_preferences() -> str:
-    env = _require("IFACE")
-    return json.dumps(
-        {"current_network_interface": env["IFACE"], "current_interface_address": ""}
-    )
-
-
 def qbit_login_form() -> str:
     """URL-encoded login body (for curl -d @file, not argv)."""
     env = _require("USER", "PASS")
@@ -288,7 +281,6 @@ TEMPLATES: dict[str, callable] = {
     "prowlarr-patch-api-key": prowlarr_patch_api_key,
     "qbit-webui-password": qbit_webui_password,
     "qbit-download-client": qbit_download_client,
-    "qbit-network-preferences": qbit_network_preferences,
     "qbit-login-form": qbit_login_form,
 }
 

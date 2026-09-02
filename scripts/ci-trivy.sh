@@ -7,6 +7,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/platform.sh"
+
 CI_ENV="${ROOT_DIR}/.ci-env"
 TRIVY_BLOCK="${TRIVY_BLOCK:-0}"
 
@@ -35,14 +38,6 @@ trivy_or_warn() {
   fi
   echo "WARN: trivy ${label} reported issues (warn-only; set TRIVY_BLOCK=1 to fail)" >&2
   return 0
-}
-
-sed_inplace() {
-  if [[ "$(uname -s)" == Darwin ]]; then
-    sed -i '' "$@"
-  else
-    sed -i "$@"
-  fi
 }
 
 write_ci_env() {

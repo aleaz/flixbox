@@ -31,10 +31,6 @@ configure_tmpfile() {
   mktemp "${CONFIGURE_TMPDIR}/flixbox.XXXXXX"
 }
 
-flixbox_json() {
-  python3 "${FLIXBOX_JSON_PAYLOAD:?FLIXBOX_JSON_PAYLOAD not set}"
-}
-
 # Redact common secret keys from JSON/text for verbose configure logs.
 configure_redact() {
   python3 -c '

@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 # Enforce Flixbox architecture contracts in CI and locally.
-# See docs/10-ci-plan.md for check IDs (C-01 … C-63).
+# See docs/10-ci-plan.md for check IDs (C-01 … C-65).
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
+
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/platform.sh"
 
 CI_ENV="${ROOT_DIR}/.ci-env"
 COMPOSE=(docker compose --env-file "${CI_ENV}")
@@ -16,14 +19,6 @@ fail() {
 
 pass() {
   printf 'OK   %s\n' "$1"
-}
-
-sed_inplace() {
-  if [[ "$(uname -s)" == Darwin ]]; then
-    sed -i '' "$@"
-  else
-    sed -i "$@"
-  fi
 }
 
 write_ci_env() {
@@ -286,6 +281,7 @@ pass C-61
 # --- C-62: configure module layout (R2) ---
 [[ -f scripts/lib/flixbox-env.sh ]] || fail C-62 'missing scripts/lib/flixbox-env.sh'
 [[ -f scripts/configure/preflight.sh ]] || fail C-62 'missing scripts/configure/preflight.sh'
+[[ -f scripts/configure/arr-common.sh ]] || fail C-62 'missing scripts/configure/arr-common.sh'
 [[ -f scripts/configure/qbittorrent.sh ]] || fail C-62 'missing scripts/configure/qbittorrent.sh'
 grep -q 'source "${CONFIGURE_DIR}/' scripts/configure-apps.sh || \
   fail C-62 'configure-apps.sh must source scripts/configure modules'

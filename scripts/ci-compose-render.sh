@@ -11,6 +11,8 @@ cd "${ROOT_DIR}"
 source "${ROOT_DIR}/scripts/lib/env-file.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/access-profile.sh"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/platform.sh"
 
 CI_ENV="${ROOT_DIR}/.ci-env"
 CI_ENV_SHARED="${ROOT_DIR}/.ci-env.shared"
@@ -22,14 +24,6 @@ fail() {
 
 pass() {
   printf 'OK   compose-render: %s\n' "$*"
-}
-
-sed_inplace() {
-  if [[ "$(uname -s)" == Darwin ]]; then
-    sed -i '' "$@"
-  else
-    sed -i "$@"
-  fi
 }
 
 write_ci_env() {

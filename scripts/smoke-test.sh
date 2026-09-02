@@ -13,14 +13,6 @@ SMOKE_DATA="${SMOKE_DATA:-${SMOKE_ROOT}/data}"
 SMOKE_CONFIG="${SMOKE_CONFIG:-${SMOKE_ROOT}/config}"
 ENV_BACKUP=""
 
-sed_inplace() {
-  if [[ "$(uname -s)" == Darwin ]]; then
-    sed -i '' "$@"
-  else
-    sed -i "$@"
-  fi
-}
-
 die() {
   printf 'smoke-test: %s\n' "$*" >&2
   exit 1

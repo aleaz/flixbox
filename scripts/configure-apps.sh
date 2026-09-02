@@ -6,7 +6,7 @@
 #   ./scripts/configure-apps.sh [--dry-run] [--verbose] [--sync-qbit-auth]
 #   ./bin/flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth]
 #
-# Module layout: scripts/configure/*.sh (sourced below).
+# Module layout: scripts/configure/*.sh (preflight, arr-common, per-service modules).
 # Shared helpers: scripts/lib/configure-helpers.sh
 # Env loading: scripts/lib/flixbox-env.sh
 
@@ -49,7 +49,7 @@ flixbox_load_configure_env
 configure_runtime_init
 QBIT_COOKIE=$(configure_tmpfile)
 
-for _configure_module in preflight qbittorrent prowlarr bazarr jellyfin seerr hygiene; do
+for _configure_module in preflight arr-common qbittorrent prowlarr bazarr jellyfin seerr hygiene; do
   # shellcheck disable=SC1090
   source "${CONFIGURE_DIR}/${_configure_module}.sh"
 done
