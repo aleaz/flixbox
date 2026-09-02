@@ -19,6 +19,33 @@ flixbox_chown_tree() {
   return 1
 }
 
+# After a prior PUID chown, CONFIG_DIR may not be writable by the operator/CI user.
+# Reclaim it before copy_templates; apply_runtime_ownership restores PUID afterward.
+flixbox_prepare_config_for_host_write() {
+  local cfg="${CONFIG_DIR:?CONFIG_DIR required}"
+  mkdir -p "$cfg"
+  if [[ -w "$cfg" ]]; then
+    return 0
+  fi
+  if flixbox_chown_tree "$cfg" "$(id -u)" "$(id -g)"; then
+    echo "CONFIG_DIR reclaimed for host template writes (uid $(id -u))"
+    return 0
+  fi
+  echo "Warning: CONFIG_DIR not writable and reclaim failed — template copy may fail" >&2
+  return 1
+}
+
+# Container runtime ownership: linuxserver apps use PUID/PGID; Seerr is fixed 1000.
+flixbox_apply_runtime_ownership() {
+  local ok_data=0 ok_cfg=0
+  flixbox_chown_tree "${DATA_DIR:?DATA_DIR required}" "${PUID:?PUID required}" "${PGID:?PGID required}" && ok_data=1
+  flixbox_chown_tree "${CONFIG_DIR:?CONFIG_DIR required}" "${PUID}" "${PGID}" && ok_cfg=1
+  [[ "$ok_data" -eq 1 ]] || echo "Warning: could not chown DATA_DIR to ${PUID}:${PGID}" >&2
+  [[ "$ok_cfg" -eq 1 ]] || echo "Warning: could not chown CONFIG_DIR to ${PUID}:${PGID}" >&2
+  flixbox_ensure_seerr_config_owner || true
+  [[ "$ok_data" -eq 1 && "$ok_cfg" -eq 1 ]]
+}
+
 # Seerr runs as fixed UID/GID 1000 (node) and ignores PUID/PGID.
 # Call after creating CONFIG_DIR/seerr and after any bulk chown of CONFIG_DIR.
 flixbox_ensure_seerr_config_owner() {

@@ -79,17 +79,17 @@ for f in compose/downloaders-direct.yml compose/downloaders-vpn.yml compose/serv
 done
 pass C-10
 
-# --- C-11: torrents/incomplete in bootstrap ---
+# --- C-11: torrents/incomplete + ownership helpers ---
 grep -q 'torrents/incomplete' scripts/bootstrap-dirs.sh || \
   fail C-11 'bootstrap-dirs.sh missing torrents/incomplete'
-grep -q 'flixbox_ensure_seerr_config_owner' scripts/bootstrap-dirs.sh || \
-  fail C-11 'bootstrap-dirs.sh must ensure Seerr config is UID 1000'
 grep -q 'flixbox_chown_tree' scripts/bootstrap-dirs.sh || \
   fail C-11 'bootstrap-dirs.sh must chown DATA_DIR via flixbox_chown_tree (alpine fallback)'
-grep -q 'flixbox_ensure_seerr_config_owner' bin/flixbox || \
-  fail C-11 'bin/flixbox init must re-apply Seerr UID 1000 after CONFIG_DIR chown'
-grep -q 'flixbox_chown_tree' bin/flixbox || \
-  fail C-11 'bin/flixbox init must chown DATA_DIR via flixbox_chown_tree'
+grep -q 'flixbox_prepare_config_for_host_write' bin/flixbox || \
+  fail C-11 'bin/flixbox must reclaim CONFIG_DIR before copy_templates'
+grep -q 'flixbox_apply_runtime_ownership' bin/flixbox || \
+  fail C-11 'bin/flixbox must apply PUID ownership after copy_templates'
+grep -q 'flixbox_ensure_seerr_config_owner' scripts/lib/seerr-perms.sh || \
+  fail C-11 'seerr-perms.sh must ensure Seerr config is UID 1000'
 [[ -f scripts/lib/seerr-perms.sh ]] || fail C-11 'missing scripts/lib/seerr-perms.sh'
 grep -q 'flixbox_chown_tree' scripts/lib/seerr-perms.sh || \
   fail C-11 'seerr-perms.sh must define flixbox_chown_tree'

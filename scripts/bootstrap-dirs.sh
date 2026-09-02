@@ -52,15 +52,14 @@ chmod g+s \
   "${DATA_DIR}/media/movies" \
   "${DATA_DIR}/media/tv" || true
 
-if flixbox_chown_tree "${DATA_DIR}" "${PUID}" "${PGID}" \
-  && flixbox_chown_tree "${CONFIG_DIR}" "${PUID}" "${PGID}"; then
-  echo "Ownership set to ${PUID}:${PGID}"
+if flixbox_chown_tree "${DATA_DIR}" "${PUID}" "${PGID}"; then
+  echo "DATA_DIR ownership set to ${PUID}:${PGID}"
 else
-  echo "Warning: could not chown DATA_DIR/CONFIG_DIR to ${PUID}:${PGID}." >&2
+  echo "Warning: could not chown DATA_DIR to ${PUID}:${PGID}." >&2
   echo "  *arr root folders may fail until media dirs are writable by PUID." >&2
 fi
 
-# Seerr ignores PUID — must stay 1000:1000 after the bulk chown above.
-flixbox_ensure_seerr_config_owner || true
+# Leave CONFIG_DIR owned by the invoking user so init/up can copy templates.
+# Runtime PUID ownership is applied after copy_templates (bin/flixbox).
 
 echo "Bootstrap directories ready."

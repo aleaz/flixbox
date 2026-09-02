@@ -252,20 +252,17 @@ cmd_init() {
 
   "${ROOT_DIR}/scripts/bootstrap-dirs.sh"
   load_env
+  # shellcheck disable=SC1091
+  source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
+  flixbox_prepare_config_for_host_write || true
   copy_templates
   flixbox_validate_access_profile || die "Fix FLIXBOX_ACCESS_PROFILE in .env (trusted or shared)."
   flixbox_sync_access_profile_env "${ROOT_DIR}/.env"
   ensure_first_run_secrets
   load_env
-  # shellcheck disable=SC1091
-  source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
-  if ! flixbox_chown_tree "${CONFIG_DIR}" "${PUID}" "${PGID}"; then
-    warn "Could not chown CONFIG_DIR to ${PUID}:${PGID} (may need sudo)."
+  if ! flixbox_apply_runtime_ownership; then
+    warn "Runtime ownership incomplete — *arr/Seerr may hit permission errors until fixed."
   fi
-  if ! flixbox_chown_tree "${DATA_DIR}" "${PUID}" "${PGID}"; then
-    warn "Could not chown DATA_DIR to ${PUID}:${PGID} — *arr may reject root folders."
-  fi
-  flixbox_ensure_seerr_config_owner || warn "Seerr config may not be writable by UID 1000"
   ok "Init complete."
   log "Access profile: $(flixbox_access_profile) (*arr UI auth — ADR 0015)"
   if [[ "$(flixbox_access_profile)" == "shared" ]]; then
@@ -299,8 +296,12 @@ cmd_up() {
     warn "trusted profile: admin UIs bind on all interfaces — use shared profile on untrusted LANs (docs/user/13-access-profiles.md)."
   fi
   warn_mode_vpn_mismatch || true
+  # shellcheck disable=SC1091
+  source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
   # Refresh qBit custom-services for current FLIXBOX_MODE (ADR 0019 / 0002) before compose.
+  flixbox_prepare_config_for_host_write || true
   copy_templates
+  flixbox_apply_runtime_ownership || true
   flixbox_preflight_host_ports
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
@@ -362,7 +363,11 @@ cmd_reload() {
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
     die "Directories missing. Run ./bin/flixbox init first."
   warn_mode_vpn_mismatch || true
+  # shellcheck disable=SC1091
+  source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
+  flixbox_prepare_config_for_host_write || true
   copy_templates
+  flixbox_apply_runtime_ownership || true
   flixbox_preflight_host_ports
   log "Recreating containers (applies .env and compose changes)..."
   log "Tip: prefer reload over down when you only changed config."
