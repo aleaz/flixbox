@@ -61,7 +61,7 @@ When `FLIXBOX_MODE=vpn`, Compose waits on health in this order:
 gluetun (healthy) → qbittorrent (WebUI healthy) → radarr / sonarr / decluttarr / unpackerr
 ```
 
-If Gluetun is unhealthy, qBit and those peers fail with dependency errors. That is intentional (fail closed for torrent path). Seerr, Jellyfin, Prowlarr, and similar apps do not depend on Gluetun and may still start. Fix Gluetun first (`docker compose logs gluetun`), then recreate; or roll back to Direct (`FLIXBOX_MODE=direct`, `VPN_ENABLED=false`, `init`, `down`, `up`, download client host `qbittorrent`).
+If Gluetun is unhealthy, qBit and those peers fail with dependency errors. That is intentional (fail closed for torrent path). Seerr, Jellyfin, Prowlarr, and similar apps do not depend on Gluetun and may still start. Fix Gluetun first (`./bin/flixbox logs gluetun`), then recreate; or roll back to Direct (`FLIXBOX_MODE=direct`, `VPN_ENABLED=false`, `./bin/flixbox init --non-interactive`, `./bin/flixbox down`, `./bin/flixbox up`, download client host `qbittorrent`).
 
 ### What happens when the VPN drops
 
