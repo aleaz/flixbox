@@ -8,6 +8,7 @@ on:
   schedule:
     # Weekly image CVE refresh (docs/10-ci-plan.md §4.3)
     - cron: '0 6 * * 1'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -40,7 +41,9 @@ jobs:
       - name: ShellCheck
         run: |
           shellcheck -e SC1091 bin/flixbox scripts/*.sh scripts/lib/*.sh scripts/configure/*.sh \
-            scripts/ci-validate.sh scripts/ci-smoke-init.sh scripts/ci-compose-render.sh scripts/ci-trivy.sh
+            scripts/ci-validate.sh scripts/ci-smoke-init.sh scripts/ci-compose-render.sh \
+            scripts/ci-trivy.sh scripts/ci-smoke-configure.sh scripts/ci-smoke-vpn.sh \
+            scripts/ci-pin-digests.sh
           shellcheck templates/qbittorrent/custom-services.d/*.sh
           shellcheck templates/qbittorrent/flixbox-qbit-api-login.sh
           shellcheck templates/qbittorrent/custom-cont-init.d/*.sh
@@ -52,6 +55,24 @@ jobs:
       - name: Init smoke (C-50–52 + env-file)
         run: ./scripts/ci-smoke-init.sh
 
+      - name: VPN structural smoke (C-74)
+        env:
+          CI_VPN_SMOKE: "1"
+        run: ./scripts/ci-smoke-vpn.sh
+
+  configure-smoke-pr:
+    name: configure-smoke-pr
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure PR subset (C-73)
+        env:
+          CI_CONFIGURE_SMOKE_PR: "1"
+        run: ./scripts/ci-smoke-configure.sh
+
   configure-smoke:
     name: configure-smoke
     runs-on: ubuntu-latest
@@ -60,7 +81,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure on ephemeral stack (C-70 / D5)
+      - name: Configure on ephemeral stack (C-70)
         env:
           CI_CONFIGURE_SMOKE: "1"
         run: ./scripts/ci-smoke-configure.sh

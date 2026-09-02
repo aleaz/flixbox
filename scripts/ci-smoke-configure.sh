@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Ephemeral-stack configure smoke (D5 / C-70).
-# Brings up MVP core + Seerr + Byparr in direct mode (random free QBITTORRENT_PORT),
+# Ephemeral-stack configure smoke (D5 / C-70 / C-73).
+# Brings up MVP core in direct mode (random free QBITTORRENT_PORT),
 # runs configure twice (idempotency), tears down.
+#
+# Modes:
+#   CI_CONFIGURE_SMOKE=1           — full stack (main push / workflow_dispatch)
+#   CI_CONFIGURE_SMOKE_PR=1        — PR subset (qBit + *arr + Prowlarr + Bazarr + Jellyfin)
 #
 # Usage:
 #   CI_CONFIGURE_SMOKE=1 ./scripts/ci-smoke-configure.sh
@@ -20,10 +24,13 @@ SMOKE_WORKTREE="$(mktemp -d /tmp/flixbox-configure-smoke-wt.XXXXXX)"
 pass() { printf 'OK   %s\n' "$*"; }
 fail() { printf 'FAIL %s\n' "$*" >&2; exit 1; }
 
-if [[ "${CI_CONFIGURE_SMOKE:-0}" != 1 && "${FLIXBOX_CI_CONFIGURE_SMOKE:-0}" != 1 ]]; then
-  echo "Skip configure stack smoke (set CI_CONFIGURE_SMOKE=1 to run)."
+if [[ "${CI_CONFIGURE_SMOKE:-0}" != 1 && "${FLIXBOX_CI_CONFIGURE_SMOKE:-0}" != 1 && "${CI_CONFIGURE_SMOKE_PR:-0}" != 1 ]]; then
+  echo "Skip configure stack smoke (set CI_CONFIGURE_SMOKE=1 or CI_CONFIGURE_SMOKE_PR=1 to run)."
   exit 0
 fi
+
+SMOKE_PR=0
+[[ "${CI_CONFIGURE_SMOKE_PR:-0}" == 1 ]] && SMOKE_PR=1
 
 command -v docker >/dev/null || fail "docker required"
 docker compose version >/dev/null 2>&1 || fail "docker compose required"
@@ -56,16 +63,28 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   ./bin/flixbox init --non-interactive
 
   log() { echo "[configure-smoke] $*"; }
-  log "Starting core stack (direct mode, QBITTORRENT_PORT=${SMOKE_QBIT_PORT}, Seerr + Byparr)..."
-  docker compose --project-directory . up -d \
-    qbittorrent radarr sonarr prowlarr bazarr jellyfin seerr byparr
+  if [[ "$SMOKE_PR" -eq 1 ]]; then
+    log "Starting PR subset (direct mode, QBITTORRENT_PORT=${SMOKE_QBIT_PORT})..."
+    docker compose --project-directory . up -d qbittorrent radarr sonarr prowlarr bazarr jellyfin
+    core=(
+      flixbox-qbittorrent flixbox-radarr flixbox-sonarr flixbox-prowlarr flixbox-bazarr flixbox-jellyfin
+    )
+    preflight_timeout=600
+    wait_timeout=180
+  else
+    log "Starting core stack (direct mode, QBITTORRENT_PORT=${SMOKE_QBIT_PORT}, Seerr + Byparr)..."
+    docker compose --project-directory . up -d \
+      qbittorrent radarr sonarr prowlarr bazarr jellyfin seerr byparr
+    core=(
+      flixbox-qbittorrent flixbox-radarr flixbox-sonarr flixbox-prowlarr
+      flixbox-bazarr flixbox-jellyfin flixbox-seerr flixbox-byparr
+    )
+    preflight_timeout=1200
+    wait_timeout=300
+  fi
 
   log "Waiting for containers..."
   deadline=$((SECONDS + 600))
-  core=(
-    flixbox-qbittorrent flixbox-radarr flixbox-sonarr flixbox-prowlarr
-    flixbox-bazarr flixbox-jellyfin flixbox-seerr flixbox-byparr
-  )
   while (( SECONDS < deadline )); do
     ready=true
     for c in "${core[@]}"; do
@@ -76,21 +95,26 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   done
   $ready || fail "core containers not up within 600s"
 
-  log "Running configure (extended preflight budget)..."
+  log "Running configure (preflight budget=${preflight_timeout}s)..."
   set +e
-  out="$(CONFIGURE_PREFLIGHT_TIMEOUT=1200 WAIT_TIMEOUT=300 ./bin/flixbox configure 2>&1)"
+  out="$(CONFIGURE_PREFLIGHT_TIMEOUT="${preflight_timeout}" WAIT_TIMEOUT="${wait_timeout}" ./bin/flixbox configure 2>&1)"
   rc=$?
   set -e
   [[ "$rc" -eq 0 ]] || fail "configure failed (rc=${rc}): ${out:0:500}"
 
   echo "$out" | grep -qE 'Done: [0-9]+ configured,' || \
     fail "configure missing Done summary"
-  echo "$out" | grep -q 'Configuring Seerr' || \
-    fail "configure did not run Seerr wiring"
-  echo "$out" | grep -q 'Seerr:' || \
-    fail "configure missing Seerr outcome line"
-  echo "$out" | grep -qE 'Prowlarr: (added Byparr|Byparr/FlareSolverr proxy)' || \
-    fail "configure missing Prowlarr Byparr proxy outcome"
+  if [[ "$SMOKE_PR" -eq 0 ]]; then
+    echo "$out" | grep -q 'Configuring Seerr' || \
+      fail "configure did not run Seerr wiring"
+    echo "$out" | grep -q 'Seerr:' || \
+      fail "configure missing Seerr outcome line"
+    echo "$out" | grep -qE 'Prowlarr: (added Byparr|Byparr/FlareSolverr proxy)' || \
+      fail "configure missing Prowlarr Byparr proxy outcome"
+  else
+    echo "$out" | grep -q 'Configuring Prowlarr' || \
+      fail "configure did not run Prowlarr wiring"
+  fi
   pass "configure on ephemeral stack (rc=0)"
 
   log "Idempotent re-run..."
