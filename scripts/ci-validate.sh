@@ -508,6 +508,29 @@ grep -q 'qbit-prefs-vpn-ok' scripts/lib/json-query.py || \
   fail C-79 'json-query must include qbit-prefs-vpn-ok handler'
 pass C-79
 
+# --- C-81: remove deprecated json_extract from configure helpers ---
+if grep -q '^json_extract()' scripts/lib/configure-helpers.sh 2>/dev/null; then
+  fail C-81 'configure-helpers must not define json_extract (use json_query)'
+fi
+pass C-81
+
+# --- C-82: shared CLI output when configure-entry runs from bin/flixbox ---
+[[ -f scripts/lib/cli-output.sh ]] || fail C-82 'missing scripts/lib/cli-output.sh'
+grep -q 'cli-output.sh' scripts/lib/configure-entry.sh || \
+  fail C-82 'configure-entry must source cli-output.sh for info/dry fallbacks'
+grep -q 'declare -f info' scripts/lib/cli-output.sh || \
+  fail C-82 'cli-output must define info only when missing'
+pass C-82
+
+# --- C-83: host port preflight hints and household app bind probe ---
+grep -q '_flixbox_port_hint' scripts/lib/preflight-host.sh || \
+  fail C-83 'preflight-host must suggest per-service alternate ports'
+grep -q 'Jellyfin" "0.0.0.0"' scripts/lib/preflight-host.sh || \
+  fail C-83 'preflight must probe Jellyfin on 0.0.0.0 (household app)'
+grep -q 'SEERR_PORT.*"0.0.0.0"' scripts/lib/preflight-host.sh || \
+  fail C-83 'preflight must probe Seerr on 0.0.0.0 (household app)'
+pass C-83
+
 # --- C-80: ADR 0013 Accepted + VPN operator docs ---
 grep -qE 'Status:\*\* Accepted' docs/adr/0013-vpn-resilience-no-direct-fallback.md || \
   fail C-80 'ADR 0013 must be Accepted'

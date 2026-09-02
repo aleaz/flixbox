@@ -28,15 +28,6 @@ FAILED=0
 # Exported so ShellCheck treats later assignments as used by the caller script.
 export ENV_DIRTY=false
 
-json_extract() {
-  local json="$1" expr="$2"
-  echo "$json" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-${expr}
-" 2>/dev/null
-}
-
 # Build JSON_QUERY_PARAMS from param_key=ENV_VAR pairs (comma-separated spec).
 # Values are read from the process environment — prefix assignments inside $(...):
 #   "$(ROOT_PATH="$root_path" json_params root_path=ROOT_PATH)"

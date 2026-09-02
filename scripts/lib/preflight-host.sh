@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #
-# Host port preflight before compose up/reload (R1 / C-72).
+# Host port preflight before compose up/reload.
 # Requires flixbox_load_env / load_env already applied.
 
 flixbox_preflight_host_ports() {
   local bind_ip="${FLIXBOX_ADMIN_BIND_IP:-0.0.0.0}"
   local failed=0
 
-  # Returns 0 when the port is free on bind_ip, 1 when already bound.
+  # Returns 0 when the port is free on probe_host, 1 when already bound.
   _flixbox_port_is_free() {
-    local port="$1"
-    python3 - "$bind_ip" "$port" <<'PY'
+    local probe_host="$1" port="$2"
+    python3 - "$probe_host" "$port" <<'PY'
 import socket, sys
 bind_ip, port = sys.argv[1], int(sys.argv[2])
 host = "" if bind_ip in ("0.0.0.0", "::") else bind_ip
@@ -26,12 +26,31 @@ sys.exit(0)
 PY
   }
 
+  _flixbox_port_hint() {
+    case "$1" in
+      QBITTORRENT_PORT) echo "9898" ;;
+      QBITTORRENT_BT_PORT) echo "6882" ;;
+      PROWLARR_PORT) echo "9697" ;;
+      BYPARR_PORT) echo "8192" ;;
+      RADARR_PORT) echo "7879" ;;
+      SONARR_PORT) echo "8990" ;;
+      BAZARR_PORT) echo "6768" ;;
+      JELLYFIN_PORT) echo "8097" ;;
+      SEERR_PORT) echo "5056" ;;
+      HOMEPAGE_PORT) echo "3001" ;;
+      MAINTAINERR_PORT) echo "6247" ;;
+      *) echo "$(( ${2:-8080} + 1 ))" ;;
+    esac
+  }
+
   _flixbox_check_port() {
-    local env_var="$1" port="$2" service="$3"
+    local env_var="$1" port="$2" service="$3" probe_host="${4:-$bind_ip}"
     [[ -n "$port" ]] || return 0
-    if ! _flixbox_port_is_free "$port"; then
-      warn "Port ${port} (${service}) is already in use (bind ${bind_ip})."
-      warn "  Set a free port in .env, e.g. ${env_var}=9898, then: ./bin/flixbox reload"
+    if ! _flixbox_port_is_free "$probe_host" "$port"; then
+      local hint
+      hint=$(_flixbox_port_hint "$env_var" "$port")
+      warn "Port ${port} (${service}) is already in use (bind ${probe_host})."
+      warn "  Set a free port in .env, e.g. ${env_var}=${hint}, then: ./bin/flixbox reload"
       warn "  Guide: docs/user/05-first-run.md#host-port-conflicts"
       failed=1
     fi
@@ -44,9 +63,10 @@ PY
   _flixbox_check_port RADARR_PORT "${RADARR_PORT:-7878}" "Radarr"
   _flixbox_check_port SONARR_PORT "${SONARR_PORT:-8989}" "Sonarr"
   _flixbox_check_port BAZARR_PORT "${BAZARR_PORT:-6767}" "Bazarr"
-  _flixbox_check_port JELLYFIN_PORT "${JELLYFIN_PORT:-8096}" "Jellyfin"
-  _flixbox_check_port SEERR_PORT "${SEERR_PORT:-5055}" "Seerr"
-  _flixbox_check_port HOMEPAGE_PORT "${HOMEPAGE_PORT:-3000}" "Homepage"
+  # Jellyfin stays on all interfaces in shared profile (household app) — always probe 0.0.0.0.
+  _flixbox_check_port JELLYFIN_PORT "${JELLYFIN_PORT:-8096}" "Jellyfin" "0.0.0.0"
+  _flixbox_check_port SEERR_PORT "${SEERR_PORT:-5055}" "Seerr" "0.0.0.0"
+  _flixbox_check_port HOMEPAGE_PORT "${HOMEPAGE_PORT:-3000}" "Homepage" "0.0.0.0"
   _flixbox_check_port MAINTAINERR_PORT "${MAINTAINERR_PORT:-6246}" "Maintainerr"
 
   if [[ "$failed" -ne 0 ]]; then

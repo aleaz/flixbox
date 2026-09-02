@@ -149,12 +149,16 @@ configure_jellyfin() {
     local key_json new_key
     key_json=$(curl -s -X POST "${base}/Auth/Keys?app=Flixbox" \
       -H "X-Emby-Token: ${token}" 2>/dev/null || true)
-    new_key=$(json_query jellyfin-api-key-from-create "$key_json" || true)
+    if [[ -n "$key_json" ]]; then
+      new_key=$(json_query jellyfin-api-key-from-create "$key_json" || true)
+    fi
     if [[ -z "$new_key" ]]; then
       # List existing keys
       local keys
       keys=$(curl -s "${base}/Auth/Keys" -H "X-Emby-Token: ${token}" 2>/dev/null || true)
-      new_key=$(json_query jellyfin-flixbox-api-key "$keys" || true)
+      if [[ -n "$keys" ]]; then
+        new_key=$(json_query jellyfin-flixbox-api-key "$keys" || true)
+      fi
     fi
     if [[ -n "$new_key" ]]; then
       env_set_if_empty JELLYFIN_API_KEY "$new_key"

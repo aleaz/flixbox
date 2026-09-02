@@ -229,6 +229,9 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-77 | Bazarr start order | `depends_on` Sonarr/Radarr `service_healthy` |
 | C-78 | Runtime secrets doc | ADR 0018; threat model in access profiles + configuration |
 | C-79 | json_query migration | no `json_extract` in `scripts/configure/`; named handlers in `json-query.py` |
+| C-81 | json_extract removed | no `json_extract` in configure-helpers |
+| C-82 | CLI output fallbacks | `cli-output.sh` sourced by configure-entry for up/reload |
+| C-83 | Port preflight UX | per-service port hints; Jellyfin/Seerr probe on 0.0.0.0 |
 | C-80 | VPN ops docs | ADR 0013 Accepted; VPN drop + Gluetun recreate troubleshooting |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)

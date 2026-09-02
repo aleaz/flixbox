@@ -3,6 +3,9 @@
 # Shared configure entry: access profile sync before wiring (ADR 0015).
 # Used by bin/flixbox up/reload and scripts/configure-apps.sh.
 
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/cli-output.sh"
+
 _configure_entry_generate_password() {
   if command -v openssl >/dev/null 2>&1; then
     openssl rand -base64 18 | tr -d '/+=' | head -c 20
@@ -66,6 +69,8 @@ configure_entry_prepare() {
     flixbox_load_env
   fi
   if $synced; then
-    configure_entry_recreate_admin_services || true
+    if ! configure_entry_recreate_admin_services; then
+      warn "Access profile keys synced but admin service recreate failed — run: ./bin/flixbox reload"
+    fi
   fi
 }

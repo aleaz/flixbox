@@ -63,6 +63,8 @@ Preview without API or `.env` changes:
 2. Run `./bin/flixbox reload` (or `up` if the stack is down).
 3. Open qBit at `http://localhost:9898` — *arr and Decluttarr still use `http://qbittorrent:8080` inside Docker ([ADR 0014](../adr/0014-stable-qbit-download-hostname.md)).
 
+Jellyfin and Seerr stay on all host interfaces even in the `shared` profile (household apps). Port preflight probes them on `0.0.0.0`, not `FLIXBOX_ADMIN_BIND_IP`.
+
 See also [Troubleshooting — port preflight](10-troubleshooting.md).
 
 ---
