@@ -286,11 +286,15 @@ cmd_up() {
     warn "trusted profile: admin UIs bind on all interfaces — use shared profile on untrusted LANs (docs/user/13-access-profiles.md)."
   fi
   warn_mode_vpn_mismatch || true
+  # Refresh qBit custom-services for current FLIXBOX_MODE (ADR 0019 / 0002) before compose.
+  copy_templates
   flixbox_preflight_host_ports
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
   ok "Stack started. ./bin/flixbox status"
-  flixbox_qbit_webui_bootstrap || true
+  if ! flixbox_qbit_webui_bootstrap; then
+    warn "qBit WebUI bootstrap did not finish — check logs, then ./bin/flixbox configure --sync-qbit-auth"
+  fi
   log "Next: ./bin/flixbox configure  (then add Prowlarr indexers)"
   log "After Direct↔VPN or qBit recreate: ./bin/flixbox configure --sync-qbit-auth"
   log "Guide: docs/user/05-first-run.md · Cheat sheet: docs/user/REFERENCE.md"
@@ -338,12 +342,15 @@ cmd_reload() {
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
     die "Directories missing. Run ./bin/flixbox init first."
   warn_mode_vpn_mismatch || true
+  copy_templates
   flixbox_preflight_host_ports
   log "Recreating containers (applies .env and compose changes)..."
   log "Tip: prefer reload over down when you only changed config."
   compose "${profiles[@]}" up -d --force-recreate
   ok "Stack reloaded. ./bin/flixbox status"
-  flixbox_qbit_webui_bootstrap || true
+  if ! flixbox_qbit_webui_bootstrap; then
+    warn "qBit WebUI bootstrap did not finish — check logs, then ./bin/flixbox configure --sync-qbit-auth"
+  fi
   log "If qBit auth or remapped-port WebUI broke: ./bin/flixbox configure --sync-qbit-auth"
 }
 

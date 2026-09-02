@@ -162,6 +162,39 @@ grep -q 'session-temp-password' templates/qbittorrent/custom-services.d/98-flixb
   fail C-84 'missing ADR 0019 qBit WebUI runtime contract'
 pass C-84
 
+# --- C-85: WebUI contract OK-check + prefs drift guards (QA remediation) ---
+grep -A12 'security_prefs_ok()' templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh \
+  | grep -q '"web_ui_host_header_validation_enabled":false' || \
+  fail C-85 'webui-contract security_prefs_ok must require explicit host_header false (match json-query)'
+grep -q 'qbit-api-login.sh' templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh || \
+  fail C-85 'webui-contract must login via qbit-api-login.sh'
+grep -q 'exit 2' templates/qbittorrent/flixbox-qbit-api-login.sh || \
+  fail C-85 'qbit-api-login.sh must exit 2 on WebUI ban'
+# up/reload must refresh custom-services before compose (mode flip)
+awk '/^cmd_up\(\)/,/^}/' bin/flixbox | grep -q 'copy_templates' || \
+  fail C-85 'cmd_up must call copy_templates before compose'
+awk '/^cmd_reload\(\)/,/^}/' bin/flixbox | grep -q 'copy_templates' || \
+  fail C-85 'cmd_reload must call copy_templates before compose'
+# Shared contract keys present in all three apply sites
+for f in scripts/lib/configure-helpers.sh scripts/lib/qbit-webui-bootstrap.sh \
+  templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh; do
+  grep -q 'web_ui_host_header_validation_enabled' "$f" || \
+    fail C-85 "${f} missing web_ui_host_header_validation_enabled"
+  grep -q 'bypass_auth_subnet_whitelist_enabled' "$f" || \
+    fail C-85 "${f} missing bypass_auth_subnet_whitelist_enabled"
+  grep -q '172.30.42.0/24' "$f" || \
+    fail C-85 "${f} missing flixbox_net whitelist CIDR"
+  grep -q 'web_ui_max_auth_fail_count' "$f" || \
+    fail C-85 "${f} missing web_ui_max_auth_fail_count"
+done
+# No dummy ban-probe password on host bootstrap
+if grep -q 'password=x' scripts/lib/qbit-webui-bootstrap.sh; then
+  fail C-85 'qbit-webui-bootstrap must not use dummy password=x ban probe'
+fi
+grep -q '_flixbox_bootstrap_cleanup_temp' scripts/lib/qbit-webui-bootstrap.sh || \
+  fail C-85 'bootstrap must clean session-temp-password'
+pass C-85
+
 # --- C-24c: Servarr External auth + API key env (ADR 0005 / 0015) ---
 for app in RADARR SONARR PROWLARR; do
   grep -q "${app}__AUTH__APIKEY:" compose/servarr.yml || \

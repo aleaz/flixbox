@@ -35,11 +35,13 @@ QBIT_LOGIN_SCRIPT="/config/.flixbox/qbit-api-login.sh"
 API_BASE="http://127.0.0.1:${WEBUI_PORT:-8080}"
 
 qbit_login() {
+  local rc=0
   [[ -x "$QBIT_LOGIN_SCRIPT" ]] || return 1
   [[ -n "$QBIT_PASS" ]] || return 1
   [[ "$LOGIN_FAILED" == true ]] && return 1
   rm -f "$COOKIE"
-  if printf '%s\n%s\n' "$QBIT_USER" "$QBIT_PASS" | "$QBIT_LOGIN_SCRIPT" "$COOKIE" "$API_BASE"; then
+  printf '%s\n%s\n' "$QBIT_USER" "$QBIT_PASS" | "$QBIT_LOGIN_SCRIPT" "$COOKIE" "$API_BASE" || rc=$?
+  if [[ "$rc" -eq 0 ]]; then
     return 0
   fi
   LOGIN_FAILED=true

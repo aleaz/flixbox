@@ -236,6 +236,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-83 | Port preflight UX | per-service port hints; Jellyfin/Seerr probe on 0.0.0.0 |
 | C-80 | VPN ops docs | ADR 0013 Accepted; VPN drop + Gluetun recreate troubleshooting |
 | C-84 | qBit WebUI runtime contract | ADR 0019; custom-service in both downloader modes |
+| C-85 | WebUI contract QA remediation | host-header OK matches json-query; copy_templates on up/reload; shared prefs keys; no dummy ban probe |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 

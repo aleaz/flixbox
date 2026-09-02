@@ -24,12 +24,13 @@ cont-init writes `WebUI\HostHeaderValidation` and `AuthSubnetWhitelist` into `qB
 2. **cont-init remains** best-effort for paths + initial Preferences; it is **not** the sole source of truth for WebUI security keys.
 3. **Compose:** both downloader modules mount `${CONFIG_DIR}/qbittorrent-custom-services` and pass `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD`. VPN mode still installs `99-flixbox-bind-vpn-interface.sh`; Direct mode removes that script on `init`.
 4. **Configure state machine (ADR 0016) unchanged:** reconciler complements PREFLIGHT (makes auth more likely to succeed). `--sync-qbit-auth` remains the intentional force-push into *arr + Decluttarr. CLI `up` / `reload` run a **host bootstrap** (`scripts/lib/qbit-webui-bootstrap.sh`) that reads the session temp password from `docker logs` (not available inside the container) and applies password + security prefs; tips still mention `--sync-qbit-auth` after mode switches.
-5. **Security:** login via `/config/.flixbox/qbit-api-login.sh` stdin only; never widen AuthSubnetWhitelist beyond flixbox_net; no Direct fallback on VPN failure (ADR 0013).
+5. **Security:** login via `/config/.flixbox/qbit-api-login.sh` (stdin; exit 2 on WebUI ban); never widen AuthSubnetWhitelist beyond flixbox_net; no Direct fallback on VPN failure (ADR 0013).
+6. **Lifecycle:** `flixbox up` / `reload` refresh qBit custom-services via `copy_templates` so Direct↔VPN mode flips install/remove `99-flixbox-bind-vpn-interface.sh` without a separate `init` (operators should still run `init` when changing `.env` paths/secrets).
 
 ## Consequences
 
-- Pros: remapped-port WebUI and Docker-peer auth survive qBit recreate without manual curl; pattern matches tun0 bind.
-- Cons: long-running s6 service inside qBit container; password bootstrap depends on temp password appearing in qBit logs under `/config` when env login fails.
+- Pros: remapped-port WebUI and Docker-peer auth survive qBit recreate without manual curl; pattern matches tun0 bind; Host-header readiness matches configure (`json-query` / missing key ⇒ not OK).
+- Cons: long-running s6 service inside qBit container; host bootstrap depends on `docker logs` for session temp password; security prefs JSON is duplicated in configure helpers, host bootstrap, and reconciler (CI C-85 guards key strings).
 - Operators still run `configure` for *arr wiring; reconciler does not replace ADR 0016.
 
 ## Validation

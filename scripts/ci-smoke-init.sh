@@ -90,6 +90,16 @@ echo "$diff" | grep -q 'sonarr.apikey' || fail "json-query bazarr-conn-diff spec
 pass "json-query (param-safe API keys)"
 pass "json-payload (special-char passwords)"
 
+# --- json-query: WebUI security OK matches reconciler (missing host-header ⇒ fail) ---
+_webui_ok='{"web_ui_host_header_validation_enabled":false,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"172.30.42.0/24","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300,"bypass_local_auth":false}'
+echo "$_webui_ok" | JSON_QUERY_PARAMS='{"expect_bypass_local":"false"}' python3 "${jq}" qbit-webui-security-ok >/dev/null || \
+  fail "json-query qbit-webui-security-ok complete prefs"
+_webui_missing_hh='{"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"172.30.42.0/24","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300,"bypass_local_auth":false}'
+if echo "$_webui_missing_hh" | JSON_QUERY_PARAMS='{"expect_bypass_local":"false"}' python3 "${jq}" qbit-webui-security-ok >/dev/null 2>&1; then
+  fail "json-query qbit-webui-security-ok must fail when host-header key is missing"
+fi
+pass "json-query qbit-webui-security-ok (missing host-header fails)"
+
 # --- C-50–C-52 + access profile sync: isolated copy (never touch operator .env) ---
 SMOKE_WORKTREE="$(mktemp -d /tmp/flixbox-smoke-wt.XXXXXX)"
 rsync -a --exclude='.git' --exclude='.env' "${ROOT_DIR}/" "${SMOKE_WORKTREE}/"
@@ -119,7 +129,24 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
     fail "C-51 missing qbittorrent/.flixbox/qbit-api-login.sh"
   [[ -f "${SMOKE_CONFIG}/maintainerr/rule-pack.md" ]] || \
     fail "C-51 missing maintainerr/rule-pack.md"
+  [[ -f "${SMOKE_CONFIG}/qbittorrent-custom-services/98-flixbox-webui-contract.sh" ]] || \
+    fail "C-51 missing webui-contract custom-service"
+  [[ ! -e "${SMOKE_CONFIG}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh" ]] || \
+    fail "C-51 Direct mode must not install bind-vpn custom-service"
   pass "C-51 templates + incomplete dir"
+
+  # Mode flip without full stack: init refreshes custom-services (ADR 0019 / C-85)
+  flixbox_env_file_set .env FLIXBOX_MODE vpn
+  flixbox_env_file_set .env VPN_ENABLED true
+  ./bin/flixbox init --non-interactive
+  [[ -f "${SMOKE_CONFIG}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh" ]] || \
+    fail "C-85 VPN init must install bind-vpn custom-service"
+  flixbox_env_file_set .env FLIXBOX_MODE direct
+  flixbox_env_file_set .env VPN_ENABLED false
+  ./bin/flixbox init --non-interactive
+  [[ ! -e "${SMOKE_CONFIG}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh" ]] || \
+    fail "C-85 Direct init must remove bind-vpn custom-service"
+  pass "C-85 custom-services mode flip via init"
 
   qbit_url="$(flixbox_env_file_get .env DECLUTTARR_QBIT_URL)"
   [[ "$qbit_url" == "http://qbittorrent:8080" ]] || fail "C-52 DECLUTTARR_QBIT_URL=${qbit_url}"

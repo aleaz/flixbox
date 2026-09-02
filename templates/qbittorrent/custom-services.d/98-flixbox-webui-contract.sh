@@ -14,16 +14,18 @@
 # /config/.flixbox/session-temp-password when the session temp password only
 # appears in docker logs. Do NOT hammer login — that bans 127.0.0.1.
 #
-# Auth: QBITTORRENT_USERNAME/PASSWORD via container env; login helper stdin only.
+# Auth: QBITTORRENT_USERNAME/PASSWORD via container env; login via qbit-api-login.sh (stdin).
 
 set -uo pipefail
 
 API="http://127.0.0.1:${WEBUI_PORT:-8080}/api/v2"
+API_BASE="http://127.0.0.1:${WEBUI_PORT:-8080}"
 INTERVAL="${FLIXBOX_WEBUI_CONTRACT_INTERVAL:-120}"
 COOKIE="/tmp/.flixbox-webui-contract-cookie"
 PREFS="/tmp/.flixbox-webui-contract-prefs"
 QBIT_USER="${QBITTORRENT_USERNAME:-admin}"
 QBIT_PASS="${QBITTORRENT_PASSWORD:-}"
+QBIT_LOGIN_SCRIPT="/config/.flixbox/qbit-api-login.sh"
 TEMP_FILE="/config/.flixbox/session-temp-password"
 # flixbox_net — MUST match compose/network-base.yml
 SUBNET_WHITELIST="172.30.42.0/24"
@@ -36,24 +38,16 @@ BANNED_BACKOFF=0
 log() { echo "[flixbox-webui-contract] $*"; }
 
 qbit_login_with() {
-  local user="$1" pass="$2" body code
+  local user="$1" pass="$2" rc=0
+  [[ -x "$QBIT_LOGIN_SCRIPT" ]] || return 1
   [[ -n "$pass" ]] || return 1
   rm -f "$COOKIE"
-  body="$(curl -s -c "$COOKIE" -w '\n%{http_code}' --max-time 10 \
-    -X POST "${API}/auth/login" \
-    --data-urlencode "username=${user}" \
-    --data-urlencode "password=${pass}" 2>/dev/null || echo $'\n000')"
-  code="$(printf '%s\n' "$body" | tail -1)"
-  case "$code" in
-    200|204)
-      chmod 600 "$COOKIE" 2>/dev/null || true
-      return 0
-      ;;
+  printf '%s\n%s\n' "$user" "$pass" | "$QBIT_LOGIN_SCRIPT" "$COOKIE" "$API_BASE" || rc=$?
+  case "$rc" in
+    0) return 0 ;;
+    2) return 2 ;;
+    *) return 1 ;;
   esac
-  if printf '%s\n' "$body" | grep -qi 'banned'; then
-    return 2
-  fi
-  return 1
 }
 
 prefs_code() {
@@ -83,15 +77,16 @@ find_temp_password() {
 security_prefs_ok() {
   local json="$1"
   [[ -n "$json" ]] || return 1
+  # Match scripts/lib/json-query.py qbit_webui_security_ok: missing key defaults to
+  # validation ON → must see explicit false (do not treat omit as OK).
+  printf '%s' "$json" | grep -q '"web_ui_host_header_validation_enabled":false' || return 1
   printf '%s' "$json" | grep -q '"bypass_auth_subnet_whitelist_enabled":true' || return 1
   printf '%s' "$json" | grep -q "\"bypass_auth_subnet_whitelist\":\"${SUBNET_WHITELIST}\"" || return 1
-  if printf '%s' "$json" | grep -q '"web_ui_host_header_validation_enabled":true'; then
-    return 1
-  fi
   return 0
 }
 
 apply_security_prefs() {
+  # MUST match qbit_webui_security_prefs_json() in scripts/lib/configure-helpers.sh (CI C-85).
   local json='{"web_ui_host_header_validation_enabled":false,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"'"${SUBNET_WHITELIST}"'","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300}'
   if [[ "${VPN_PORT_FORWARDING:-off}" == "on" ]]; then
     json='{"web_ui_host_header_validation_enabled":false,"bypass_local_auth":true,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"'"${SUBNET_WHITELIST}"'","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300}'
