@@ -55,6 +55,16 @@ Preview without API or `.env` changes:
 
 **Stays manual:** Prowlarr indexers; *arr Forms users (`shared`); Maintainerr rule enablement; optional Recyclarr sync.
 
+### Host port conflicts
+
+`./bin/flixbox up` and `reload` run a **host port preflight** before Compose starts. If a default port is already taken on your machine (common: `8080` used by another app), `up` fails with an actionable message instead of a Docker bind error.
+
+1. Pick a free host port in `.env`, for example `QBITTORRENT_PORT=9898` (container port stays `8080`).
+2. Run `./bin/flixbox reload` (or `up` if the stack is down).
+3. Open qBit at `http://localhost:9898` — *arr and Decluttarr still use `http://qbittorrent:8080` inside Docker ([ADR 0014](../adr/0014-stable-qbit-download-hostname.md)).
+
+See also [Troubleshooting — port preflight](10-troubleshooting.md).
+
 ---
 
 ## 1. Prowlarr + Byparr

@@ -13,6 +13,8 @@ source "${ROOT_DIR}/scripts/lib/env-file.sh"
 source "${ROOT_DIR}/scripts/lib/flixbox-env.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/access-profile.sh"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/preflight-host.sh"
 
 NO_COLOR="${NO_COLOR:-}"
 if [[ -t 1 && -z "${NO_COLOR}" ]]; then
@@ -269,7 +271,11 @@ cmd_up() {
   if [[ -z "${QBITTORRENT_PASSWORD:-}" || -z "${QBITTORRENT_USERNAME:-}" ]]; then
     warn "QBITTORRENT_USERNAME/PASSWORD incomplete — Decluttarr stays idle until both are set in .env and Decluttarr is recreated."
   fi
+  if [[ "$(flixbox_access_profile)" == "trusted" && "${FLIXBOX_ADMIN_BIND_IP:-0.0.0.0}" == "0.0.0.0" ]]; then
+    warn "trusted profile: admin UIs bind on all interfaces — use shared profile on untrusted LANs (docs/user/13-access-profiles.md)."
+  fi
   warn_mode_vpn_mismatch || true
+  flixbox_preflight_host_ports
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
   ok "Stack started. ./bin/flixbox status"
@@ -319,6 +325,7 @@ cmd_reload() {
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
     die "Directories missing. Run ./bin/flixbox init first."
   warn_mode_vpn_mismatch || true
+  flixbox_preflight_host_ports
   log "Recreating containers (applies .env and compose changes)..."
   log "Tip: prefer reload over down when you only changed config."
   compose "${profiles[@]}" up -d --force-recreate

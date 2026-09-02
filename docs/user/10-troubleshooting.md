@@ -2,6 +2,7 @@
 
 | Symptom | Likely cause | What to try |
 | --- | --- | --- |
+| `Host port preflight failed` on `up` / `reload` | Host port from `.env` already bound (e.g. `8080` in use) | Change the matching `*_PORT` in `.env` (e.g. `QBITTORRENT_PORT=9898`) → `./bin/flixbox reload` — [First-run — port conflicts](05-first-run.md#host-port-conflicts) |
 | `cannot create DATA_DIR at /srv/flixbox/data — cannot write under /srv` | Linux default paths; regular user cannot create `/srv` without `sudo` | Create parent dirs + `chown` to your user, or set custom paths in `.env` (e.g. `/data/flixbox/data`) — [Install — Storage paths](04-install.md#storage-paths-and-permissions); re-run `./bin/flixbox init --non-interactive` |
 | `Path validation failed` after `init`; `.env` exists | Writable paths not set before `--non-interactive` init | Edit `DATA_DIR` / `CONFIG_DIR` in `.env`, ensure parent is writable, re-run `init` (init incomplete — do not run `up` until init succeeds) |
 | `mkdir: /srv: Read-only file system` on init | Linux template paths on macOS without `init` | Run `./bin/flixbox init --force --non-interactive` or set `DATA_DIR`/`CONFIG_DIR` under `$HOME/flixbox/` |
@@ -20,6 +21,7 @@
 | Services cannot join `flixbox_net` after upgrade | Old bridge without `172.30.42.0/24` | `docker compose down`, `docker network rm flixbox_net` if it still exists, then `./bin/flixbox up` |
 | Radarr cannot reach qBit (VPN) | Missing Gluetun `qbittorrent` alias (pre–ADR 0014) or Gluetun unhealthy | Host **`qbittorrent`**; `compose up -d gluetun` after upgrade |
 | qBit crash-loops at boot (VPN) | Started before Gluetun healthy | Healthcheck `depends_on`; restart qBit after Gluetun is healthy |
+| qBit WebUI dead after Gluetun recreate | qBit stranded in old netns (`network_mode: service:gluetun`) | `docker compose up -d qbittorrent` or `./bin/flixbox reload` — [VPN drops](07-vpn-and-direct.md#what-happens-when-the-vpn-drops) |
 | VPN test shows home IP | Not in VPN mode / tunnel down | Check `VPN_ENABLED`, Gluetun logs, `vpn-test` |
 | Homepage link goes to wrong port after `.env` change | `services.yaml` copied once at init with default ports | Edit `${CONFIG_DIR}/homepage/services.yaml` or regenerate from `.env` |
 | qBit WebUI `Unauthorized` after login attempts | Not logged in yet | Browser → `http://localhost:<QBITTORRENT_PORT>`; user `admin`; temp password in `docker compose logs qbittorrent` |
