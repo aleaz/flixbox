@@ -10,6 +10,8 @@ source "${ROOT_DIR}/scripts/lib/paths.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/env-file.sh"
 # shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/flixbox-env.sh"
+# shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/access-profile.sh"
 
 NO_COLOR="${NO_COLOR:-}"
@@ -28,18 +30,7 @@ ok() { printf '%b%s%b\n' "${C_OK}" "$*" "${C_RST}"; }
 warn() { printf '%b%s%b\n' "${C_WARN}" "$*" "${C_RST}" >&2; }
 die() { printf '%b%s%b\n' "${C_ERR}" "$*" "${C_RST}" >&2; exit 1; }
 
-load_env() {
-  if [[ -f "${ROOT_DIR}/.env" ]]; then
-    # Parse without shell-evaluating values (passwords may contain $ ` etc.).
-    eval "$(flixbox_env_file_exports "${ROOT_DIR}/.env")"
-  fi
-  DATA_DIR="${DATA_DIR:-$(flixbox_default_data_dir)}"
-  CONFIG_DIR="${CONFIG_DIR:-$(flixbox_default_config_dir)}"
-  PUID="${PUID:-1000}"
-  PGID="${PGID:-1000}"
-  FLIXBOX_MODE="${FLIXBOX_MODE:-direct}"
-  VPN_ENABLED="${VPN_ENABLED:-false}"
-}
+load_env() { flixbox_load_env; }
 
 compose() {
   docker compose --project-directory "${ROOT_DIR}" "$@"

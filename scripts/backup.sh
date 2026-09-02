@@ -8,13 +8,9 @@ cd "${ROOT_DIR}"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/paths.sh"
 # shellcheck disable=SC1091
-source "${ROOT_DIR}/scripts/lib/env-file.sh"
+source "${ROOT_DIR}/scripts/lib/flixbox-env.sh"
 
-if [[ -f .env ]]; then
-  eval "$(flixbox_env_file_exports "${ROOT_DIR}/.env")"
-fi
-
-CONFIG_DIR="${CONFIG_DIR:-$(flixbox_default_config_dir)}"
+flixbox_load_env
 DEST="${1:-${ROOT_DIR}/backups}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUT="${DEST}/flixbox-config-${STAMP}.tar.gz"

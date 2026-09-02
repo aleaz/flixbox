@@ -209,6 +209,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-42 | Stateful `stop_grace_period` | grep count ≥ expected minimum on long-running services |
 | C-43 | No `:latest` image tags | grep `compose/*.yml` for `:latest` (ADR 0010) |
 | C-61 | Configure JSON payload contract | `json-payload.py` + `configure-runtime.sh`; no shell-interpolated secrets in `configure-apps.sh`; qBit login via stdin script (not `docker exec` argv) |
+| C-62 | Configure module layout | `scripts/configure/*.sh` sourced from `configure-apps.sh`; unified `scripts/lib/flixbox-env.sh` |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 

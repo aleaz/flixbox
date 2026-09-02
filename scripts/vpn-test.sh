@@ -6,14 +6,11 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 
 # shellcheck disable=SC1091
-source "${ROOT_DIR}/scripts/lib/env-file.sh"
+source "${ROOT_DIR}/scripts/lib/flixbox-env.sh"
 
-if [[ -f .env ]]; then
-  eval "$(flixbox_env_file_exports "${ROOT_DIR}/.env")"
-fi
-
-MODE="${FLIXBOX_MODE:-direct}"
-VPN_ENABLED="${VPN_ENABLED:-false}"
+flixbox_load_env
+MODE="${FLIXBOX_MODE}"
+VPN_ENABLED="${VPN_ENABLED}"
 echo "FLIXBOX_MODE=${MODE}"
 echo "VPN_ENABLED=${VPN_ENABLED}"
 

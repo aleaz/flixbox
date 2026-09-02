@@ -275,13 +275,25 @@ grep -q 'flixbox_json' scripts/lib/configure-helpers.sh || \
   fail C-61 'configure-helpers must use flixbox_json'
 grep -q 'configure_runtime_init' scripts/configure-apps.sh || \
   fail C-61 'configure-apps must call configure_runtime_init'
-if grep -E '(-d "\{.*\$\{|cat <<EOF.*\{")' scripts/configure-apps.sh; then
-  fail C-61 'configure-apps.sh must not interpolate secrets into JSON strings'
+if grep -E '(-d "\{.*\$\{|cat <<EOF.*\{")' scripts/configure-apps.sh scripts/configure/*.sh 2>/dev/null; then
+  fail C-61 'configure scripts must not interpolate secrets into JSON strings'
 fi
 if grep -E 'docker exec .*--data-urlencode "password=\$\{' scripts/lib/configure-helpers.sh; then
   fail C-61 'qbit_auth must not pass password on docker exec argv'
 fi
 pass C-61
+
+# --- C-62: configure module layout (R2) ---
+[[ -f scripts/lib/flixbox-env.sh ]] || fail C-62 'missing scripts/lib/flixbox-env.sh'
+[[ -f scripts/configure/preflight.sh ]] || fail C-62 'missing scripts/configure/preflight.sh'
+[[ -f scripts/configure/qbittorrent.sh ]] || fail C-62 'missing scripts/configure/qbittorrent.sh'
+grep -q 'source "${CONFIGURE_DIR}/' scripts/configure-apps.sh || \
+  fail C-62 'configure-apps.sh must source scripts/configure modules'
+grep -q 'flixbox_load_configure_env' scripts/configure-apps.sh || \
+  fail C-62 'configure-apps.sh must use flixbox_load_configure_env'
+grep -q 'flixbox_load_env' bin/flixbox || \
+  fail C-62 'bin/flixbox must use flixbox_load_env'
+pass C-62
 
 # --- Compose quiet config (direct + vpn + profiles) ---
 "${COMPOSE[@]}" config --quiet

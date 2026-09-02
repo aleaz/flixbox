@@ -66,6 +66,7 @@ Document clearly; do not silently switch to per-app UIDs without an ADR.
 - Trap `EXIT`/`INT`/`TERM` for cleanup when mutating terminal state or temp files.
 - **Configure JSON:** build API payloads with `scripts/lib/json-payload.py` (secrets via env only). Do not interpolate passwords, API keys, or other secrets into shell JSON strings or heredocs in `configure-apps.sh`.
 - **Configure runtime:** use `scripts/lib/configure-runtime.sh` for private temp files; redact secrets in `--verbose` logs.
+- **Configure layout:** service wiring lives in `scripts/configure/*.sh`; entry point `scripts/configure-apps.sh` sources modules. Env loading: `scripts/lib/flixbox-env.sh`.
 - **qBit login:** use `/config/.flixbox/qbit-api-login.sh` (stdin credentials) from configure and VPN sidecar — never pass passwords on `docker exec` argv.
 - Prefer coreutils; optional `jq` enhancements must degrade gracefully.
 - Respect `NO_COLOR` and non-TTY stdout.

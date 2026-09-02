@@ -6,16 +6,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/paths.sh"
 # shellcheck disable=SC1091
-source "${ROOT_DIR}/scripts/lib/env-file.sh"
+source "${ROOT_DIR}/scripts/lib/flixbox-env.sh"
 
-if [[ -f "${ROOT_DIR}/.env" ]]; then
-  eval "$(flixbox_env_file_exports "${ROOT_DIR}/.env")"
-fi
-
-DATA_DIR="${DATA_DIR:-$(flixbox_default_data_dir)}"
-CONFIG_DIR="${CONFIG_DIR:-$(flixbox_default_config_dir)}"
-PUID="${PUID:-1000}"
-PGID="${PGID:-1000}"
+flixbox_load_env
 
 echo "DATA_DIR=${DATA_DIR}"
 echo "CONFIG_DIR=${CONFIG_DIR}"
