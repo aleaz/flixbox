@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Enforce Flixbox architecture contracts in CI and locally.
-# See docs/10-ci-plan.md for check IDs (C-01 … C-65).
+# See docs/10-ci-plan.md for check IDs (C-01 … C-66).
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -325,6 +325,18 @@ grep -q '15-credential-rotation' docs/user/06-configuration.md || \
 grep -q 'ES scope' docs/adr/0011-documentation-i18n.md || \
   fail C-65 'ADR 0011 missing ES scope section'
 pass C-65
+
+# --- C-66: .env.example access-profile placeholders (in-place sync, no append) ---
+for _c66_key in \
+  FLIXBOX_ARR_AUTH_METHOD \
+  FLIXBOX_ARR_AUTH_REQUIRED \
+  FLIXBOX_ADMIN_BIND_IP \
+  FLIXBOX_ARR_UI_USER \
+  FLIXBOX_ARR_UI_PASSWORD; do
+  grep -qE "^${_c66_key}=" .env.example || \
+    fail C-66 ".env.example missing active assignment: ${_c66_key}="
+done
+pass C-66
 
 # --- Compose render (shared script — R4) ---
 "${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1
