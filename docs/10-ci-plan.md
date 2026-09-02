@@ -1,6 +1,6 @@
 # Continuous integration plan (GitHub Actions)
 
-**Status:** Working Draft — validated against repository state on 2026-08-27  
+**Status:** Working Draft — last validated 2026-09-02  
 **Related:** [05-standards.md](05-standards.md) · [06-development-guide.md](06-development-guide.md) (phase 7) · [08-roadmap.md](08-roadmap.md) · [ADR 0003](adr/0003-compose-modularity.md) · [ADR 0006](adr/0006-mvp-service-inventory.md)
 
 ## 1. Purpose
@@ -26,11 +26,14 @@ The following was checked against the tree at commit `30a51fc` and local tooling
 
 | Path | Role |
 | --- | --- |
-| `compose.yaml` | Root `include:` project (19 lines) |
-| `compose/*.yml` | 9 modules; all ≤150 lines (max: `servarr.yml` 86, `optimization.yml` 85) |
+| `compose.yaml` | Root `include:` project |
+| `compose/*.yml` | 9 modules; all ≤150 lines |
 | `.env.example` | Env template for `docker compose config` |
-| `bin/flixbox` | CLI (241 lines) |
-| `scripts/*.sh` | Host helpers (4 scripts, 141 lines total) |
+| `bin/flixbox` | CLI (~430 lines) |
+| `scripts/*.sh` | Host helpers + CI scripts + configure orchestrator |
+| `scripts/configure/*.sh` | Per-service configure modules |
+| `scripts/lib/*.sh` | Shared configure helpers, state machine, env tools |
+| `scripts/lib/*.py` | `json-payload.py` (payload builder) + `json-query.py` (named queries) |
 | `templates/` | Copied by `init`; no runtime secrets |
 
 ### 2.2 Compose services (expected)
@@ -348,11 +351,12 @@ Optional: install [gitleaks](https://github.com/gitleaks/gitleaks) locally for p
 
 ## 11. Success criteria
 
-CI implementation is complete for phase 1 when:
+CI implementation is complete for phases 1 + 2:
 
-1. `.github/workflows/ci.yml` exists and passes on `main`.
-2. `scripts/ci-validate.sh` enforces checks C-01 through C-42.
-3. [06-development-guide.md](06-development-guide.md) phase 7 item “CI stubs: gitleaks (required)” is marked done.
-4. [08-roadmap.md](08-roadmap.md) reflects phase 1 CI as complete and phase 2 as next.
+1. `.github/workflows/ci.yml` exists and passes on `main` (jobs: `secrets`, `validate`, `security`).
+2. `scripts/ci-validate.sh` enforces checks C-01 through C-71.
+3. Init smoke (`ci-smoke-init.sh`) runs in the `validate` job (C-50–C-52 + env-file unit + access profile).
+4. Configure smoke (`ci-smoke-configure.sh`) available for opt-in E2E runs (`CI_CONFIGURE_SMOKE=1`).
+5. [06-development-guide.md](06-development-guide.md) phase 7 CI items marked done.
 
-Phase 2 adds Trivy + init smoke (C-50..C-52) and Dependabot.
+Phase 3 adds docs link check (C-60) and release tag workflow.

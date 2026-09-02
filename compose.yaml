@@ -3,7 +3,7 @@
 # FLIXBOX_MODE=direct|vpn selects the downloader module.
 # Optional profiles: plex, proxy, socket-proxy, recyclarr
 #
-#   cp .env.example .env && ./scripts/bootstrap-dirs.sh
+#   cp .env.example .env && ./bin/flixbox init
 #   docker compose up -d
 
 name: flixbox

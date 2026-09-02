@@ -19,6 +19,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
+    stop_grace_period: 10s
     networks:
       - flixbox_net
 

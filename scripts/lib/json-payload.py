@@ -14,6 +14,7 @@ import json
 import os
 import sys
 import urllib.parse
+from typing import Callable
 
 
 def _require(*keys: str) -> dict[str, str]:
@@ -275,7 +276,7 @@ def jellyfin_url_quote() -> str:
     return urllib.parse.quote(env["VALUE"])
 
 
-TEMPLATES: dict[str, callable] = {
+TEMPLATES: dict[str, Callable] = {
     "jellyfin-startup-user": jellyfin_startup_user,
     "jellyfin-auth": jellyfin_auth,
     "jellyfin-library-options": jellyfin_library_options,

@@ -151,7 +151,12 @@ See [ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md).
 
 ## 8. CLI (MVP)
 
-`bin/flixbox` (Bash): `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`.
+`bin/flixbox` (Bash): `init`, `up`, `down`, `reload`, `restart`, `configure`, `status`, `logs`, `vpn-test`.
+
+- **`init`** — create `.env`, dirs, templates; generate API keys and passwords.
+- **`up [profiles…]`** — start stack; sync access profile.
+- **`reload [profiles…]`** — force-recreate all containers to pick up `.env` / Compose changes.
+- **`configure [--dry-run] [--sync-qbit-auth]`** — idempotent API wiring (ADR 0005, ADR 0016).
 
 ## 9. Security baseline
 
@@ -159,7 +164,7 @@ See [ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md).
 - Non-root app containers via PUID/PGID where applicable; Seerr runs as UID 1000 with `init: true`.
 - Optional docker-socket-proxy for Homepage.
 - Caddy for TLS; SSO/Authelia is post-MVP.
-- Future CI: gitleaks + trivy — see `docs/10-ci-plan.md`.
+- CI: gitleaks (secret scan) + ShellCheck + contract validation + Trivy (CVE) — see `docs/10-ci-plan.md`.
 
 ## 10. Resilience baseline
 

@@ -122,6 +122,7 @@ configure_ensure_http_parallel() {
     name="$1"
     url="$2"
     shift 2
+    # Subshell: use return codes only — ok()/fail() counter increments would be lost.
     ( wait_for_service "$name" "$url" ) &
     pids+=($!)
   done

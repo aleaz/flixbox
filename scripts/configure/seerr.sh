@@ -102,6 +102,8 @@ print(items[0].get('apiKey','') if items else '')" 2>/dev/null || true)
         flixbox_json seerr-radarr-service)
     else
       local lang_profiles
+      # Sonarr v4 removed /api/v3/languageprofile (merged into quality profiles).
+      # The endpoint returns 404 on v4 (handled by || true); defaulting to 1 is correct for v4.
       lang_profiles=$(api_get "${arr_base}/api/v3/languageprofile" "$arr_auth") || true
       lang_profile_id=$(json_extract "$lang_profiles" "print(data[0]['id'] if data else 1)" || echo 1)
       payload=$(HOST="$host" PORT="$port" API_KEY="$api_key" PROFILE_ID="$profile_id" \

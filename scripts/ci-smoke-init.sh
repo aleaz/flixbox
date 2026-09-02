@@ -83,7 +83,7 @@ _root_params=$(ROOT_PATH='/data/media/tv' python3 -c 'import json,os; print(json
 echo "$roots" | JSON_QUERY_PARAMS="$_root_params" python3 "${jq}" arr-root-folder-exists >/dev/null || \
   fail "json-query arr-root-folder-exists path match"
 _bazarr_params=$(SONARR_API_KEY="$special_key" RADARR_API_KEY='radarr-key' \
-  python3 -c 'import json,os; print(json.dumps({"sonarr_key":os.environ["SONARR_API_KEY"],"radarr_key":os.environ["RADARR_API_KEY"]}))')
+  python3 -c 'import json,os; print(json.dumps({"sonarr_key":os.environ["SONARR_API_KEY"],"radarr_key":os.environ["RADARR_API_KEY"],"sonarr_port":"8989","radarr_port":"7878"}))')
 settings='{"general":{"use_sonarr":true,"use_radarr":true},"sonarr":{"ip":"sonarr","port":8989,"base_url":"","ssl":false,"apikey":"old"},"radarr":{"ip":"radarr","port":7878,"base_url":"","ssl":false,"apikey":"radarr-key"}}'
 diff=$(echo "$settings" | JSON_QUERY_PARAMS="$_bazarr_params" python3 "${jq}" bazarr-conn-diff)
 echo "$diff" | grep -q 'sonarr.apikey' || fail "json-query bazarr-conn-diff special-char key"
