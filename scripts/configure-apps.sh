@@ -49,6 +49,10 @@ flixbox_load_configure_env
 configure_runtime_init
 QBIT_COOKIE=$(configure_tmpfile)
 
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/configure-entry.sh"
+configure_entry_prepare
+
 for _configure_module in preflight arr-common qbittorrent prowlarr bazarr jellyfin seerr hygiene; do
   # shellcheck disable=SC1090
   source "${CONFIGURE_DIR}/${_configure_module}.sh"

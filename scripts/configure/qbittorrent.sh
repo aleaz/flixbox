@@ -2,16 +2,16 @@
 configure_qbittorrent() {
   log "Configuring qBittorrent..."
 
-  if ! wait_for_qbittorrent; then
-    return
-  fi
-
   if $DRY_RUN; then
     dry "Auth via in-container :8080 (env password or temp); set stable WebUI password if needed"
     dry "Apply WebUI host-header fix for remapped QBITTORRENT_PORT"
     dry "Create categories tv/movies under /data/torrents/{tv,movies}"
     dry "Prefs: auto TMM, UPnP off, encryption, limits; tun0 bind if VPN"
     $SYNC_QBIT_AUTH && dry "Force-push .env password to qBit + *arr download clients + Decluttarr"
+    return
+  fi
+
+  if ! configure_ensure_qbittorrent_ready; then
     return
   fi
 
@@ -147,4 +147,8 @@ if not p.get('limit_lan_peers', False): sys.exit(1)
 
   rm -f "$QBIT_COOKIE"
   docker exec "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}" rm -f "${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}" 2>/dev/null || true
+
+  # API key may appear in qBittorrent.conf only after WebUI auth/password setup.
+  QBIT_API_KEY=$(qbit_api_key_from_config "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}")
+  [[ -n "$QBIT_API_KEY" ]] && info "qBittorrent API key: ${QBIT_API_KEY:0:8}..."
 }

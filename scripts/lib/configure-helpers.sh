@@ -8,6 +8,8 @@ FLIXBOX_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${FLIXBOX_LIB}/env-file.sh"
 # shellcheck disable=SC1091
 source "${FLIXBOX_LIB}/configure-runtime.sh"
+# shellcheck disable=SC1091
+source "${FLIXBOX_LIB}/configure-state.sh"
 FLIXBOX_JSON_PAYLOAD="${FLIXBOX_LIB}/json-payload.py"
 
 flixbox_json() {
@@ -35,7 +37,8 @@ ${expr}
 log()  { echo "[configure] $*"; }
 ok()   { echo "  ✓ $*"; CONFIGURED=$((CONFIGURED + 1)); }
 skip() { echo "  - $* (already configured)"; SKIPPED=$((SKIPPED + 1)); }
-fail() { echo "  ✗ $*"; FAILED=$((FAILED + 1)); }
+fail() { echo "  ✗ $*"; FAILED=$((FAILED + 1)); return 1; }
+warn() { echo "  ! $*"; }
 info() { echo "  $*"; }
 dry()  { echo "  [dry-run] Would: $*"; }
 
@@ -91,6 +94,10 @@ wait_for_service() {
     fi
     sleep 1
   done
+  if [[ "${CONFIGURE_SOFT_WAIT:-0}" == 1 ]]; then
+    info "${name} not responding yet (${timeout}s window, last HTTP: ${code:-none}) — will retry"
+    return 1
+  fi
   fail "${name} not responding after ${timeout}s at ${url} (last HTTP: ${code:-none})"
   return 1
 }
@@ -115,6 +122,10 @@ wait_for_arr_api() {
     fi
     sleep 2
   done
+  if [[ "${CONFIGURE_SOFT_WAIT:-0}" == 1 ]]; then
+    info "${name} API not ready yet (${timeout}s window, last HTTP: ${code:-none}) — will retry"
+    return 1
+  fi
   fail "${name} API not ready after ${timeout}s (last HTTP: ${code:-none})"
   return 1
 }
@@ -136,6 +147,10 @@ wait_for_bazarr_api() {
     fi
     sleep 2
   done
+  if [[ "${CONFIGURE_SOFT_WAIT:-0}" == 1 ]]; then
+    info "Bazarr API not ready yet (${timeout}s window, last HTTP: ${code:-none}) — will retry"
+    return 1
+  fi
   fail "Bazarr API not ready after ${timeout}s (last HTTP: ${code:-none})"
   return 1
 }
@@ -149,7 +164,9 @@ env_set_key() {
     dry "Set ${key} in .env"
     return 0
   fi
-  flixbox_env_file_set "$env_file" "$key" "$value"
+  if ! flixbox_env_file_set "$env_file" "$key" "$value"; then
+    configure_env_write_fatal "$key"
+  fi
   ENV_DIRTY=true
 }
 
@@ -160,13 +177,13 @@ resolve_arr_api_key() {
   config_key=$(api_key_from_config_xml "$container")
   if [[ -z "$config_key" ]]; then
     echo "$env_value"
-    return
+    return 0
   fi
   if [[ -n "$env_value" && "$env_value" != "$config_key" ]]; then
     info "${app_label}: ${env_name} in .env out of sync with container — updating .env"
-    env_set_key "$env_name" "$config_key"
+    env_set_key "$env_name" "$config_key" || return 1
   elif [[ -z "$env_value" ]]; then
-    env_set_key "$env_name" "$config_key"
+    env_set_key "$env_name" "$config_key" || return 1
   fi
   echo "$config_key"
 }
@@ -290,6 +307,10 @@ wait_for_qbittorrent() {
     fi
     sleep 1
   done
+  if [[ "${CONFIGURE_SOFT_WAIT:-0}" == 1 ]]; then
+    info "qBittorrent not responding yet (${timeout}s window, last HTTP: ${code:-none}) — will retry"
+    return 1
+  fi
   fail "qBittorrent not responding after ${timeout}s (last HTTP: ${code:-none})"
   return 1
 }
@@ -338,7 +359,9 @@ env_set_if_empty() {
     dry "Write ${key} to .env (was empty)"
     return 0
   fi
-  flixbox_env_file_set_if_empty "$env_file" "$key" "$value"
+  if ! flixbox_env_file_set_if_empty "$env_file" "$key" "$value"; then
+    configure_env_write_fatal "$key"
+  fi
   after="$(flixbox_env_file_get "$env_file" "$key")"
   if [[ -n "$after" ]]; then
     ENV_DIRTY=true

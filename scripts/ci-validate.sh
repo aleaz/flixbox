@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Enforce Flixbox architecture contracts in CI and locally.
-# See docs/10-ci-plan.md for check IDs (C-01 … C-66).
+# See docs/10-ci-plan.md for check IDs (C-01 … C-69).
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -294,10 +294,12 @@ pass C-62
 # --- C-63: access profile recreate + UI credential sync (R3) ---
 grep -q 'flixbox_access_profile_admin_services' scripts/lib/access-profile.sh || \
   fail C-63 'access-profile.sh missing admin service list'
-grep -q 'recreate_admin_bound_services' bin/flixbox || \
-  fail C-63 'bin/flixbox missing recreate_admin_bound_services'
+grep -q 'configure_entry_recreate_admin_services' scripts/lib/configure-entry.sh || \
+  fail C-63 'configure-entry must recreate admin-bound services on drift'
+grep -q 'configure_entry_prepare' scripts/lib/configure-entry.sh || \
+  fail C-63 'configure-entry must expose configure_entry_prepare'
 grep -q 'ensure_shared_ui_credentials' bin/flixbox || \
-  fail C-63 'bin/flixbox missing ensure_shared_ui_credentials'
+  fail C-63 'bin/flixbox must ensure shared UI credentials on init'
 grep -q 'Admin surface matrix' docs/adr/0015-access-profiles.md || \
   fail C-63 'ADR 0015 missing admin surface matrix'
 pass C-63
@@ -337,6 +339,65 @@ for _c66_key in \
     fail C-66 ".env.example missing active assignment: ${_c66_key}="
 done
 pass C-66
+
+# --- C-67: configure waits before API key discovery (first-start race) ---
+grep -q 'configure_wait_for_first_start' scripts/configure/preflight.sh || \
+  fail C-67 'preflight must wait for first-start before discover'
+_preflight_discover_line="$(grep -n '^configure_discover_api_keys()' scripts/configure/preflight.sh | head -1 | cut -d: -f1)"
+_preflight_wait_line="$(grep -n '^configure_wait_for_first_start()' scripts/configure/preflight.sh | head -1 | cut -d: -f1)"
+[[ -n "$_preflight_discover_line" && -n "$_preflight_wait_line" ]] || \
+  fail C-67 'preflight missing discover/wait functions'
+[[ "$_preflight_wait_line" -lt "$_preflight_discover_line" ]] || \
+  fail C-67 'configure must wait for first-start before discover'
+grep -A5 '^configure_preflight_pass()' scripts/configure/preflight.sh | grep -q 'configure_wait_for_first_start' || \
+  fail C-67 'preflight pass must call wait before discover'
+grep -q 'CONFIGURE_PREFLIGHT_TIMEOUT' scripts/configure/preflight.sh || \
+  fail C-67 'preflight must support CONFIGURE_PREFLIGHT_TIMEOUT retry budget'
+grep -q 'CONFIGURE_SOFT_WAIT' scripts/lib/configure-state.sh || \
+  fail C-67 'configure-state must support CONFIGURE_SOFT_WAIT for retries'
+pass C-67
+
+# --- C-68: configure readiness state machine (structural contract) ---
+[[ -f scripts/lib/configure-state.sh ]] || fail C-68 'missing scripts/lib/configure-state.sh'
+[[ -f scripts/lib/configure-entry.sh ]] || fail C-68 'missing scripts/lib/configure-entry.sh'
+grep -q 'flixbox-jellyfin' scripts/lib/configure-state.sh || \
+  fail C-68 'core stack assert must include Jellyfin'
+grep -q 'configure_assert_vpn_ready' scripts/lib/configure-state.sh || \
+  fail C-68 'configure-state must assert VPN readiness with soft retry'
+grep -q 'configure_env_write_fatal' scripts/lib/configure-state.sh || \
+  fail C-68 'configure-state must fast-fail .env write errors'
+grep -q 'configure_entry_prepare' scripts/configure-apps.sh || \
+  fail C-68 'configure-apps must call configure_entry_prepare (access profile on direct invoke)'
+grep -q 'configure_mark_preflight_passed' scripts/configure/preflight.sh || \
+  fail C-68 'preflight must mark PREFLIGHT_PASSED before wiring'
+grep -q 'configure_ensure_qbittorrent_ready' scripts/configure/qbittorrent.sh || \
+  fail C-68 'qBit module must use configure_ensure_* (skip duplicate waits)'
+grep -q 'configure_ensure_arr_api' scripts/configure/arr-common.sh || \
+  fail C-68 'arr module must use configure_ensure_arr_api'
+_qbit_dry_line="$(grep -n 'if \$DRY_RUN; then' scripts/configure/qbittorrent.sh | head -1 | cut -d: -f1)"
+_qbit_wait_line="$(grep -n 'configure_ensure_qbittorrent_ready' scripts/configure/qbittorrent.sh | head -1 | cut -d: -f1)"
+[[ -n "$_qbit_dry_line" && -n "$_qbit_wait_line" && "$_qbit_dry_line" -lt "$_qbit_wait_line" ]] || \
+  fail C-68 'qBit module must short-circuit dry-run before waits'
+grep -q 'flixbox-byparr' scripts/configure/prowlarr.sh || \
+  fail C-68 'Prowlarr must skip Byparr proxy when Byparr is down'
+grep -q 'configure_assert_tools' scripts/lib/configure-state.sh || \
+  fail C-68 'configure-state must assert docker/python3 tools'
+pass C-68
+
+# --- C-69: configure pre-release hardening (dry-run, parallel waits, fail contract) ---
+grep -q '\${DRY_RUN:-false}' scripts/lib/configure-entry.sh || \
+  fail C-69 'configure-entry must respect --dry-run (no .env/recreate side effects)'
+grep -q 'configure_ensure_http_parallel' scripts/configure/preflight.sh || \
+  fail C-69 'preflight must parallelize HTTP warm-up waits'
+grep -q 'configure_ensure_stack_apis_parallel' scripts/configure/preflight.sh || \
+  fail C-69 'preflight must parallelize authenticated API waits'
+grep -q 'return 1' scripts/lib/configure-helpers.sh || \
+  fail C-69 'configure fail() must return non-zero'
+grep -q 'wait_for_bazarr_api' scripts/configure/bazarr.sh || \
+  fail C-69 'Bazarr must re-wait for API after restart'
+[[ -f docs/adr/0016-configure-state-machine.md ]] || \
+  fail C-69 'missing ADR 0016 configure state machine'
+pass C-69
 
 # --- Compose render (shared script — R4) ---
 "${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1

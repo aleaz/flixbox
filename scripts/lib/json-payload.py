@@ -215,14 +215,20 @@ def qbit_webui_password() -> str:
 def qbit_download_client() -> str:
     env = _require(
         "HOST",
-        "USER",
-        "PASS",
-        "API_KEY",
         "CAT_FIELD",
         "CATEGORY",
         "PRIO_RECENT",
         "PRIO_OLDER",
     )
+    user = os.environ.get("USER", "")
+    password = os.environ.get("PASS", "")
+    api_key = os.environ.get("API_KEY", "")
+    if not password and not api_key:
+        print(
+            "json-payload: qbit-download-client needs PASS or API_KEY",
+            file=sys.stderr,
+        )
+        sys.exit(2)
     payload: dict[str, object] = {
         "enable": True,
         "protocol": "torrent",
@@ -233,9 +239,9 @@ def qbit_download_client() -> str:
         "fields": [
             {"name": "host", "value": env["HOST"]},
             {"name": "port", "value": 8080},
-            {"name": "username", "value": env["USER"]},
-            {"name": "password", "value": env["PASS"]},
-            {"name": "apiKey", "value": env["API_KEY"]},
+            {"name": "username", "value": user},
+            {"name": "password", "value": password},
+            {"name": "apiKey", "value": api_key},
             {"name": env["CAT_FIELD"], "value": env["CATEGORY"]},
             {"name": env["PRIO_RECENT"], "value": 0},
             {"name": env["PRIO_OLDER"], "value": 0},

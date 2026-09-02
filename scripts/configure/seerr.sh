@@ -3,22 +3,22 @@ configure_seerr() {
   log "Configuring Seerr..."
 
   if ! flixbox_container_running flixbox-seerr; then
-    fail "Seerr: container not running"
+    info "Seerr: container not running — skipping (optional service)"
     return
   fi
-
-  local base="http://127.0.0.1:${SEERR_PORT}"
-  if ! wait_for_service "Seerr" "${base}/api/v1/status"; then
-    return
-  fi
-
-  local admin_user="${FLIXBOX_ADMIN_USER:-admin}"
-  local admin_pass="${FLIXBOX_ADMIN_PASSWORD:-}"
 
   if $DRY_RUN; then
     dry "Seerr Jellyfin auth + Radarr/Sonarr services + initialize"
     return
   fi
+
+  local base="http://127.0.0.1:${SEERR_PORT}"
+  if ! configure_ensure_http "Seerr" "${base}/api/v1/status"; then
+    return
+  fi
+
+  local admin_user="${FLIXBOX_ADMIN_USER:-admin}"
+  local admin_pass="${FLIXBOX_ADMIN_PASSWORD:-}"
 
   if [[ -z "$admin_pass" ]]; then
     info "Seerr: skip (need FLIXBOX_ADMIN_PASSWORD for Jellyfin login)"

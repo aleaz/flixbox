@@ -30,6 +30,7 @@ Each ADR uses:
 | [0013](0013-vpn-resilience-no-direct-fallback.md) | VPN resilience (no Direct fallback) | Proposed |
 | [0014](0014-stable-qbit-download-hostname.md) | Stable `qbittorrent` download host | Accepted |
 | [0015](0015-access-profiles.md) | Access profiles (`trusted` / `shared`) | Accepted |
+| [0016](0016-configure-state-machine.md) | Configure readiness state machine | Accepted |
 
 ## Rules
 

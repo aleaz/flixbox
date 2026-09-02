@@ -10,12 +10,12 @@ configure_bazarr() {
   local base="http://127.0.0.1:${BAZARR_PORT}"
   local auth="X-API-KEY: ${BAZARR_API_KEY}"
 
-  if ! wait_for_bazarr_api "$BAZARR_PORT" "$BAZARR_API_KEY"; then
+  if $DRY_RUN; then
+    dry "Connect Bazarr to Sonarr/Radarr; enable ffsubsync; ES/EN language defaults"
     return
   fi
 
-  if $DRY_RUN; then
-    dry "Connect Bazarr to Sonarr/Radarr; enable ffsubsync; ES/EN language defaults"
+  if ! configure_ensure_bazarr_api "$BAZARR_PORT" "$BAZARR_API_KEY"; then
     return
   fi
 
@@ -102,5 +102,8 @@ print(' '.join(diff) if diff else 'MATCH')")
   if $needs_restart; then
     info "Restarting Bazarr to apply settings..."
     docker restart flixbox-bazarr >/dev/null 2>&1 || true
+    if ! wait_for_bazarr_api "$BAZARR_PORT" "$BAZARR_API_KEY"; then
+      warn "Bazarr: API not ready after restart — re-run ./bin/flixbox configure if wiring fails"
+    fi
   fi
 }

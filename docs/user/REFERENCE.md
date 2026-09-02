@@ -11,7 +11,7 @@ Cheat sheet for operators. Defaults assume a local install with `./bin/flixbox i
 | `./bin/flixbox init [--non-interactive]` | Create `.env`, dirs, templates; generate API keys/passwords. **Linux:** set writable `DATA_DIR`/`CONFIG_DIR` in `.env` before `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
 | `./bin/flixbox up [profiles...]` | Start stack (`plex`, `proxy`, `socket-proxy`, `recyclarr`) |
 | `./bin/flixbox reload [profiles...]` | Recreate containers after `.env` / compose changes |
-| `./bin/flixbox configure [--dry-run] [--sync-qbit-auth]` | Idempotent wiring; heals drifted API keys. `--sync-qbit-auth` forces qBit WebUI password from `.env` into qBit + *arr + Decluttarr |
+| `./bin/flixbox configure [--dry-run] [--sync-qbit-auth]` | Idempotent wiring; heals drifted API keys. `--dry-run` previews only (no `.env`/API changes). `--sync-qbit-auth` forces qBit WebUI password from `.env` into qBit + *arr + Decluttarr |
 | `./bin/flixbox status` | Container status + mode + download-client URL |
 | `./bin/flixbox logs [service]` | Tail logs |
 | `./bin/flixbox vpn-test` | VPN egress check (VPN mode only) |
@@ -102,7 +102,7 @@ init → up → configure → Prowlarr indexers → optional Maintainerr / Recyc
 Preview configure without changes:
 
 ```bash
-./bin/flixbox configure --dry-run
+./bin/flixbox configure --dry-run   # no .env writes, no API calls; stack must be up
 ```
 
 ## Credentials quick map

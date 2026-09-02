@@ -76,7 +76,14 @@ configure_arr_service() {
   local base="http://127.0.0.1:${port}"
   local auth="X-Api-Key: ${api_key}"
 
-  if ! wait_for_arr_api "$name" "$port" "$api_key" "v3"; then
+  if $DRY_RUN; then
+    dry "Add root folder ${root_path}"
+    dry "Add qBittorrent download client (${qbit_host}:8080, category ${category})"
+    dry "Enable NFO metadata + Reject ISO custom format"
+    return
+  fi
+
+  if ! configure_ensure_arr_api "$name" "$port" "$api_key" "v3"; then
     return
   fi
 
@@ -89,13 +96,6 @@ configure_arr_service() {
     cat_field="movieCategory"
     priority_recent="recentMoviePriority"
     priority_older="olderMoviePriority"
-  fi
-
-  if $DRY_RUN; then
-    dry "Add root folder ${root_path}"
-    dry "Add qBittorrent download client (${qbit_host}:8080, category ${category})"
-    dry "Enable NFO metadata + Reject ISO custom format"
-    return
   fi
 
   local roots

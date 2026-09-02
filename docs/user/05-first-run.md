@@ -25,11 +25,15 @@ Cheat sheet: [Quick reference](REFERENCE.md).
 ./bin/flixbox configure --sync-qbit-auth   # after changing qBit password — see [Credentials](06-configuration.md#accidental--intentional-key-changes)
 ```
 
-Preview without changes:
+On first run right after `up`, the script **waits and retries** (default **15 minutes** total, heartbeats every 10s) before wiring. HTTP and API checks run **in parallel** per pass (typically 1–3 min after `up`, not 15). You should see `Waiting for first-start initialization…` before `Discovering API keys…`. Override: `CONFIGURE_PREFLIGHT_TIMEOUT=1200 ./bin/flixbox configure`.
+
+Preview without API or `.env` changes:
 
 ```bash
 ./bin/flixbox configure --dry-run
 ```
+
+`--dry-run` prints what would run; it does **not** write `.env`, recreate containers, or call service APIs. It still requires core containers to be up (same as a live run).
 
 **What the script configures (idempotent — safe to re-run):**
 
@@ -37,7 +41,7 @@ Preview without changes:
 | --- | --- |
 | qBittorrent | Categories `tv` / `movies`, prefs (TMM, UPnP off, encryption); VPN → bind `tun0`; WebUI password from `.env` |
 | Sonarr / Radarr | Root folders, qBittorrent client, NFO metadata, Reject ISO custom format |
-| Prowlarr | Byparr proxy (`http://byparr:8191`, tag `cf`), Radarr + Sonarr app sync |
+| Prowlarr | Byparr proxy when `flixbox-byparr` is running (`http://byparr:8191`, tag `cf`), Radarr + Sonarr app sync |
 | Bazarr | Sonarr + Radarr connections, ffsubsync |
 | Jellyfin | Startup (if needed), libraries `/data/media/movies` + `/data/media/tv`, API key |
 | Seerr | Jellyfin login + Radarr/Sonarr services + initialize |

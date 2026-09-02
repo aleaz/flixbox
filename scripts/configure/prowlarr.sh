@@ -7,10 +7,16 @@ configure_prowlarr() {
     return
   fi
 
+  if $DRY_RUN; then
+    dry "Add Byparr indexer proxy (http://byparr:8191) when Byparr is running"
+    dry "Add Sonarr and Radarr application sync"
+    return
+  fi
+
   local base="http://127.0.0.1:${PROWLARR_PORT}"
   local auth="X-Api-Key: ${PROWLARR_API_KEY}"
 
-  if ! wait_for_arr_api "Prowlarr" "$PROWLARR_PORT" "$PROWLARR_API_KEY" "v1"; then
+  if ! configure_ensure_arr_api "Prowlarr" "$PROWLARR_PORT" "$PROWLARR_API_KEY" "v1"; then
     return
   fi
 
@@ -21,15 +27,12 @@ configure_prowlarr() {
     return
   fi
 
-  if $DRY_RUN; then
-    dry "Add Byparr indexer proxy (http://byparr:8191)"
-    dry "Add Sonarr and Radarr application sync"
-    return
-  fi
-
   local proxies
   proxies=$(api_get "${base}/api/v1/indexerProxy" "$auth") || true
   if json_extract "$proxies" "sys.exit(0 if any('byparr' in p.get('name','').lower() or 'flaresolverr' in p.get('name','').lower() for p in data) else 1)"; then
+    skip "Prowlarr: Byparr/FlareSolverr proxy"
+  elif ! flixbox_container_running flixbox-byparr; then
+    info "Prowlarr: Byparr not running — skipping CF proxy (start with profile proxy or add manually)"
     skip "Prowlarr: Byparr/FlareSolverr proxy"
   else
     local proxy_payload

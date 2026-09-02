@@ -35,7 +35,9 @@
 | Maintainerr deleted too much | Rules too aggressive | Tighten thresholds; use Keep list; review Leaving Soon first |
 | Decluttarr removes wanted torrent | No protect tag | Add `flixbox-keep`; raise strikes |
 | Permission denied on media | UID/GID mismatch | Align `PUID`/`PGID`; SGID on data dirs |
-| `./bin/flixbox configure` fails on first run (API not ready) | *arr/Jellyfin still initializing SQLite | Wait 1–3 min after `up`, re-run `configure`. Script waits up to 180s per service — [First-run §0](05-first-run.md#0-script-assisted-wiring-recommended) |
+| `./bin/flixbox configure --dry-run` fails with containers not running | Same core-stack assert as live configure | Start stack: `./bin/flixbox up` — dry-run previews wiring but does not skip the running-stack requirement |
+| `./bin/flixbox configure --dry-run` expected zero side effects | Entry/preflight/modules must respect `$DRY_RUN` | No `.env` writes, no recreate, no API mutations — only `[dry-run]` lines (ADR 0016) |
+| `./bin/flixbox configure` fails on first run (API not ready) | *arr/Jellyfin still initializing SQLite | Waits up to **15 min** (`CONFIGURE_PREFLIGHT_TIMEOUT=900`); parallel checks per pass — typical 1–3 min — [First-run §0](05-first-run.md#0-script-assisted-wiring-recommended) |
 | `configure` / *arr auth errors after wiping `${CONFIG_DIR}` | `.env` API keys stale vs new container `config.xml` | Re-run `./bin/flixbox configure` (syncs keys from container). Or `./bin/flixbox init --non-interactive` if keys were empty |
 | `Invalid FLIXBOX_ACCESS_PROFILE=…` on `up` / `configure` | Typo in `.env` | Set `trusted` or `shared`; run `./bin/flixbox init --non-interactive` |
 | Warn: Access profile out of sync (then auto-sync + recreate admin services) | Changed `FLIXBOX_ACCESS_PROFILE` or empty derived bind/auth keys | `up`/`reload`/`configure` sync derived keys and force-recreate admin-bound services — [§13](13-access-profiles.md) |

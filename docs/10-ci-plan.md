@@ -126,7 +126,7 @@ flowchart TB
 | Checkout | `actions/checkout@v4` |
 | Compose render | `./scripts/ci-compose-render.sh` (direct, VPN, profiles, shared access profile) |
 | ShellCheck | `shellcheck bin/flixbox scripts/*.sh scripts/configure/*.sh …` |
-| Contract script | `./scripts/ci-validate.sh` (includes compose render + C-01…C-66) |
+| Contract script | `./scripts/ci-validate.sh` (includes compose render + C-01…C-69) |
 | Init smoke | `./scripts/ci-smoke-init.sh` |
 
 **Env for CI:** Use `.env.example` as-is with `DATA_DIR` / `CONFIG_DIR` overridden inside `ci-validate.sh` to `/tmp/flixbox-ci/{data,config}` so runners never touch `/srv/flixbox`.
@@ -209,10 +209,13 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-43 | No `:latest` image tags | grep `compose/*.yml` for `:latest` (ADR 0010) |
 | C-61 | Configure JSON payload contract | `json-payload.py` + `configure-runtime.sh`; no shell-interpolated secrets in `configure-apps.sh`; qBit login via stdin script (not `docker exec` argv) |
 | C-62 | Configure module layout | `scripts/configure/*.sh` sourced from `configure-apps.sh`; unified `scripts/lib/flixbox-env.sh` |
-| C-63 | Access profile recreate + UI sync | `recreate_admin_bound_services` on derived-key drift; `FLIXBOX_ARR_UI_*` sync in `shared`; ADR 0015 admin matrix |
+| C-63 | Access profile recreate + UI sync | `configure-entry` recreate on drift; `FLIXBOX_ARR_UI_*` on init/`shared`; ADR 0015 |
 | C-64 | CI workflow alignment | `ci-compose-render.sh` shared render; `security` job + `ci-trivy.sh`; Dependabot for Actions |
 | C-65 | Operator docs + Maintainerr pack | `rule-pack.md` copied by init; `15-credential-rotation.md`; ADR 0011 ES scope |
 | C-66 | `.env.example` access-profile keys | Active `FLIXBOX_ARR_AUTH_*`, `FLIXBOX_ADMIN_BIND_IP`, `FLIXBOX_ARR_UI_*` assignments (in-place sync) |
+| C-67 | Configure first-start wait order | `configure_wait_for_first_start` before API key discovery in preflight |
+| C-68 | Configure readiness state machine | `configure-state.sh` + `configure-entry.sh`; Jellyfin in core assert; soft VPN retry; wiring skips duplicate waits after preflight |
+| C-69 | Configure pre-release hardening | `--dry-run` entry guard; parallel preflight waits; `fail()` returns 1; Bazarr post-restart wait; ADR 0016 |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 

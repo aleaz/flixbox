@@ -7,18 +7,18 @@ configure_jellyfin() {
     return
   fi
 
+  if $DRY_RUN; then
+    dry "Complete Jellyfin startup if needed; add movie/TV libraries; create API key"
+    return
+  fi
+
   local base="http://127.0.0.1:${JELLYFIN_PORT}"
-  if ! wait_for_service "Jellyfin" "${base}/System/Info/Public"; then
+  if ! configure_ensure_http "Jellyfin" "${base}/System/Info/Public"; then
     return
   fi
 
   local admin_user="${FLIXBOX_ADMIN_USER:-admin}"
   local admin_pass="${FLIXBOX_ADMIN_PASSWORD:-}"
-
-  if $DRY_RUN; then
-    dry "Complete Jellyfin startup if needed; add movie/TV libraries; create API key"
-    return
-  fi
 
   local needs_startup=false
   if jellyfin_startup_wizard_pending "$base"; then
