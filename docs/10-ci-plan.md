@@ -126,7 +126,7 @@ flowchart TB
 | Checkout | `actions/checkout@v4` |
 | Compose render | `./scripts/ci-compose-render.sh` (direct, VPN, profiles, shared access profile) |
 | ShellCheck | `shellcheck bin/flixbox scripts/*.sh scripts/configure/*.sh …` |
-| Contract script | `./scripts/ci-validate.sh` (includes compose render + C-01…C-64) |
+| Contract script | `./scripts/ci-validate.sh` (includes compose render + C-01…C-65) |
 | Init smoke | `./scripts/ci-smoke-init.sh` |
 
 **Env for CI:** Use `.env.example` as-is with `DATA_DIR` / `CONFIG_DIR` overridden inside `ci-validate.sh` to `/tmp/flixbox-ci/{data,config}` so runners never touch `/srv/flixbox`.
@@ -211,13 +211,14 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-62 | Configure module layout | `scripts/configure/*.sh` sourced from `configure-apps.sh`; unified `scripts/lib/flixbox-env.sh` |
 | C-63 | Access profile recreate + UI sync | `recreate_admin_bound_services` on derived-key drift; `FLIXBOX_ARR_UI_*` sync in `shared`; ADR 0015 admin matrix |
 | C-64 | CI workflow alignment | `ci-compose-render.sh` shared render; `security` job + `ci-trivy.sh`; Dependabot for Actions |
+| C-65 | Operator docs + Maintainerr pack | `rule-pack.md` copied by init; `15-credential-rotation.md`; ADR 0011 ES scope |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 
 | ID | Rule | Validation |
 | --- | --- | --- |
 | C-50 | `init --non-interactive` succeeds | temp `.env` with `/tmp/flixbox-ci-smoke/*` paths |
-| C-51 | Templates copied | `homepage/services.yaml`, `recyclarr/recyclarr.yml`, `torrents/incomplete`, `qbittorrent/.flixbox/qbit-api-login.sh` |
+| C-51 | Templates copied | `homepage/services.yaml`, `recyclarr/recyclarr.yml`, `torrents/incomplete`, `qbittorrent/.flixbox/qbit-api-login.sh`, `maintainerr/rule-pack.md` |
 | C-52 | Decluttarr qBit URL | `DECLUTTARR_QBIT_URL` is `http://qbittorrent:8080` after init (ADR 0014) |
 
 ### 5.7 Documentation links (phase 3 — optional)

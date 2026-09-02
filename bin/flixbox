@@ -158,6 +158,8 @@ copy_templates() {
     cp "${ROOT_DIR}/templates/caddy/Caddyfile" "${CONFIG_DIR}/caddy/Caddyfile"
   [[ -f "${CONFIG_DIR}/maintainerr/README.md" ]] || \
     cp "${ROOT_DIR}/templates/maintainerr/README.md" "${CONFIG_DIR}/maintainerr/README.md"
+  cp -f "${ROOT_DIR}/templates/maintainerr/rule-pack.md" \
+    "${CONFIG_DIR}/maintainerr/rule-pack.md"
   # linuxserver runs /custom-cont-init.d (separate mount), not /config/custom-cont-init.d
   mkdir -p "${CONFIG_DIR}/qbittorrent-cont-init" \
     "${CONFIG_DIR}/qbittorrent-custom-services" \

@@ -18,6 +18,7 @@ Compose must not interpolate secrets into `command:` / `entrypoint:` shell strin
 - Decluttarr manages Radarr/Sonarr queues and qBittorrent; qBit URL is always `http://qbittorrent:8080` ([ADR 0014](0014-stable-qbit-download-hostname.md)).
 - Maintainerr defaults to **Jellyfin** + Radarr/Sonarr. One media server at a time.
 - Default behavior and thresholds are defined in [docs/09-hygiene-defaults.md](../09-hygiene-defaults.md).
+- Operator rule pack: `templates/maintainerr/rule-pack.md` (copied to `${CONFIG_DIR}/maintainerr/` by `init`).
 - Streamystats remains optional/post-MVP.
 - **Decluttarr idle entrypoint:** `templates/decluttarr/entrypoint.sh` (copied by `flixbox init` to `${CONFIG_DIR}/decluttarr-entrypoint.sh`). If `QBITTORRENT_USERNAME` or `QBITTORRENT_PASSWORD` is empty, sleep with a clear log line — **no** qBit login. Credentials are read from container **environment at runtime** only.
 - **Docker automation network (`172.30.42.0/24`):** `flixbox_net` is pinned to that CIDR ([compose/network-base.yml](../../compose/network-base.yml), hardcoded). qBittorrent cont-init enables `WebUI\AuthSubnetWhitelist` for that CIDR. That bypasses WebUI password **only for clients on `flixbox_net`** (stack peers) and often the host path via the Docker bridge gateway — **not** for arbitrary home LAN `192.168.x.x` clients ([ADR 0015](0015-access-profiles.md)). Distinct from LAN profile `trusted` / `shared`. Do not publish qBit WebUI to the public internet. Not env-configurable (Compose subnet and whitelist must stay identical).

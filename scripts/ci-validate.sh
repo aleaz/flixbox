@@ -320,6 +320,16 @@ grep -q 'access profile shared' scripts/ci-compose-render.sh || \
   fail C-64 'ci-compose-render must test shared access profile'
 pass C-64
 
+# --- C-65: Maintainerr rule pack + credential runbook + ADR 0011 ES scope (R5) ---
+[[ -f templates/maintainerr/rule-pack.md ]] || fail C-65 'missing templates/maintainerr/rule-pack.md'
+grep -q 'rule-pack.md' bin/flixbox || fail C-65 'bin/flixbox must copy maintainerr/rule-pack.md'
+[[ -f docs/user/15-credential-rotation.md ]] || fail C-65 'missing docs/user/15-credential-rotation.md'
+grep -q '15-credential-rotation' docs/user/06-configuration.md || \
+  fail C-65 '06-configuration must link credential rotation runbook'
+grep -q 'ES scope' docs/adr/0011-documentation-i18n.md || \
+  fail C-65 'ADR 0011 missing ES scope section'
+pass C-65
+
 # --- Compose render (shared script — R4) ---
 "${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1
 pass compose-config

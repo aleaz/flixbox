@@ -98,6 +98,8 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   [[ -d "${SMOKE_DATA}/torrents/incomplete" ]] || fail "C-51 missing torrents/incomplete"
   [[ -f "${SMOKE_CONFIG}/qbittorrent/.flixbox/qbit-api-login.sh" ]] || \
     fail "C-51 missing qbittorrent/.flixbox/qbit-api-login.sh"
+  [[ -f "${SMOKE_CONFIG}/maintainerr/rule-pack.md" ]] || \
+    fail "C-51 missing maintainerr/rule-pack.md"
   pass "C-51 templates + incomplete dir"
 
   qbit_url="$(flixbox_env_file_get .env DECLUTTARR_QBIT_URL)"

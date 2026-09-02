@@ -128,7 +128,7 @@ Compose passes some credentials as **container environment variables** (for exam
 
 ### Accidental / intentional key changes
 
-Changing a password or regenerating an API key **in a WebUI alone** does not update every consumer. Use this table — especially after an accidental click on “Regenerate”.
+Changing a password or regenerating an API key **in a WebUI alone** does not update every consumer. Use this table — especially after an accidental click on “Regenerate”. For full rotation procedures, see [Credential rotation runbook](15-credential-rotation.md).
 
 | What happened | Breaks | Fix |
 | --- | --- | --- |

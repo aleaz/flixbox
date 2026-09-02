@@ -29,6 +29,8 @@ Standard pack (summary):
 
 Always review rules before the first destructive run. Prefer a Keep / exclusion list for favorites.
 
+After `./bin/flixbox init`, open **`${CONFIG_DIR}/maintainerr/rule-pack.md`** for step-by-step UI setup (Rules A/B/C). Same thresholds as [09-hygiene-defaults.md](../09-hygiene-defaults.md).
+
 ## Hardlinks and free space
 
 Deleting a library file that is still hardlinked to an active torrent **does not free disk** until the torrent copy is gone too. Plan seeding vs cleanup together.
