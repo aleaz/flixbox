@@ -1,14 +1,45 @@
 #!/usr/bin/env bash
 # Host-side qBit WebUI bootstrap (ADR 0019).
-# Session temp passwords appear in docker logs; optional file for in-container reconciler.
+# Session temp passwords appear in docker logs only (never written to disk).
 # shellcheck shell=bash
+
+flixbox_qbit_webui_repo_root() {
+  local candidate
+  if [[ -n "${ROOT_DIR:-}" && -f "${ROOT_DIR}/templates/qbittorrent/webui-security-prefs.json" ]]; then
+    printf '%s\n' "$ROOT_DIR"
+    return 0
+  fi
+  # bash-only; when sourced under zsh without ROOT_DIR, fall back to PWD
+  if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+    candidate="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+    if [[ -f "${candidate}/templates/qbittorrent/webui-security-prefs.json" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  fi
+  if [[ -f "${PWD}/templates/qbittorrent/webui-security-prefs.json" ]]; then
+    printf '%s\n' "$PWD"
+    return 0
+  fi
+  return 1
+}
+
+flixbox_qbit_webui_security_prefs_file() {
+  local root
+  root="$(flixbox_qbit_webui_repo_root)" || return 1
+  if [[ "${VPN_PORT_FORWARDING:-off}" == "on" ]]; then
+    printf '%s\n' "${root}/templates/qbittorrent/webui-security-prefs-portforward.json"
+  else
+    printf '%s\n' "${root}/templates/qbittorrent/webui-security-prefs.json"
+  fi
+}
 
 flixbox_qbit_webui_bootstrap() {
   local container="${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}"
   local user="${QBITTORRENT_USERNAME:-admin}"
   local pass="${QBITTORRENT_PASSWORD:-}"
   local config_dir="${CONFIG_DIR:-}"
-  local temp_file temp prefs_json
+  local temp prefs_json prefs_file
   local api="http://127.0.0.1:8080/api/v2"
   local cookie="/tmp/flixbox-host-bootstrap-cookie.txt"
   local login_script="/config/.flixbox/qbit-api-login.sh"
@@ -27,27 +58,20 @@ flixbox_qbit_webui_bootstrap() {
   done
 
   mkdir -p "${config_dir}/qbittorrent/.flixbox"
-  temp_file="${config_dir}/qbittorrent/.flixbox/session-temp-password"
+  # Remove legacy plaintext temp-password file from older builds.
+  rm -f "${config_dir}/qbittorrent/.flixbox/session-temp-password" 2>/dev/null || true
+
   temp="$(
     docker logs "$container" 2>&1 \
       | grep -iE 'temporary password is provided for this session:' \
       | tail -1 \
       | awk '{print $NF}' || true
   )"
-  if [[ -n "$temp" ]]; then
-    printf '%s\n' "$temp" >"$temp_file"
-    chmod 600 "$temp_file" 2>/dev/null || true
-  fi
-
-  _flixbox_bootstrap_cleanup_temp() {
-    rm -f "$temp_file" 2>/dev/null || true
-  }
 
   if [[ -z "$pass" ]]; then
     if command -v warn >/dev/null 2>&1; then
       warn "qBit WebUI bootstrap: QBITTORRENT_PASSWORD empty — skip"
     fi
-    _flixbox_bootstrap_cleanup_temp
     return 0
   fi
 
@@ -72,7 +96,6 @@ flixbox_qbit_webui_bootstrap() {
     if command -v warn >/dev/null 2>&1; then
       warn "qBit WebUI banned — ./bin/flixbox restart qbittorrent then re-run up/configure"
     fi
-    _flixbox_bootstrap_cleanup_temp
     return 1
   fi
   if [[ "$rc" -ne 0 && -n "$temp" && "$temp" != "$pass" ]]; then
@@ -96,7 +119,6 @@ flixbox_qbit_webui_bootstrap() {
       if command -v warn >/dev/null 2>&1; then
         warn "qBit WebUI banned — ./bin/flixbox restart qbittorrent then re-run up/configure"
       fi
-      _flixbox_bootstrap_cleanup_temp
       return 1
     fi
   fi
@@ -105,15 +127,17 @@ flixbox_qbit_webui_bootstrap() {
     if command -v warn >/dev/null 2>&1; then
       warn "qBit WebUI bootstrap: auth pending — configure --sync-qbit-auth"
     fi
-    _flixbox_bootstrap_cleanup_temp
     return 1
   fi
 
-  # MUST match qbit_webui_security_prefs_json() in configure-helpers.sh (CI C-85).
-  prefs_json='{"web_ui_host_header_validation_enabled":false,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"172.30.42.0/24","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300}'
-  if [[ "${VPN_PORT_FORWARDING:-off}" == "on" ]]; then
-    prefs_json='{"web_ui_host_header_validation_enabled":false,"bypass_local_auth":true,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"172.30.42.0/24","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300}'
+  prefs_file="$(flixbox_qbit_webui_security_prefs_file)"
+  if [[ ! -f "$prefs_file" ]]; then
+    if command -v warn >/dev/null 2>&1; then
+      warn "qBit WebUI bootstrap: missing prefs template ${prefs_file}"
+    fi
+    return 1
   fi
+  prefs_json="$(python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1], encoding="utf-8"))))' "$prefs_file")"
   if printf '%s' "$prefs_json" | docker exec -i "$container" sh -c \
     "curl -sf -b '$cookie' -o /dev/null --max-time 15 -X POST --data-urlencode json@- '${api}/app/setPreferences'" \
     >/dev/null 2>&1; then
@@ -126,6 +150,5 @@ flixbox_qbit_webui_bootstrap() {
     fi
   fi
   docker exec "$container" rm -f "$cookie" 2>/dev/null || true
-  _flixbox_bootstrap_cleanup_temp
   return 0
 }

@@ -10,9 +10,11 @@
 # (HostHeaderValidation, AuthSubnetWhitelist). The WebUI API is the reliable
 # path — same pattern as 99-flixbox-bind-vpn-interface.sh (ADR 0002 / 0019).
 #
-# Password bootstrap: prefer QBITTORRENT_PASSWORD. Optional host helper may write
-# /config/.flixbox/session-temp-password when the session temp password only
-# appears in docker logs. Do NOT hammer login — that bans 127.0.0.1.
+# Password bootstrap: prefer QBITTORRENT_PASSWORD; optional one-shot from qBit
+# file logs if present. Host bootstrap (docker logs) is the primary temp→.env path.
+# Do NOT hammer login — that bans 127.0.0.1.
+#
+# Security prefs JSON: /config/.flixbox/webui-security-prefs*.json (from templates).
 #
 # Auth: QBITTORRENT_USERNAME/PASSWORD via container env; login via qbit-api-login.sh (stdin).
 
@@ -26,7 +28,8 @@ PREFS="/tmp/.flixbox-webui-contract-prefs"
 QBIT_USER="${QBITTORRENT_USERNAME:-admin}"
 QBIT_PASS="${QBITTORRENT_PASSWORD:-}"
 QBIT_LOGIN_SCRIPT="/config/.flixbox/qbit-api-login.sh"
-TEMP_FILE="/config/.flixbox/session-temp-password"
+PREFS_FILE="/config/.flixbox/webui-security-prefs.json"
+PREFS_FILE_PF="/config/.flixbox/webui-security-prefs-portforward.json"
 # flixbox_net — MUST match compose/network-base.yml
 SUBNET_WHITELIST="172.30.42.0/24"
 
@@ -56,14 +59,8 @@ prefs_code() {
 }
 
 find_temp_password() {
-  local line temp
-  if [[ -f "$TEMP_FILE" ]]; then
-    temp="$(tr -d '\r\n' <"$TEMP_FILE" 2>/dev/null || true)"
-    if [[ -n "$temp" ]]; then
-      printf '%s\n' "$temp"
-      return 0
-    fi
-  fi
+  # Best-effort only — host bootstrap reads docker logs (authoritative).
+  local line
   line="$(
     {
       grep -h -i 'temporary password' /config/qBittorrent/logs/*.log 2>/dev/null || true
@@ -86,11 +83,15 @@ security_prefs_ok() {
 }
 
 apply_security_prefs() {
-  # MUST match qbit_webui_security_prefs_json() in scripts/lib/configure-helpers.sh (CI C-85).
-  local json='{"web_ui_host_header_validation_enabled":false,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"'"${SUBNET_WHITELIST}"'","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300}'
+  local src="$PREFS_FILE" json
   if [[ "${VPN_PORT_FORWARDING:-off}" == "on" ]]; then
-    json='{"web_ui_host_header_validation_enabled":false,"bypass_local_auth":true,"bypass_auth_subnet_whitelist_enabled":true,"bypass_auth_subnet_whitelist":"'"${SUBNET_WHITELIST}"'","web_ui_max_auth_fail_count":20,"web_ui_ban_duration":300}'
+    src="$PREFS_FILE_PF"
   fi
+  [[ -f "$src" ]] || {
+    log "missing WebUI prefs template ${src}"
+    return 1
+  }
+  json="$(tr -d '\n' <"$src")"
   curl -sf -b "$COOKIE" -o /dev/null --max-time 10 -X POST "${API}/app/setPreferences" \
     --data-urlencode "json=${json}"
 }
@@ -147,7 +148,7 @@ try_bootstrap_from_temp() {
   [[ "$rc" -eq 0 ]] || return 1
   if apply_env_password; then
     log "WebUI password aligned from temporary session → .env"
-    rm -f "$COOKIE" "$TEMP_FILE"
+    rm -f "$COOKIE"
     if qbit_login_with "$QBIT_USER" "$QBIT_PASS"; then
       ENV_LOGIN_OK=true
       return 0
@@ -236,7 +237,7 @@ if ! ensure_session; then
   elif [[ "$BANNED_BACKOFF" -eq 1 ]]; then
     log "WebUI ban — restart qbittorrent, then host bootstrap or configure --sync-qbit-auth"
   else
-    log "WebUI login pending — host bootstrap writes session-temp-password, or run configure --sync-qbit-auth"
+    log "WebUI login pending — host bootstrap (docker logs) or ./bin/flixbox configure --sync-qbit-auth"
   fi
 else
   ensure_contract || true

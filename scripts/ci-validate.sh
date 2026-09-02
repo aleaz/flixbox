@@ -156,8 +156,14 @@ grep -q 'flixbox_qbit_webui_bootstrap' bin/flixbox || \
   fail C-84 'bin/flixbox must call flixbox_qbit_webui_bootstrap after up/reload'
 [[ -f scripts/lib/qbit-webui-bootstrap.sh ]] || \
   fail C-84 'missing scripts/lib/qbit-webui-bootstrap.sh'
-grep -q 'session-temp-password' templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh || \
-  fail C-84 'webui-contract must read session-temp-password from host bootstrap'
+[[ -f templates/qbittorrent/webui-security-prefs.json ]] || \
+  fail C-84 'missing templates/qbittorrent/webui-security-prefs.json'
+[[ -f templates/qbittorrent/webui-security-prefs-portforward.json ]] || \
+  fail C-84 'missing templates/qbittorrent/webui-security-prefs-portforward.json'
+grep -q 'webui-security-prefs.json' templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh || \
+  fail C-84 'webui-contract must load prefs from webui-security-prefs.json'
+grep -q 'force-recreate --no-deps decluttarr' bin/flixbox || \
+  fail C-84 'up/reload must recreate Decluttarr after successful WebUI bootstrap'
 [[ -f docs/adr/0019-qbit-webui-runtime-contract.md ]] || \
   fail C-84 'missing ADR 0019 qBit WebUI runtime contract'
 pass C-84
@@ -175,24 +181,28 @@ awk '/^cmd_up\(\)/,/^}/' bin/flixbox | grep -q 'copy_templates' || \
   fail C-85 'cmd_up must call copy_templates before compose'
 awk '/^cmd_reload\(\)/,/^}/' bin/flixbox | grep -q 'copy_templates' || \
   fail C-85 'cmd_reload must call copy_templates before compose'
-# Shared contract keys present in all three apply sites
-for f in scripts/lib/configure-helpers.sh scripts/lib/qbit-webui-bootstrap.sh \
-  templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh; do
-  grep -q 'web_ui_host_header_validation_enabled' "$f" || \
-    fail C-85 "${f} missing web_ui_host_header_validation_enabled"
-  grep -q 'bypass_auth_subnet_whitelist_enabled' "$f" || \
-    fail C-85 "${f} missing bypass_auth_subnet_whitelist_enabled"
-  grep -q '172.30.42.0/24' "$f" || \
-    fail C-85 "${f} missing flixbox_net whitelist CIDR"
-  grep -q 'web_ui_max_auth_fail_count' "$f" || \
-    fail C-85 "${f} missing web_ui_max_auth_fail_count"
+# Single-source prefs templates + consumers
+for key in web_ui_host_header_validation_enabled bypass_auth_subnet_whitelist_enabled \
+  bypass_auth_subnet_whitelist web_ui_max_auth_fail_count web_ui_ban_duration; do
+  grep -q "\"${key}\"" templates/qbittorrent/webui-security-prefs.json || \
+    fail C-85 "webui-security-prefs.json missing ${key}"
+  grep -q "\"${key}\"" templates/qbittorrent/webui-security-prefs-portforward.json || \
+    fail C-85 "webui-security-prefs-portforward.json missing ${key}"
 done
-# No dummy ban-probe password on host bootstrap
+grep -q 'webui-security-prefs' scripts/lib/configure-helpers.sh || \
+  fail C-85 'configure-helpers must load webui-security-prefs templates'
+grep -q 'webui-security-prefs' scripts/lib/qbit-webui-bootstrap.sh || \
+  fail C-85 'qbit-webui-bootstrap must load webui-security-prefs templates'
+# Must not persist session temp password on disk
+if grep 'session-temp-password' scripts/lib/qbit-webui-bootstrap.sh | grep -vq 'rm -f'; then
+  fail C-85 'bootstrap must not write session-temp-password (rm-only cleanup allowed)'
+fi
+if grep -q 'session-temp-password' templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh; then
+  fail C-85 'webui-contract must not depend on session-temp-password file'
+fi
 if grep -q 'password=x' scripts/lib/qbit-webui-bootstrap.sh; then
   fail C-85 'qbit-webui-bootstrap must not use dummy password=x ban probe'
 fi
-grep -q '_flixbox_bootstrap_cleanup_temp' scripts/lib/qbit-webui-bootstrap.sh || \
-  fail C-85 'bootstrap must clean session-temp-password'
 pass C-85
 
 # --- C-24c: Servarr External auth + API key env (ADR 0005 / 0015) ---

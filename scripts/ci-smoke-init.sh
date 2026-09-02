@@ -131,6 +131,8 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
     fail "C-51 missing maintainerr/rule-pack.md"
   [[ -f "${SMOKE_CONFIG}/qbittorrent-custom-services/98-flixbox-webui-contract.sh" ]] || \
     fail "C-51 missing webui-contract custom-service"
+  [[ -f "${SMOKE_CONFIG}/qbittorrent/.flixbox/webui-security-prefs.json" ]] || \
+    fail "C-51 missing webui-security-prefs.json"
   [[ ! -e "${SMOKE_CONFIG}/qbittorrent-custom-services/99-flixbox-bind-vpn-interface.sh" ]] || \
     fail "C-51 Direct mode must not install bind-vpn custom-service"
   pass "C-51 templates + incomplete dir"

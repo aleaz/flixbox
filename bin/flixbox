@@ -174,6 +174,11 @@ copy_templates() {
   cp -f "${ROOT_DIR}/templates/qbittorrent/flixbox-qbit-api-login.sh" \
     "${CONFIG_DIR}/qbittorrent/.flixbox/qbit-api-login.sh"
   chmod 700 "${CONFIG_DIR}/qbittorrent/.flixbox/qbit-api-login.sh"
+  cp -f "${ROOT_DIR}/templates/qbittorrent/webui-security-prefs.json" \
+    "${CONFIG_DIR}/qbittorrent/.flixbox/webui-security-prefs.json"
+  cp -f "${ROOT_DIR}/templates/qbittorrent/webui-security-prefs-portforward.json" \
+    "${CONFIG_DIR}/qbittorrent/.flixbox/webui-security-prefs-portforward.json"
+  rm -f "${CONFIG_DIR}/qbittorrent/.flixbox/session-temp-password"
   # WebUI contract reconciler — Direct + VPN (ADR 0019)
   cp -f "${ROOT_DIR}/templates/qbittorrent/custom-services.d/98-flixbox-webui-contract.sh" \
     "${CONFIG_DIR}/qbittorrent-custom-services/98-flixbox-webui-contract.sh"
@@ -292,8 +297,15 @@ cmd_up() {
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
   ok "Stack started. ./bin/flixbox status"
-  if ! flixbox_qbit_webui_bootstrap; then
-    warn "qBit WebUI bootstrap did not finish — check logs, then ./bin/flixbox configure --sync-qbit-auth"
+  if flixbox_qbit_webui_bootstrap; then
+    # Decluttarr may have raced the temp-password window; recreate once auth is stable.
+    if docker inspect flixbox-decluttarr >/dev/null 2>&1; then
+      log "Recreating Decluttarr after qBit WebUI bootstrap..."
+      compose up -d --force-recreate --no-deps decluttarr || \
+        warn "Could not recreate Decluttarr — ./bin/flixbox reload or configure --sync-qbit-auth"
+    fi
+  else
+    warn "qBit WebUI bootstrap did not finish — stack is up; run ./bin/flixbox configure --sync-qbit-auth when qBit accepts .env credentials"
   fi
   log "Next: ./bin/flixbox configure  (then add Prowlarr indexers)"
   log "After Direct↔VPN or qBit recreate: ./bin/flixbox configure --sync-qbit-auth"
@@ -348,8 +360,14 @@ cmd_reload() {
   log "Tip: prefer reload over down when you only changed config."
   compose "${profiles[@]}" up -d --force-recreate
   ok "Stack reloaded. ./bin/flixbox status"
-  if ! flixbox_qbit_webui_bootstrap; then
-    warn "qBit WebUI bootstrap did not finish — check logs, then ./bin/flixbox configure --sync-qbit-auth"
+  if flixbox_qbit_webui_bootstrap; then
+    if docker inspect flixbox-decluttarr >/dev/null 2>&1; then
+      log "Recreating Decluttarr after qBit WebUI bootstrap..."
+      compose up -d --force-recreate --no-deps decluttarr || \
+        warn "Could not recreate Decluttarr — configure --sync-qbit-auth"
+    fi
+  else
+    warn "qBit WebUI bootstrap did not finish — stack reloaded; run ./bin/flixbox configure --sync-qbit-auth when qBit accepts .env credentials"
   fi
   log "If qBit auth or remapped-port WebUI broke: ./bin/flixbox configure --sync-qbit-auth"
 }

@@ -488,18 +488,27 @@ qbit_webui_bypass_local_auth_expected() {
   [[ "${VPN_PORT_FORWARDING:-off}" == "on" ]]
 }
 
-# JSON blob for qBit WebUI security prefs (configure + ADR 0019 reconciler must agree).
+# JSON blob for qBit WebUI security prefs (single source: templates/qbittorrent/webui-security-prefs*.json).
 qbit_webui_security_prefs_json() {
-  local bypass="false"
-  qbit_webui_bypass_local_auth_expected && bypass="true"
-  QBIT_BYPASS_LOCAL="$bypass" python3 -c 'import json, os; print(json.dumps({
-    "web_ui_host_header_validation_enabled": False,
-    "bypass_local_auth": os.environ["QBIT_BYPASS_LOCAL"] == "true",
-    "bypass_auth_subnet_whitelist_enabled": True,
-    "bypass_auth_subnet_whitelist": "172.30.42.0/24",
-    "web_ui_max_auth_fail_count": 20,
-    "web_ui_ban_duration": 300,
-  }))'
+  local root="${ROOT_DIR:-}"
+  local prefs_file
+  if [[ -z "$root" || ! -f "${root}/templates/qbittorrent/webui-security-prefs.json" ]]; then
+    if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+      root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+    fi
+  fi
+  if [[ -z "$root" || ! -f "${root}/templates/qbittorrent/webui-security-prefs.json" ]]; then
+    if [[ -f "${PWD}/templates/qbittorrent/webui-security-prefs.json" ]]; then
+      root="$PWD"
+    fi
+  fi
+  if qbit_webui_bypass_local_auth_expected; then
+    prefs_file="${root}/templates/qbittorrent/webui-security-prefs-portforward.json"
+  else
+    prefs_file="${root}/templates/qbittorrent/webui-security-prefs.json"
+  fi
+  [[ -f "$prefs_file" ]] || return 1
+  python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1], encoding="utf-8"))))' "$prefs_file"
 }
 
 # qBit 5.x WebUI security prefs applied by configure (ADR 0008 whitelist).

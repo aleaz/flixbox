@@ -1,0 +1,8 @@
+{
+  "web_ui_host_header_validation_enabled": false,
+  "bypass_local_auth": false,
+  "bypass_auth_subnet_whitelist_enabled": true,
+  "bypass_auth_subnet_whitelist": "172.30.42.0/24",
+  "web_ui_max_auth_fail_count": 20,
+  "web_ui_ban_duration": 300
+}
