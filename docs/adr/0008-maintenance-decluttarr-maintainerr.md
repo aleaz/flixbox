@@ -28,7 +28,7 @@ Compose must not interpolate secrets into `command:` / `entrypoint:` shell strin
 
 - Templates must implement the hygiene defaults doc, not invent ad-hoc aggressive rules.
 - Hardlink + seeding interaction must be documented (deleting library path may not free space while seeding).
-- Existing installs that created `flixbox_net` without the fixed subnet must recreate the network (`docker compose down`, remove `flixbox_net` if needed, then `up`) for the whitelist to match.
+- Existing installs that created `flixbox_net` without the fixed subnet must recreate the network (`./bin/flixbox down`, remove `flixbox_net` if needed, then `./bin/flixbox up`) for the whitelist to match.
 - Operators must run `flixbox init` (or copy the Decluttarr entrypoint) before Decluttarr can start after upgrades that add the mount.
 - Operators must still put qBit WebUI login in `.env` for Decluttarr; whitelist does not replace the idle gate (Decluttarr always attempts login when active).
 - **`flixbox configure`** SHOULD write `RADARR_API_KEY` / `SONARR_API_KEY` / `QBITTORRENT_*` into `.env` when empty (discovered or operator-supplied) and recreate Decluttarr/Unpackerr so hygiene leaves idle without a manual copy-paste step.

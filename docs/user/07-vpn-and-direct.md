@@ -25,7 +25,7 @@ Flixbox has **one** download-mode switch. Modes are **exclusive** — you cannot
 
 `flixbox init` rewrites `VPN_ENABLED` from `FLIXBOX_MODE` (and warns if they disagreed). `flixbox up`, `status`, and `vpn-test` warn on mismatch but still follow `FLIXBOX_MODE`.
 
-There is no “Direct traffic with VPN still up” design. If you previously ran VPN and switch to Direct, run `docker compose down` then `up` so a leftover `flixbox-gluetun` container is not mistaken for an active dual mode.
+There is no “Direct traffic with VPN still up” design. If you previously ran VPN and switch to Direct, run `./bin/flixbox down` then `./bin/flixbox up` so a leftover `flixbox-gluetun` container is not mistaken for an active dual mode.
 
 | `.env` | Behavior | *arr download client |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ Switching to VPN:
 2. Fill Gluetun vars under **[VPN ONLY]** (native provider or `custom` + `OPENVPN_CUSTOM_CONFIG` — see [examples below](#vpn-provider-examples) and `.env.example`).
 3. `./bin/flixbox init --non-interactive` (updates `DECLUTTARR_QBIT_URL` and syncs `VPN_ENABLED`).
 4. **Recreate the stack** so Gluetun appears (Direct → VPN is a compose include change):
-   - Preferred: `docker compose down` → `./bin/flixbox up`
+   - Preferred: `./bin/flixbox down` → `./bin/flixbox up`
    - Or: `./bin/flixbox reload` if the stack is already up (after host port preflight allows self-owned ports)
 5. Wait until Gluetun is **healthy** (`./bin/flixbox status` / `logs gluetun`).
 6. `./bin/flixbox configure` (wires apps; does **not** start Gluetun by itself).
@@ -79,7 +79,7 @@ Flixbox will **never** auto-switch `FLIXBOX_MODE` to Direct on VPN failure ([ADR
 
 After setting `FLIXBOX_MODE=vpn` and `VPN_ENABLED=true`, fill the **[VPN ONLY]** block in `.env`. Use the Gluetun provider id from the [Gluetun wiki](https://github.com/qdm12/gluetun-wiki). Never commit real keys.
 
-Then: `./bin/flixbox init --non-interactive` → `docker compose down` → `./bin/flixbox up` → `./bin/flixbox vpn-test`.
+Then: `./bin/flixbox init --non-interactive` → `./bin/flixbox down` → `./bin/flixbox up` → `./bin/flixbox vpn-test`.
 
 ### WireGuard (native provider)
 

@@ -63,12 +63,12 @@ configure_assert_vpn_ready() {
   if ! flixbox_container_running flixbox-gluetun; then
     if [[ "${CONFIGURE_SOFT_WAIT:-0}" == 1 ]]; then
       info "Gluetun container not running yet — will retry"
-      info "If you just switched to VPN: docker compose down && ./bin/flixbox up  (configure does not start Gluetun)"
+      info "If you just switched to VPN: ./bin/flixbox down && ./bin/flixbox up  (configure does not start Gluetun)"
       return 1
     fi
     echo "ERROR: FLIXBOX_MODE=vpn but flixbox-gluetun is not running." >&2
     echo "       After enabling VPN in .env: ./bin/flixbox init --non-interactive" >&2
-    echo "       then: docker compose down && ./bin/flixbox up" >&2
+    echo "       then: ./bin/flixbox down && ./bin/flixbox up" >&2
     echo "       (or ./bin/flixbox reload once the stack is already on VPN compose)." >&2
     echo "       configure only wires APIs — it does not create Gluetun." >&2
     exit 1

@@ -3,7 +3,7 @@
 | Symptom | Likely cause | What to try |
 | --- | --- | --- |
 | `Host port preflight failed` on `up` / `reload` | Host port from `.env` already bound by **another** process (not Flixbox) | Change the matching `*_PORT` in `.env` → `./bin/flixbox reload` — [First-run — port conflicts](05-first-run.md#host-port-conflicts). Ports already used by running `flixbox-*` containers are ignored (reload of the same stack is OK) |
-| `Gluetun container not running` during `configure` | Switched to VPN in `.env` but stack was never recreated | `docker compose down && ./bin/flixbox up`, wait for Gluetun healthy, then `configure` — [VPN switch](07-vpn-and-direct.md#choose-a-mode) |
+| `Gluetun container not running` during `configure` | Switched to VPN in `.env` but stack was never recreated | `./bin/flixbox down && ./bin/flixbox up`, wait for Gluetun healthy, then `configure` — [VPN switch](07-vpn-and-direct.md#choose-a-mode) |
 | `cannot create DATA_DIR at /srv/flixbox/data — cannot write under /srv` | Linux default paths; regular user cannot create `/srv` without `sudo` | Create parent dirs + `chown` to your user, or set custom paths in `.env` (e.g. `/data/flixbox/data`) — [Install — Storage paths](04-install.md#storage-paths-and-permissions); re-run `./bin/flixbox init --non-interactive` |
 | `Path validation failed` after `init`; `.env` exists | Writable paths not set before `--non-interactive` init | Edit `DATA_DIR` / `CONFIG_DIR` in `.env`, ensure parent is writable, re-run `init` (init incomplete — do not run `up` until init succeeds) |
 | `mkdir: /srv: Read-only file system` on init | Linux template paths on macOS without `init` | Run `./bin/flixbox init --force --non-interactive` or set `DATA_DIR`/`CONFIG_DIR` under `$HOME/flixbox/` |
@@ -19,7 +19,7 @@
 | Changed qBit password (or API key) in the WebUI only | `.env` / Decluttarr / *arr still have old values | Password: align `.env`, then `--sync-qbit-auth`. API key only: plain `configure` is usually enough — [Credentials](06-configuration.md#accidental--intentional-key-changes) |
 | Regenerated Radarr/Sonarr API key in that app’s UI | Prowlarr/Seerr/Decluttarr/Unpackerr may still use the old key | `./bin/flixbox configure`; then update Maintainerr + Recyclarr YAML if needed — [Credentials](06-configuration.md#accidental--intentional-key-changes) |
 | *arr banner: Connection refused to qBit, but **Test** is OK | Health check ran while qBit WebUI was still starting (or stale status) | System → Tasks → **Check Health**, or wait for the next cycle. With current Compose, *arr wait for qBit `healthy` on new boots |
-| Services cannot join `flixbox_net` after upgrade | Old bridge without `172.30.42.0/24` | `docker compose down`, `docker network rm flixbox_net` if it still exists, then `./bin/flixbox up` |
+| Services cannot join `flixbox_net` after upgrade | Old bridge without `172.30.42.0/24` | `./bin/flixbox down`, `docker network rm flixbox_net` if it still exists, then `./bin/flixbox up` |
 | Radarr cannot reach qBit (VPN) | Missing Gluetun `qbittorrent` alias (pre–ADR 0014) or Gluetun unhealthy | Host **`qbittorrent`**; `compose up -d gluetun` after upgrade |
 | qBit crash-loops at boot (VPN) | Started before Gluetun healthy | Healthcheck `depends_on`; restart qBit after Gluetun is healthy |
 | qBit WebUI dead after Gluetun recreate | qBit stranded in old netns (`network_mode: service:gluetun`) | `docker compose up -d qbittorrent` or `./bin/flixbox reload` — [VPN drops](07-vpn-and-direct.md#what-happens-when-the-vpn-drops) |

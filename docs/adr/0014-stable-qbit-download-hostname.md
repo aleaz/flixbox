@@ -17,7 +17,7 @@ ADR 0002 documented mode-specific download-client URLs: `http://gluetun:8080` (V
 3. **Direct implementation:** unchanged — the `qbittorrent` service name already resolves.
 4. **`DECLUTTARR_QBIT_URL`:** always `http://qbittorrent:8080`; remove mode-switching logic from `flixbox init`.
 5. **`gluetun` hostname** remains valid for debugging but is **not** the documented operator/*arr setting.
-6. First-run and troubleshooting docs must state: configure *arr once with host `qbittorrent`; mode switches require `compose down` / `up` only (no *arr hostname edits).
+6. First-run and troubleshooting docs must state: configure *arr once with host `qbittorrent`; mode switches require `./bin/flixbox down` / `./bin/flixbox up` only (no *arr hostname edits).
 
 ## Consequences
 
