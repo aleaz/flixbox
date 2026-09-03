@@ -168,6 +168,7 @@ copy_templates() {
     cp "${ROOT_DIR}/templates/recyclarr/recyclarr.yml" "${CONFIG_DIR}/recyclarr/recyclarr.yml"
   [[ -f "${CONFIG_DIR}/homepage/services.yaml" ]] || \
     cp "${ROOT_DIR}/templates/homepage/services.yaml" "${CONFIG_DIR}/homepage/services.yaml"
+  python3 "${ROOT_DIR}/scripts/lib/homepage-sync.py" "${CONFIG_DIR}/homepage/services.yaml" >/dev/null 2>&1 || true
   [[ -f "${CONFIG_DIR}/homepage/settings.yaml" ]] || \
     cp "${ROOT_DIR}/templates/homepage/settings.yaml" "${CONFIG_DIR}/homepage/settings.yaml"
   [[ -f "${CONFIG_DIR}/homepage/widgets.yaml" ]] || \
@@ -322,7 +323,7 @@ cmd_up() {
   flixbox_prepare_config_for_host_write || true
   copy_templates
   flixbox_apply_config_runtime_ownership || true
-  flixbox_preflight_host_ports
+  flixbox_preflight_host_ports "${profiles[@]}"
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
   ok "Stack started. ./bin/flixbox status"
@@ -389,7 +390,7 @@ cmd_reload() {
   flixbox_prepare_config_for_host_write || true
   copy_templates
   flixbox_apply_config_runtime_ownership || true
-  flixbox_preflight_host_ports
+  flixbox_preflight_host_ports "${profiles[@]}"
   log "Recreating containers (applies .env and compose changes)..."
   log "Tip: prefer reload over down when you only changed config."
   compose "${profiles[@]}" up -d --force-recreate

@@ -650,6 +650,56 @@ grep -q 'Gluetun recreate' docs/user/10-troubleshooting.md || \
   fail C-80 'troubleshooting must cover Gluetun recreate'
 pass C-80
 
+# --- C-86: Homepage port sync (ADR 0014 / services.yaml non-destructive sync) ---
+[[ -f scripts/lib/homepage-sync.py ]] || fail C-86 'missing scripts/lib/homepage-sync.py'
+[[ -x scripts/lib/homepage-sync.py ]] || fail C-86 'homepage-sync.py must be executable'
+grep -q 'homepage-sync.py' bin/flixbox || fail C-86 'bin/flixbox must invoke homepage-sync.py'
+python3 - <<'PY' || fail C-86 'homepage-sync unit test failed'
+import os, subprocess, tempfile
+from pathlib import Path
+
+sample = """---
+- Media:
+    - Jellyfin:
+        href: http://localhost:8096
+    - Seerr:
+        href: http://nas.local:5055
+- Downloads:
+    - qBittorrent:
+        href: http://localhost:8080
+        widget:
+          type: qbittorrent
+          url: http://qbittorrent:8080
+    - Custom App:
+        href: http://localhost:8080
+"""
+
+with tempfile.NamedTemporaryFile("w+", delete=False) as f:
+    f.write(sample)
+    f.flush()
+    path = f.name
+
+try:
+    env = {**os.environ, "QBITTORRENT_PORT": "9898", "JELLYFIN_PORT": "8097", "SEERR_PORT": "5056"}
+    res = subprocess.run(["python3", "scripts/lib/homepage-sync.py", path], env=env, capture_output=True, text=True)
+    if res.returncode != 0:
+        raise AssertionError(f"homepage-sync.py exited with {res.returncode}")
+
+    content = Path(path).read_text()
+    assert "href: http://localhost:9898" in content, "qBittorrent port not updated"
+    assert "href: http://localhost:8097" in content, "Jellyfin port not updated"
+    assert "href: http://nas.local:5056" in content, "Seerr custom host not preserved"
+    assert "url: http://qbittorrent:8080" in content, "qBit widget URL was incorrectly altered"
+    assert "Custom App:\n        href: http://localhost:8080" in content, "Custom app was altered"
+
+    # Test idempotency (no modifications on re-run)
+    res2 = subprocess.run(["python3", "scripts/lib/homepage-sync.py", path], env=env, capture_output=True, text=True)
+    assert res2.stdout.strip() == "", "homepage-sync.py is not idempotent"
+finally:
+    Path(path).unlink(missing_ok=True)
+PY
+pass C-86
+
 # --- Compose render (shared script — R4) ---
 "${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1
 pass compose-config

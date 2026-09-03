@@ -237,6 +237,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-80 | VPN ops docs | ADR 0013 Accepted; VPN drop + Gluetun recreate troubleshooting |
 | C-84 | qBit WebUI runtime contract | ADR 0019; custom-service in both downloader modes |
 | C-85 | WebUI contract QA remediation | host-header OK matches json-query; copy_templates on up/reload; shared prefs JSON templates; no on-disk temp password; Decluttarr refresh after bootstrap |
+| C-86 | Homepage port sync | `homepage-sync.py` non-destructive port sync; preserves widgets, custom hosts, and custom services |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 

@@ -27,14 +27,41 @@ print(" ".join(sorted(ports)))
   _flixbox_port_is_free() {
     local probe_host="$1" port="$2"
     python3 - "$probe_host" "$port" <<'PY'
-import socket, sys
+import errno, socket, sys
 bind_ip, port = sys.argv[1], int(sys.argv[2])
 host = "" if bind_ip in ("0.0.0.0", "::") else bind_ip
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 try:
     s.bind((host, port))
-except OSError:
+except OSError as e:
+    if e.errno == errno.EACCES:
+        # Privileged port (<1024) unprivileged bind restriction on host.
+        # Check /proc/net/tcp for active LISTEN sockets, fallback to connect probe.
+        hex_port = f"{port:04X}"
+        found_proc = False
+        for path in ("/proc/net/tcp", "/proc/net/tcp6"):
+            try:
+                with open(path) as f:
+                    found_proc = True
+                    for line in f:
+                        parts = line.strip().split()
+                        if len(parts) >= 4 and parts[3] == "0A":
+                            if parts[1].endswith(":" + hex_port):
+                                sys.exit(1)
+            except Exception:
+                pass
+        if found_proc:
+            sys.exit(0)
+        c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        c.settimeout(0.2)
+        try:
+            c.connect((host or "127.0.0.1", port))
+            sys.exit(1)
+        except OSError:
+            sys.exit(0)
+        finally:
+            c.close()
     sys.exit(1)
 finally:
     s.close()
@@ -77,25 +104,113 @@ PY
       fi
       local hint
       hint=$(_flixbox_port_hint "$env_var" "$port")
-      warn "Port ${port} (${service}) is already in use (bind ${probe_host})."
+      warn "Port ${port} (${service}) is already in use by another process on host (bind ${probe_host})."
       warn "  Set a free port in .env, e.g. ${env_var}=${hint}, then: ./bin/flixbox reload"
       warn "  Guide: docs/user/05-first-run.md#host-port-conflicts"
       failed=1
     fi
   }
 
-  _flixbox_check_port QBITTORRENT_PORT "${QBITTORRENT_PORT:-8080}" "qBittorrent WebUI"
-  _flixbox_check_port QBITTORRENT_BT_PORT "${QBITTORRENT_BT_PORT:-6881}" "qBittorrent BitTorrent"
-  _flixbox_check_port PROWLARR_PORT "${PROWLARR_PORT:-9696}" "Prowlarr"
-  _flixbox_check_port BYPARR_PORT "${BYPARR_PORT:-8191}" "Byparr"
-  _flixbox_check_port RADARR_PORT "${RADARR_PORT:-7878}" "Radarr"
-  _flixbox_check_port SONARR_PORT "${SONARR_PORT:-8989}" "Sonarr"
-  _flixbox_check_port BAZARR_PORT "${BAZARR_PORT:-6767}" "Bazarr"
+  local port_entries=()
+  _flixbox_add_port() {
+    local v="$1" p="$2" s="$3" h="${4:-$bind_ip}"
+    [[ -n "$p" ]] || return 0
+    port_entries+=("${v}:${p}:${s}:${h}")
+  }
+
+  _flixbox_add_port QBITTORRENT_PORT "${QBITTORRENT_PORT:-8080}" "qBittorrent WebUI" "${bind_ip}"
+  _flixbox_add_port QBITTORRENT_BT_PORT "${QBITTORRENT_BT_PORT:-6881}" "qBittorrent BitTorrent" "0.0.0.0"
+  _flixbox_add_port PROWLARR_PORT "${PROWLARR_PORT:-9696}" "Prowlarr" "${bind_ip}"
+  _flixbox_add_port BYPARR_PORT "${BYPARR_PORT:-8191}" "Byparr" "${bind_ip}"
+  _flixbox_add_port RADARR_PORT "${RADARR_PORT:-7878}" "Radarr" "${bind_ip}"
+  _flixbox_add_port SONARR_PORT "${SONARR_PORT:-8989}" "Sonarr" "${bind_ip}"
+  _flixbox_add_port BAZARR_PORT "${BAZARR_PORT:-6767}" "Bazarr" "${bind_ip}"
   # Jellyfin stays on all interfaces in shared profile (household app) — always probe 0.0.0.0.
-  _flixbox_check_port JELLYFIN_PORT "${JELLYFIN_PORT:-8096}" "Jellyfin" "0.0.0.0"
-  _flixbox_check_port SEERR_PORT "${SEERR_PORT:-5055}" "Seerr" "0.0.0.0"
-  _flixbox_check_port HOMEPAGE_PORT "${HOMEPAGE_PORT:-3000}" "Homepage" "0.0.0.0"
-  _flixbox_check_port MAINTAINERR_PORT "${MAINTAINERR_PORT:-6246}" "Maintainerr"
+  _flixbox_add_port JELLYFIN_PORT "${JELLYFIN_PORT:-8096}" "Jellyfin" "0.0.0.0"
+  _flixbox_add_port SEERR_PORT "${SEERR_PORT:-5055}" "Seerr" "0.0.0.0"
+  _flixbox_add_port HOMEPAGE_PORT "${HOMEPAGE_PORT:-3000}" "Homepage" "0.0.0.0"
+  _flixbox_add_port MAINTAINERR_PORT "${MAINTAINERR_PORT:-6246}" "Maintainerr" "${bind_ip}"
+  # Optional profiles: probe ports only when that profile is active
+  local active_profiles=" $* "
+  if [[ "$active_profiles" =~ (proxy|--profile[[:space:]]+proxy) ]]; then
+    _flixbox_add_port CADDY_HTTP_PORT "${CADDY_HTTP_PORT:-80}" "Caddy HTTP" "0.0.0.0"
+    _flixbox_add_port CADDY_HTTPS_PORT "${CADDY_HTTPS_PORT:-443}" "Caddy HTTPS" "0.0.0.0"
+  fi
+  if [[ "$active_profiles" =~ (plex|--profile[[:space:]]+plex) ]]; then
+    _flixbox_add_port PLEX_PORT "${PLEX_PORT:-32400}" "Plex" "0.0.0.0"
+  fi
+
+  # Phase 1: Validate numeric format (1..65535)
+  local entry env_var port service probe_host
+  for entry in "${port_entries[@]}"; do
+    IFS=':' read -r env_var port service probe_host <<< "$entry"
+    if ! [[ "$port" =~ ^[0-9]+$ ]] || (( port < 1 || port > 65535 )); then
+      warn "Invalid port value for ${env_var}: '${port}' (must be an integer between 1 and 65535)."
+      failed=1
+    fi
+  done
+
+  # Phase 2: Detect internal port collisions within .env configuration
+  local i j count="${#port_entries[@]}"
+  local var_i port_i svc_i host_i var_j port_j svc_j host_j
+  local conflicted_ports=()
+
+  for (( i=0; i<count; i++ )); do
+    IFS=':' read -r var_i port_i svc_i host_i <<< "${port_entries[i]}"
+    [[ "$port_i" =~ ^[0-9]+$ ]] && (( port_i >= 1 && port_i <= 65535 )) || continue
+
+    local already_reported=0 p
+    for p in "${conflicted_ports[@]}"; do
+      if [[ "$p" == "$port_i" ]]; then
+        already_reported=1
+        break
+      fi
+    done
+    [[ "$already_reported" -eq 1 ]] && continue
+
+    local duplicates=()
+    for (( j=i+1; j<count; j++ )); do
+      IFS=':' read -r var_j port_j svc_j host_j <<< "${port_entries[j]}"
+      if [[ "$port_i" == "$port_j" ]]; then
+        if [[ "$host_i" == "0.0.0.0" || "$host_j" == "0.0.0.0" || "$host_i" == "$host_j" ]]; then
+          duplicates+=("${var_j} (${svc_j})")
+        fi
+      fi
+    done
+
+    if [[ ${#duplicates[@]} -gt 0 ]]; then
+      conflicted_ports+=("$port_i")
+      failed=1
+      local hint
+      hint=$(_flixbox_port_hint "$var_i" "$port_i")
+      warn "Port collision in .env configuration:"
+      warn "  Port ${port_i} is assigned to multiple services:"
+      warn "    - ${var_i} (${svc_i})"
+      local dup
+      for dup in "${duplicates[@]}"; do
+        warn "    - ${dup}"
+      done
+      warn "  Each service must have a unique host port. Example fix: ${var_i}=${hint}"
+      warn "  Guide: docs/user/05-first-run.md#host-port-conflicts"
+    fi
+  done
+
+  # Phase 3: Probe availability of valid, non-conflicted ports against the host
+  for entry in "${port_entries[@]}"; do
+    IFS=':' read -r env_var port service probe_host <<< "$entry"
+    [[ "$port" =~ ^[0-9]+$ ]] && (( port >= 1 && port <= 65535 )) || continue
+
+    local is_conflicted=0 p
+    for p in "${conflicted_ports[@]}"; do
+      if [[ "$p" == "$port" ]]; then
+        is_conflicted=1
+        break
+      fi
+    done
+    [[ "$is_conflicted" -eq 1 ]] && continue
+
+    _flixbox_check_port "$env_var" "$port" "$service" "$probe_host"
+  done
 
   if [[ "$failed" -ne 0 ]]; then
     die "Host port preflight failed — fix .env ports before starting the stack."

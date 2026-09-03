@@ -57,7 +57,11 @@ Preview without API or `.env` changes:
 
 ### Host port conflicts
 
-`./bin/flixbox up` and `reload` run a **host port preflight** before Compose starts. If a default port is already taken **by another process** on your machine (common: `8080` used by another app), `up` fails with an actionable message instead of a Docker bind error. Ports already published by running `flixbox-*` containers are **ignored** so `reload` of the same stack works.
+`./bin/flixbox up` and `reload` run a **host port preflight** before Compose starts. It validates:
+1. **Internal collisions:** Checks that no two services in `.env` share the same host port (e.g. accidentally setting `QBITTORRENT_PORT=8989` when `SONARR_PORT=8989`).
+2. **External collisions:** Checks if a port is already taken **by another process** on your machine (common: `8080` used by another app). Ports already published by running `flixbox-*` containers are **ignored** so `reload` of the same stack works.
+
+If any conflict is detected, `up` fails with an actionable message and suggestions instead of a Docker bind error.
 
 1. Pick a free host port in `.env`, for example `QBITTORRENT_PORT=9898` (container port stays `8080`).
 2. Run `./bin/flixbox reload` (or `up` if the stack is down).

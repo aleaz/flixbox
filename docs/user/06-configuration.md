@@ -68,9 +68,8 @@ Change **only** if the default port is already bound on the host. Internal servi
 
 After changing any `*_PORT` in `.env`:
 
-1. Run `./bin/flixbox up` so Compose republishes ports.
-2. Update `${CONFIG_DIR}/homepage/services.yaml` links to match (or run `./bin/flixbox sync-templates` when available).
-3. *arr download clients still use **internal** ports (`8080` for qBit) — see [Download client URLs](#download-client-urls-arr-ui).
+1. Run `./bin/flixbox reload` (or `up`) so Compose republishes ports and Homepage links in `${CONFIG_DIR}/homepage/services.yaml` are automatically synchronized (custom widgets and services are preserved).
+2. *arr download clients still use **internal** ports (`8080` for qBit) — see [Download client URLs](#download-client-urls-arr-ui).
 
 | Variable | Default | Service |
 | --- | --- | --- |
