@@ -19,20 +19,35 @@ flixbox_chown_tree() {
   return 1
 }
 
-# After a prior PUID chown, CONFIG_DIR may not be writable by the operator/CI user.
-# Reclaim it before copy_templates; apply_runtime_ownership restores PUID afterward.
+# Reclaim a host path for the invoking user when a prior PUID chown removed write access.
+flixbox_reclaim_path_for_host_write() {
+  local path="${1:?path required}"
+  [[ -e "$path" ]] || return 0
+  if [[ -w "$path" ]]; then
+    return 0
+  fi
+  if flixbox_chown_tree "$path" "$(id -u)" "$(id -g)"; then
+    echo "Reclaimed ${path} for host writes (uid $(id -u))"
+    return 0
+  fi
+  echo "Warning: ${path} not writable and reclaim failed" >&2
+  return 1
+}
+
+# After a prior PUID chown, DATA_DIR/CONFIG_DIR may not be writable by the operator/CI user.
+# Reclaim before path validation, template copy, or configure host writes; apply_runtime_ownership restores PUID afterward.
+flixbox_prepare_paths_for_host_write() {
+  local ok=0
+  flixbox_reclaim_path_for_host_write "${DATA_DIR:?DATA_DIR required}" && ok=1
+  flixbox_reclaim_path_for_host_write "${CONFIG_DIR:?CONFIG_DIR required}" && ok=1
+  [[ "$ok" -eq 1 ]]
+}
+
+# Back-compat alias: CONFIG_DIR-only reclaim (prefer flixbox_prepare_paths_for_host_write).
 flixbox_prepare_config_for_host_write() {
   local cfg="${CONFIG_DIR:?CONFIG_DIR required}"
   mkdir -p "$cfg"
-  if [[ -w "$cfg" ]]; then
-    return 0
-  fi
-  if flixbox_chown_tree "$cfg" "$(id -u)" "$(id -g)"; then
-    echo "CONFIG_DIR reclaimed for host template writes (uid $(id -u))"
-    return 0
-  fi
-  echo "Warning: CONFIG_DIR not writable and reclaim failed — template copy may fail" >&2
-  return 1
+  flixbox_reclaim_path_for_host_write "$cfg"
 }
 
 # Container runtime ownership: linuxserver apps use PUID/PGID; Seerr is fixed 1000.

@@ -247,14 +247,16 @@ cmd_init() {
   # Decluttarr qBit URL — same host in VPN and Direct (ADR 0014: alias on Gluetun in VPN mode)
   flixbox_env_file_set "${ROOT_DIR}/.env" DECLUTTARR_QBIT_URL "http://qbittorrent:8080"
 
+  # shellcheck disable=SC1091
+  source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
+  flixbox_prepare_paths_for_host_write || true
+
   validate_flixbox_paths "${DATA_DIR}" "${CONFIG_DIR}" || \
     die "Path validation failed. Fix DATA_DIR and CONFIG_DIR in .env, then re-run init."
 
   "${ROOT_DIR}/scripts/bootstrap-dirs.sh"
   load_env
-  # shellcheck disable=SC1091
-  source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
-  flixbox_prepare_config_for_host_write || true
+  flixbox_prepare_paths_for_host_write || true
   copy_templates
   flixbox_validate_access_profile || die "Fix FLIXBOX_ACCESS_PROFILE in .env (trusted or shared)."
   flixbox_sync_access_profile_env "${ROOT_DIR}/.env"
@@ -299,7 +301,7 @@ cmd_up() {
   # shellcheck disable=SC1091
   source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
   # Refresh qBit custom-services for current FLIXBOX_MODE (ADR 0019 / 0002) before compose.
-  flixbox_prepare_config_for_host_write || true
+  flixbox_prepare_paths_for_host_write || true
   copy_templates
   flixbox_apply_runtime_ownership || true
   flixbox_preflight_host_ports
@@ -365,7 +367,7 @@ cmd_reload() {
   warn_mode_vpn_mismatch || true
   # shellcheck disable=SC1091
   source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
-  flixbox_prepare_config_for_host_write || true
+  flixbox_prepare_paths_for_host_write || true
   copy_templates
   flixbox_apply_runtime_ownership || true
   flixbox_preflight_host_ports

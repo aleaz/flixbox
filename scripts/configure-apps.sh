@@ -47,6 +47,12 @@ done
 
 flixbox_load_configure_env
 
+if ! $DRY_RUN; then
+  # shellcheck disable=SC1091
+  source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
+  flixbox_prepare_paths_for_host_write || true
+fi
+
 configure_runtime_init
 configure_context_reset
 QBIT_COOKIE=$(configure_tmpfile)
@@ -90,6 +96,12 @@ echo ""
 configure_seerr
 echo ""
 reload_hygiene_if_needed
+
+if ! $DRY_RUN; then
+  # shellcheck disable=SC1091
+  source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
+  flixbox_apply_runtime_ownership || true
+fi
 
 echo ""
 log "Done: ${CONFIGURED} configured, ${SKIPPED} skipped, ${FAILED} failed"

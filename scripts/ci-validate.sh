@@ -84,8 +84,12 @@ grep -q 'torrents/incomplete' scripts/bootstrap-dirs.sh || \
   fail C-11 'bootstrap-dirs.sh missing torrents/incomplete'
 grep -q 'flixbox_chown_tree' scripts/bootstrap-dirs.sh || \
   fail C-11 'bootstrap-dirs.sh must chown DATA_DIR via flixbox_chown_tree (alpine fallback)'
-grep -q 'flixbox_prepare_config_for_host_write' bin/flixbox || \
-  fail C-11 'bin/flixbox must reclaim CONFIG_DIR before copy_templates'
+grep -q 'flixbox_prepare_paths_for_host_write' bin/flixbox || \
+  fail C-11 'bin/flixbox must reclaim DATA_DIR/CONFIG_DIR before path validation and copy_templates'
+grep -q 'flixbox_prepare_paths_for_host_write' scripts/configure-apps.sh || \
+  fail C-11 'configure-apps.sh must reclaim paths before host writes'
+grep -q 'flixbox_apply_runtime_ownership' scripts/configure-apps.sh || \
+  fail C-11 'configure-apps.sh must restore runtime ownership after host writes'
 grep -q 'flixbox_apply_runtime_ownership' bin/flixbox || \
   fail C-11 'bin/flixbox must apply PUID ownership after copy_templates'
 grep -q 'flixbox_ensure_seerr_config_owner' scripts/lib/seerr-perms.sh || \
