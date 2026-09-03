@@ -69,6 +69,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Docker Hub login (optional — higher pull rate limit)
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
       - name: Configure PR subset (C-73)
         env:
           CI_CONFIGURE_SMOKE_PR: "1"
@@ -81,6 +85,10 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+
+      - name: Docker Hub login (optional — higher pull rate limit)
+        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
       - name: Configure on ephemeral stack (C-70)
         env:

@@ -42,17 +42,14 @@ flixbox_apply_runtime_ownership() {
   flixbox_chown_tree "${CONFIG_DIR:?CONFIG_DIR required}" "${PUID}" "${PGID}" && ok_cfg=1
   [[ "$ok_data" -eq 1 ]] || echo "Warning: could not chown DATA_DIR to ${PUID}:${PGID}" >&2
   [[ "$ok_cfg" -eq 1 ]] || echo "Warning: could not chown CONFIG_DIR to ${PUID}:${PGID}" >&2
-  flixbox_ensure_seerr_config_owner || true
+  flixbox_ensure_seerr_config_owner "${CONFIG_DIR}/seerr" || true
   [[ "$ok_data" -eq 1 && "$ok_cfg" -eq 1 ]]
 }
 
 # Seerr runs as fixed UID/GID 1000 (node) and ignores PUID/PGID.
 # Call after creating CONFIG_DIR/seerr and after any bulk chown of CONFIG_DIR.
 flixbox_ensure_seerr_config_owner() {
-  local seerr_dir="${1:-}"
-  if [[ -z "$seerr_dir" ]]; then
-    seerr_dir="${CONFIG_DIR:?CONFIG_DIR required}/seerr"
-  fi
+  local seerr_dir="${1:?seerr config dir required}"
   mkdir -p "${seerr_dir}"
   if flixbox_chown_tree "${seerr_dir}" 1000 1000; then
     return 0

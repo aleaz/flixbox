@@ -63,9 +63,26 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   ./bin/flixbox init --non-interactive
 
   log() { echo "[configure-smoke] $*"; }
+
+  # GitHub Actions anonymous pulls hit Docker Hub rate limits; retry with backoff.
+  compose_up_with_retry() {
+    local attempt max=5 delay=30
+    for attempt in $(seq 1 "$max"); do
+      if docker compose --project-directory . up -d "$@"; then
+        return 0
+      fi
+      if [[ "$attempt" -lt "$max" ]]; then
+        log "compose up failed (attempt ${attempt}/${max}, often rate limit) — retry in ${delay}s..."
+        sleep "$delay"
+        delay=$((delay * 2))
+      fi
+    done
+    return 1
+  }
+
   if [[ "$SMOKE_PR" -eq 1 ]]; then
     log "Starting PR subset (direct mode, QBITTORRENT_PORT=${SMOKE_QBIT_PORT})..."
-    docker compose --project-directory . up -d qbittorrent radarr sonarr prowlarr bazarr jellyfin
+    compose_up_with_retry qbittorrent radarr sonarr prowlarr bazarr jellyfin
     core=(
       flixbox-qbittorrent flixbox-radarr flixbox-sonarr flixbox-prowlarr flixbox-bazarr flixbox-jellyfin
     )
@@ -73,8 +90,7 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
     wait_timeout=180
   else
     log "Starting core stack (direct mode, QBITTORRENT_PORT=${SMOKE_QBIT_PORT}, Seerr + Byparr)..."
-    docker compose --project-directory . up -d \
-      qbittorrent radarr sonarr prowlarr bazarr jellyfin seerr byparr
+    compose_up_with_retry qbittorrent radarr sonarr prowlarr bazarr jellyfin seerr byparr
     core=(
       flixbox-qbittorrent flixbox-radarr flixbox-sonarr flixbox-prowlarr
       flixbox-bazarr flixbox-jellyfin flixbox-seerr flixbox-byparr
