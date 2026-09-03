@@ -79,19 +79,41 @@ for f in compose/downloaders-direct.yml compose/downloaders-vpn.yml compose/serv
 done
 pass C-10
 
-# --- C-11: torrents/incomplete + ownership helpers ---
+# --- C-11: torrents/incomplete + ownership (DATA only while stack is down) ---
 grep -q 'torrents/incomplete' scripts/bootstrap-dirs.sh || \
   fail C-11 'bootstrap-dirs.sh missing torrents/incomplete'
 grep -q 'flixbox_chown_tree' scripts/bootstrap-dirs.sh || \
   fail C-11 'bootstrap-dirs.sh must chown DATA_DIR via flixbox_chown_tree (alpine fallback)'
 grep -q 'flixbox_prepare_paths_for_host_write' bin/flixbox || \
-  fail C-11 'bin/flixbox must reclaim DATA_DIR/CONFIG_DIR before path validation and copy_templates'
-grep -q 'flixbox_reclaim_path_for_host_write' scripts/lib/configure-helpers.sh || \
-  fail C-11 'configure must reclaim recyclarr dir only before host writes (not whole CONFIG_DIR while stack runs)'
-grep -q 'flixbox_apply_runtime_ownership' scripts/configure-apps.sh || \
-  fail C-11 'configure-apps.sh must restore runtime ownership after host writes'
+  fail C-11 'bin/flixbox init must reclaim DATA_DIR/CONFIG_DIR before path validation'
 grep -q 'flixbox_apply_runtime_ownership' bin/flixbox || \
-  fail C-11 'bin/flixbox must apply PUID ownership after copy_templates'
+  fail C-11 'bin/flixbox init must apply PUID ownership after copy_templates'
+grep -q 'flixbox_apply_config_runtime_ownership' bin/flixbox || \
+  fail C-11 'bin/flixbox up/reload must apply CONFIG PUID ownership without touching DATA_DIR'
+grep -q 'flixbox_prepare_config_for_host_write' bin/flixbox || \
+  fail C-11 'bin/flixbox up/reload must reclaim CONFIG_DIR only (not DATA_DIR)'
+grep -q 'flixbox_reclaim_path_for_host_write' scripts/lib/configure-helpers.sh || \
+  fail C-11 'configure must reclaim recyclarr/ only before host writes'
+grep -q 'flixbox_chown_tree "${CONFIG_DIR}/recyclarr"' scripts/lib/configure-helpers.sh || \
+  fail C-11 'configure must restore recyclarr/ to PUID after host writes'
+if grep -q 'flixbox_apply_runtime_ownership' scripts/configure-apps.sh; then
+  fail C-11 'configure-apps.sh must not chown DATA_DIR/CONFIG_DIR while the stack is running'
+fi
+if grep -q 'flixbox_prepare_paths_for_host_write' scripts/configure-apps.sh; then
+  fail C-11 'configure-apps.sh must not reclaim DATA_DIR while the stack is running'
+fi
+_up_start=$(grep -n '^cmd_up()' bin/flixbox | head -1 | cut -d: -f1)
+[[ -n "$_up_start" ]] || fail C-11 'cmd_up not found'
+while IFS= read -r _ln; do
+  [[ "${_ln}" -lt "${_up_start}" ]] || \
+    fail C-11 'flixbox_prepare_paths_for_host_write must only run in init (stack down), not up/reload'
+done < <(grep -n 'flixbox_prepare_paths_for_host_write' bin/flixbox | cut -d: -f1)
+if awk '/^cmd_up\(\)/,/^parse_profiles\(\)/' bin/flixbox | grep -q 'flixbox_apply_runtime_ownership'; then
+  fail C-11 'cmd_up must not chown DATA_DIR (use flixbox_apply_config_runtime_ownership)'
+fi
+if awk '/^cmd_reload\(\)/,/^cmd_configure\(\)/' bin/flixbox | grep -q 'flixbox_apply_runtime_ownership'; then
+  fail C-11 'cmd_reload must not chown DATA_DIR (use flixbox_apply_config_runtime_ownership)'
+fi
 grep -q 'flixbox_ensure_seerr_config_owner' scripts/lib/seerr-perms.sh || \
   fail C-11 'seerr-perms.sh must ensure Seerr config is UID 1000'
 [[ -f scripts/lib/seerr-perms.sh ]] || fail C-11 'missing scripts/lib/seerr-perms.sh'

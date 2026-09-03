@@ -175,7 +175,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | ID | Rule | Validation |
 | --- | --- | --- |
 | C-10 | Radarr/Sonarr/Bazarr/qBit mount `${DATA_DIR}:/data` | grep volumes in servarr + downloaders |
-| C-11 | `torrents/incomplete` in bootstrap | `scripts/bootstrap-dirs.sh` |
+| C-11 | `torrents/incomplete` + ownership: DATA chown only when stack is down (`init`); `up`/`reload`/`configure` never reclaim `DATA_DIR` | `scripts/bootstrap-dirs.sh`, `seerr-perms.sh`, `bin/flixbox`, `configure-helpers.sh` |
 | C-12 | Unpackerr uses `/data/torrents` | `optimization.yml` |
 
 ### 5.3 VPN dual-mode (ADR 0002)

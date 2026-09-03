@@ -436,7 +436,7 @@ patch_recyclarr_keys() {
     needs_write=true
   fi
   if $needs_write && ! $DRY_RUN; then
-    # Reclaim only recyclarr/ — not all of CONFIG_DIR (running containers need PUID ownership).
+    # Reclaim only recyclarr/ — not DATA_DIR or the rest of CONFIG_DIR while the stack is up.
     # shellcheck disable=SC1091
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/seerr-perms.sh"
     flixbox_reclaim_path_for_host_write "${CONFIG_DIR}/recyclarr" || true
@@ -465,6 +465,11 @@ patch_recyclarr_keys() {
     info "Recyclarr: placeholders remain (keys not available yet)"
   else
     skip "Recyclarr: API keys"
+  fi
+  if $needs_write && ! $DRY_RUN && [[ -n "${PUID:-}" && -n "${PGID:-}" ]]; then
+    # shellcheck disable=SC1091
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/seerr-perms.sh"
+    flixbox_chown_tree "${CONFIG_DIR}/recyclarr" "$PUID" "$PGID" || true
   fi
 }
 

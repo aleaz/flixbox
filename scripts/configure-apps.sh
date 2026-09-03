@@ -91,12 +91,6 @@ configure_seerr
 echo ""
 reload_hygiene_if_needed
 
-if ! $DRY_RUN; then
-  # shellcheck disable=SC1091
-  source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
-  flixbox_apply_runtime_ownership || true
-fi
-
 echo ""
 log "Done: ${CONFIGURED} configured, ${SKIPPED} skipped, ${FAILED} failed"
 echo ""

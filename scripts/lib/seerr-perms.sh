@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 # Directory ownership helpers (host chown, with alpine fallback for CI / no-sudo).
+#
+# Contract:
+#   Host writes (init templates, path validation) → operator uid
+#   Container runtime → PUID/PGID; Seerr is fixed 1000
+#   Never reclaim or chown DATA_DIR while Compose services may be running
+#     (breaks *arr root folders / qBit category paths). init only.
 
 # Recursively chown a host path to uid:gid. Prefers native chown; falls back to
 # a short-lived alpine container when the runner lacks CAP_CHOWN (GitHub Actions).
@@ -34,23 +40,22 @@ flixbox_reclaim_path_for_host_write() {
   return 1
 }
 
-# After a prior PUID chown, DATA_DIR/CONFIG_DIR may not be writable by the operator/CI user.
-# Reclaim before path validation, template copy, or configure host writes; apply_runtime_ownership restores PUID afterward.
+# init only (stack down): reclaim DATA_DIR + CONFIG_DIR before validation / bootstrap / templates.
 flixbox_prepare_paths_for_host_write() {
-  local ok=0
-  flixbox_reclaim_path_for_host_write "${DATA_DIR:?DATA_DIR required}" && ok=1
-  flixbox_reclaim_path_for_host_write "${CONFIG_DIR:?CONFIG_DIR required}" && ok=1
-  [[ "$ok" -eq 1 ]]
+  local rc=0
+  flixbox_reclaim_path_for_host_write "${DATA_DIR:?DATA_DIR required}" || rc=1
+  flixbox_reclaim_path_for_host_write "${CONFIG_DIR:?CONFIG_DIR required}" || rc=1
+  return "$rc"
 }
 
-# Back-compat alias: CONFIG_DIR-only reclaim (prefer flixbox_prepare_paths_for_host_write).
+# up/reload/configure: CONFIG_DIR only — never DATA_DIR while containers may be up.
 flixbox_prepare_config_for_host_write() {
   local cfg="${CONFIG_DIR:?CONFIG_DIR required}"
   mkdir -p "$cfg"
   flixbox_reclaim_path_for_host_write "$cfg"
 }
 
-# Container runtime ownership: linuxserver apps use PUID/PGID; Seerr is fixed 1000.
+# init only: DATA + CONFIG to PUID, then Seerr 1000.
 flixbox_apply_runtime_ownership() {
   local ok_data=0 ok_cfg=0
   flixbox_chown_tree "${DATA_DIR:?DATA_DIR required}" "${PUID:?PUID required}" "${PGID:?PGID required}" && ok_data=1
@@ -59,6 +64,15 @@ flixbox_apply_runtime_ownership() {
   [[ "$ok_cfg" -eq 1 ]] || echo "Warning: could not chown CONFIG_DIR to ${PUID}:${PGID}" >&2
   flixbox_ensure_seerr_config_owner "${CONFIG_DIR}/seerr" || true
   [[ "$ok_data" -eq 1 && "$ok_cfg" -eq 1 ]]
+}
+
+# After template copy on up/reload: CONFIG to PUID + Seerr 1000. Does not touch DATA_DIR.
+flixbox_apply_config_runtime_ownership() {
+  local ok_cfg=0
+  flixbox_chown_tree "${CONFIG_DIR:?CONFIG_DIR required}" "${PUID:?PUID required}" "${PGID:?PGID required}" && ok_cfg=1
+  [[ "$ok_cfg" -eq 1 ]] || echo "Warning: could not chown CONFIG_DIR to ${PUID}:${PGID}" >&2
+  flixbox_ensure_seerr_config_owner "${CONFIG_DIR}/seerr" || true
+  [[ "$ok_cfg" -eq 1 ]]
 }
 
 # Seerr runs as fixed UID/GID 1000 (node) and ignores PUID/PGID.

@@ -64,18 +64,23 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
 
   log() { echo "[configure-smoke] $*"; }
 
-  # GitHub Actions anonymous pulls hit Docker Hub rate limits; retry with backoff.
+  # GitHub Actions anonymous pulls hit Docker Hub rate limits; retry those only.
   compose_up_with_retry() {
-    local attempt max=5 delay=30
+    local attempt max=5 delay=30 out rc
     for attempt in $(seq 1 "$max"); do
-      if docker compose --project-directory . up -d "$@"; then
-        return 0
-      fi
-      if [[ "$attempt" -lt "$max" ]]; then
-        log "compose up failed (attempt ${attempt}/${max}, often rate limit) — retry in ${delay}s..."
+      set +e
+      out="$(docker compose --project-directory . up -d "$@" 2>&1)"
+      rc=$?
+      set -e
+      printf '%s\n' "$out"
+      [[ "$rc" -eq 0 ]] && return 0
+      if [[ "$attempt" -lt "$max" ]] && grep -qiE 'toomanyrequests|too many requests|rate.?limit|429' <<<"$out"; then
+        log "compose up hit registry rate limit (attempt ${attempt}/${max}) — retry in ${delay}s..."
         sleep "$delay"
         delay=$((delay * 2))
+        continue
       fi
+      return "$rc"
     done
     return 1
   }

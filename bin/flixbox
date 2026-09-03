@@ -301,9 +301,10 @@ cmd_up() {
   # shellcheck disable=SC1091
   source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
   # Refresh qBit custom-services for current FLIXBOX_MODE (ADR 0019 / 0002) before compose.
-  flixbox_prepare_paths_for_host_write || true
+  # CONFIG only — never reclaim DATA_DIR while the stack may already be running.
+  flixbox_prepare_config_for_host_write || true
   copy_templates
-  flixbox_apply_runtime_ownership || true
+  flixbox_apply_config_runtime_ownership || true
   flixbox_preflight_host_ports
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
   compose "${profiles[@]}" up -d
@@ -367,9 +368,9 @@ cmd_reload() {
   warn_mode_vpn_mismatch || true
   # shellcheck disable=SC1091
   source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
-  flixbox_prepare_paths_for_host_write || true
+  flixbox_prepare_config_for_host_write || true
   copy_templates
-  flixbox_apply_runtime_ownership || true
+  flixbox_apply_config_runtime_ownership || true
   flixbox_preflight_host_ports
   log "Recreating containers (applies .env and compose changes)..."
   log "Tip: prefer reload over down when you only changed config."
