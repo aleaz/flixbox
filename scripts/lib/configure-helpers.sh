@@ -427,6 +427,21 @@ PY
 patch_recyclarr_keys() {
   local file="${CONFIG_DIR}/recyclarr/recyclarr.yml"
   [[ -f "$file" ]] || return 0
+
+  local needs_write=false
+  if [[ -n "${RADARR_API_KEY:-}" ]] && grep -q 'REPLACE_RADARR_API_KEY' "$file" 2>/dev/null; then
+    needs_write=true
+  fi
+  if [[ -n "${SONARR_API_KEY:-}" ]] && grep -q 'REPLACE_SONARR_API_KEY' "$file" 2>/dev/null; then
+    needs_write=true
+  fi
+  if $needs_write && ! $DRY_RUN; then
+    # Reclaim only recyclarr/ — not all of CONFIG_DIR (running containers need PUID ownership).
+    # shellcheck disable=SC1091
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/seerr-perms.sh"
+    flixbox_reclaim_path_for_host_write "${CONFIG_DIR}/recyclarr" || true
+  fi
+
   local changed=false
   if [[ -n "${RADARR_API_KEY:-}" ]] && grep -q 'REPLACE_RADARR_API_KEY' "$file" 2>/dev/null; then
     if $DRY_RUN; then

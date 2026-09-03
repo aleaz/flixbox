@@ -86,8 +86,8 @@ grep -q 'flixbox_chown_tree' scripts/bootstrap-dirs.sh || \
   fail C-11 'bootstrap-dirs.sh must chown DATA_DIR via flixbox_chown_tree (alpine fallback)'
 grep -q 'flixbox_prepare_paths_for_host_write' bin/flixbox || \
   fail C-11 'bin/flixbox must reclaim DATA_DIR/CONFIG_DIR before path validation and copy_templates'
-grep -q 'flixbox_prepare_paths_for_host_write' scripts/configure-apps.sh || \
-  fail C-11 'configure-apps.sh must reclaim paths before host writes'
+grep -q 'flixbox_reclaim_path_for_host_write' scripts/lib/configure-helpers.sh || \
+  fail C-11 'configure must reclaim recyclarr dir only before host writes (not whole CONFIG_DIR while stack runs)'
 grep -q 'flixbox_apply_runtime_ownership' scripts/configure-apps.sh || \
   fail C-11 'configure-apps.sh must restore runtime ownership after host writes'
 grep -q 'flixbox_apply_runtime_ownership' bin/flixbox || \

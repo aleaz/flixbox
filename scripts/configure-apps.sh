@@ -47,12 +47,6 @@ done
 
 flixbox_load_configure_env
 
-if ! $DRY_RUN; then
-  # shellcheck disable=SC1091
-  source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
-  flixbox_prepare_paths_for_host_write || true
-fi
-
 configure_runtime_init
 configure_context_reset
 QBIT_COOKIE=$(configure_tmpfile)

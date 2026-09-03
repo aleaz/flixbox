@@ -26,7 +26,15 @@ configure_qbittorrent() {
       if [[ "$http_code" == "200" ]]; then
         ok "qBittorrent: WebUI password set from .env"
         docker exec "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}" rm -f "${QBIT_DOCKER_COOKIE:-/tmp/flixbox-configure-cookie.txt}" 2>/dev/null || true
-        if ! qbit_auth "$QBIT_URL" "$QBIT_USERNAME" "$QBIT_PASSWORD" "$QBIT_COOKIE"; then
+        local attempt reauthed=false
+        for attempt in 1 2 3; do
+          if qbit_auth "$QBIT_URL" "$QBIT_USERNAME" "$QBIT_PASSWORD" "$QBIT_COOKIE"; then
+            reauthed=true
+            break
+          fi
+          [[ "$attempt" -lt 3 ]] && sleep 2
+        done
+        if ! $reauthed; then
           fail "qBittorrent: re-auth after password change failed"
           return
         fi
