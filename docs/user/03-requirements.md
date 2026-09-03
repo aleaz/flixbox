@@ -4,7 +4,7 @@
 
 | Requirement | Notes |
 | --- | --- |
-| Docker Engine 24+ | Or **OrbStack** / Docker Desktop on macOS |
+| Docker Engine 24+ | Non-root daemon access required (`docker` group on Linux); or **OrbStack** / Docker Desktop on macOS |
 | Compose plugin ≥ 2.20 | `docker compose version` |
 | Git | To clone the repo |
 | Bash 4+ | For `bin/flixbox` on Linux / WSL2 / macOS |
@@ -13,10 +13,11 @@
 
 | Platform | Support |
 | --- | --- |
-| Linux x86_64 / ARM64 | **First-class** |
+| Linux x86_64 / ARM64 | **First-class** (user in `docker` group) |
 | Windows + WSL2 (ext4 data path) | Best-effort |
 | macOS OrbStack / Docker Desktop | Best-effort dev; Linux for release smoke |
 
+On Linux, ensure your regular user can access the Docker daemon without `sudo` (`sudo usermod -aG docker "$USER"`).
 Store `${DATA_DIR}` on a filesystem that supports hardlinks (**not exFAT**). On WSL2, keep data on the Linux filesystem — not `/mnt/c/...`.
 
 ## Hardware (practical)

@@ -2,6 +2,8 @@
 
 | Symptom | Likely cause | What to try |
 | --- | --- | --- |
+| `Cannot connect to the Docker daemon` / `Docker daemon check failed` | Docker daemon stopped, user not in `docker` group, or invalid `DOCKER_HOST` | Start Docker (`sudo systemctl start docker`) and add user to group (`sudo usermod -aG docker $USER && newgrp docker`). See [Docker daemon access](#docker-daemon-access) |
+| `Unable to set ownership ... Both native chown and Docker alpine helper failed` | Host user lacks `CAP_CHOWN` and Docker daemon cannot be reached | Run manual chown: `sudo chown -R ${PUID}:${PGID} "${DATA_DIR}" "${CONFIG_DIR}"`. If using Podman, see [Storage paths and permissions](#storage-paths-and-permissions) |
 | `Host port preflight failed` on `up` / `reload` | Host port from `.env` already bound by **another** process (not Flixbox) | Change the matching `*_PORT` in `.env` → `./bin/flixbox reload` — [First-run — port conflicts](05-first-run.md#host-port-conflicts). Ports already used by running `flixbox-*` containers are ignored (reload of the same stack is OK) |
 | `Gluetun container not running` during `configure` | Switched to VPN in `.env` but stack was never recreated | `./bin/flixbox down && ./bin/flixbox up`, wait for Gluetun healthy, then `configure` — [VPN switch](07-vpn-and-direct.md#choose-a-mode) |
 | Gluetun: `TUN device is not available` / `open /dev/net/tun: no such device` | Host kernel modules mismatch (common after Manjaro upgrade without reboot), or TUN missing in LXC/VM | `uname -r` must match `/lib/modules/$(uname -r)`; reboot after `linux*` upgrade; `sudo modprobe tun`; then `./bin/flixbox down && ./bin/flixbox up`. LXC: enable TUN/nest on the CT. Upstream: [Gluetun TUN wiki](https://github.com/qdm12/gluetun-wiki/blob/main/errors/tun.md) |
@@ -52,6 +54,50 @@
 | `shared` profile: cannot open Radarr from phone on Wi‑Fi | Admin ports bind to `127.0.0.1` | Expected — use host browser or SSH tunnel; Jellyfin/Seerr stay on LAN — [§13](13-access-profiles.md) |
 | `trusted` profile but *arr asks for login from LAN (IPv6) | Servarr RFC1918 bypass does not cover all IPv6 LAN clients | Use `shared`, or access *arr from IPv4 / localhost |
 | Scripts fail with `\r` errors | CRLF line endings on Windows clone | Ensure LF via `.gitattributes` |
+
+## Docker daemon access
+
+Flixbox requires access to the Docker daemon socket (`/var/run/docker.sock` or `DOCKER_HOST`) without `sudo`.
+
+1. **Verify daemon status:**
+   ```bash
+   sudo systemctl status docker
+   sudo systemctl enable --now docker
+   ```
+2. **Grant non-root access:**
+   ```bash
+   sudo usermod -aG docker "$USER"
+   newgrp docker # or log out and log back in
+   ```
+3. **Verify access:**
+   ```bash
+   docker info
+   ```
+   If `docker info` succeeds without `sudo`, `./bin/flixbox` commands will proceed normally.
+
+## Storage paths and permissions
+
+When Flixbox initializes or copies configuration templates, it sets runtime ownership to `PUID:PGID` (with Seerr configuration set to UID `1000`). If host permissions prevent host-side writes, Flixbox uses a short-lived `alpine` container helper to reclaim and restore ownership.
+
+If both native `chown` and the Alpine helper fail (e.g. Docker daemon is down or rootless permissions differ):
+
+1. **Fix ownership manually with `sudo`:**
+   ```bash
+   # Replace with your actual paths from .env
+   sudo chown -R 1000:1000 /srv/flixbox/data /srv/flixbox/config
+   sudo chown -R 1000:1000 /srv/flixbox/config/seerr
+   ```
+2. **Podman rootless environments:**
+   In rootless Podman without a system Docker daemon, use `podman unshare` to modify ownership within the user namespace:
+   ```bash
+   podman unshare chown -R 1000:1000 /srv/flixbox/data
+   podman unshare chown -R 1000:1000 /srv/flixbox/config
+   ```
+3. **Shared group permissions alternative:**
+   If you prefer not to change ownership repeatedly, set the SGID bit and group write permissions:
+   ```bash
+   sudo chmod -R 2775 /srv/flixbox/data /srv/flixbox/config
+   ```
 
 ## Still stuck?
 

@@ -27,6 +27,12 @@ configure_assert_tools() {
     echo "ERROR: docker not found." >&2
     exit 1
   fi
+  if ! docker info &>/dev/null; then
+    echo "ERROR: Docker daemon is not accessible via current user ($(id -un))." >&2
+    echo "  Ensure Docker service is running and your user belongs to the 'docker' group." >&2
+    echo "  Troubleshooting: docs/user/10-troubleshooting.md#docker-daemon-access" >&2
+    exit 1
+  fi
   if ! command -v python3 &>/dev/null; then
     echo "ERROR: python3 required for JSON parsing." >&2
     exit 1

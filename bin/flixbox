@@ -36,7 +36,23 @@ die() { printf '%b%s%b\n' "${C_ERR}" "$*" "${C_RST}" >&2; exit 1; }
 
 load_env() { flixbox_load_env; }
 
+assert_docker_accessible() {
+  if ! command -v docker >/dev/null 2>&1; then
+    die "Docker is not installed or not in PATH. See docs/user/03-requirements.md"
+  fi
+  if ! docker info >/dev/null 2>&1; then
+    warn "Cannot connect to the Docker daemon at ${DOCKER_HOST:-unix:///var/run/docker.sock}."
+    warn "Possible causes:"
+    warn "  1. Docker service is not running ('sudo systemctl start docker')"
+    warn "  2. Current user ($(id -un)) lacks permission ('sudo usermod -aG docker \$USER' then relogin)"
+    warn "  3. Rootless Docker or Podman socket is not exported in DOCKER_HOST"
+    warn "Troubleshooting: docs/user/10-troubleshooting.md#docker-daemon-access"
+    die "Docker daemon check failed."
+  fi
+}
+
 compose() {
+  assert_docker_accessible
   docker compose --project-directory "${ROOT_DIR}" "$@"
 }
 
@@ -285,6 +301,7 @@ ensure_access_profile() {
 }
 
 cmd_up() {
+  assert_docker_accessible
   load_env
   ensure_access_profile
   local profiles=()
@@ -359,6 +376,7 @@ cmd_restart() {
 }
 
 cmd_reload() {
+  assert_docker_accessible
   load_env
   ensure_access_profile
   local profiles=()
@@ -389,6 +407,7 @@ cmd_reload() {
 }
 
 cmd_configure() {
+  assert_docker_accessible
   load_env
   exec "${ROOT_DIR}/scripts/configure-apps.sh" "$@"
 }

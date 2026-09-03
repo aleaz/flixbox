@@ -26,6 +26,14 @@ Interactive alternative (pauses after creating `.env` so you can edit paths in a
 ```
 
 Prefer `./bin/flixbox init` + `up` over a bare `docker compose up`. Raw Compose skips access-profile sync, secret generation, and path validation.
+
+> [!TIP]
+> **Docker daemon access on Linux:** Ensure your user belongs to the `docker` group so `./bin/flixbox` commands can run without `sudo`:
+> ```bash
+> sudo usermod -aG docker "$USER"
+> newgrp docker # or log out and back in
+> ```
+
 ### Storage paths and permissions
 
 On Linux, `init` defaults to **`/srv/flixbox/data`** and **`/srv/flixbox/config`** (FHS). Most desktop installs need you to **create the parent tree and own it** before `init`, or pick another path in `.env`.

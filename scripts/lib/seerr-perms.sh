@@ -22,6 +22,10 @@ flixbox_chown_tree() {
       return 0
     fi
   fi
+  echo "Warning: Unable to set ownership on ${path} to ${uid}:${gid}." >&2
+  echo "  Both native chown and Docker alpine helper failed (Docker socket inaccessible or permission denied)." >&2
+  echo "  Manual fix: sudo chown -R ${uid}:${gid} \"${path}\"" >&2
+  echo "  Troubleshooting: docs/user/10-troubleshooting.md#storage-paths-and-permissions" >&2
   return 1
 }
 
