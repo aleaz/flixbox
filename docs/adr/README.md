@@ -34,6 +34,7 @@ Each ADR uses:
 | [0017](0017-compose-health-and-start-order.md) | Compose healthchecks + Bazarr start order | Accepted |
 | [0018](0018-runtime-secrets-and-lan-trust.md) | Runtime secrets + LAN trust | Accepted |
 | [0019](0019-qbit-webui-runtime-contract.md) | qBit WebUI runtime security contract | Accepted |
+| [0020](0020-operator-credentials-cli.md) | Operator credentials CLI (`show` / `set`) | Accepted |
 
 ## Rules
 

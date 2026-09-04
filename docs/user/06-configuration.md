@@ -46,12 +46,12 @@ Full guide: [13 — Access profiles](13-access-profiles.md).
 | `FLIXBOX_ARR_AUTH_METHOD` | *(from profile)* | `External`, `Forms` | Set by `init` — do not hand-edit unless you know Servarr auth. |
 | `FLIXBOX_ARR_AUTH_REQUIRED` | *(from profile)* | `DisabledForLocalAddresses`, `Enabled` | `Enabled` in `shared`. |
 | `FLIXBOX_ADMIN_BIND_IP` | *(from profile)* | `0.0.0.0`, `127.0.0.1` | Host bind for admin WebUIs (*arr, Byparr, Bazarr, Maintainerr, qBit WebUI). Set by `init`. |
-| `FLIXBOX_ARR_UI_USER` | `admin` | string | **Reference** for manual Forms signup (`shared` only). Not applied by Compose or `configure`. |
-| `FLIXBOX_ARR_UI_PASSWORD` | *(generated)* | string | **Reference** for manual Forms signup; **`configure` uses API keys, not this.** |
+| `FLIXBOX_ARR_UI_USER` | `admin` | string | Forms username SoT (`shared` only). Applied by `credentials set arr-ui` / `configure --sync-arr-ui` (ADR 0020). |
+| `FLIXBOX_ARR_UI_PASSWORD` | *(generated)* | string | Forms password SoT; **`configure` without `--sync-arr-ui` uses API keys, not this.** |
 
-Servarr has no env var for Forms username/password — see [13 — Create *arr login](13-access-profiles.md#create-arr-login-shared).
+Servarr has no env var for Forms username/password — see [13 — Create *arr login](13-access-profiles.md#create-arr-login-shared) and [ADR 0020](../adr/0020-operator-credentials-cli.md).
 
-After changing `FLIXBOX_ACCESS_PROFILE`: `./bin/flixbox up` or `reload` (auto-syncs derived keys). Optionally `./bin/flixbox init --non-interactive` so shared UI password placeholders are generated if empty.
+After changing `FLIXBOX_ACCESS_PROFILE`: `./bin/flixbox up`, `reload`, or `configure` (auto-syncs derived keys; **`configure` also syncs Homepage** so `shared` drops admin widget secrets). Optionally `./bin/flixbox init --non-interactive` so shared UI password placeholders are generated if empty. Then apply Forms with `credentials set arr-ui`.
 
 ## File ownership and timezone
 
@@ -131,22 +131,26 @@ Changing a password or regenerating an API key **in a WebUI alone** does not upd
 
 | What happened | Breaks | Fix |
 | --- | --- | --- |
-| **qBit password** changed in WebUI | Decluttarr (and *arr if they rely on password) | Put the **same** password in `.env` as `QBITTORRENT_PASSWORD`, then `./bin/flixbox configure --sync-qbit-auth` |
+| **Want a new Flixbox-managed qBit password** | — | **Rotate:** `./bin/flixbox credentials set qbit --generate` (or `--prompt`). Auth with current `.env`/temp → apply new → write `.env` → recreate Decluttarr. |
+| **qBit password** changed in WebUI (copied into `.env`) | Decluttarr (and *arr if they rely on password) | **Align:** `./bin/flixbox configure --sync-qbit-auth` |
 | **qBit API key** regenerated in WebUI | *arr download client (may still “Test OK” via password while the stored key is stale) | `./bin/flixbox configure` (refreshes drifted keys) or `./bin/flixbox configure --sync-qbit-auth` to force a full push |
-| **Want `.env` password applied onto qBit** | — | Only works if `configure` can still **log in** (`.env` already matches the current WebUI password, **or** qBit still shows a temporary password in `docker compose logs qbittorrent`). You cannot invent a new password in `.env` alone when the WebUI password is unknown. |
+| **Want `.env` password applied onto qBit** | — | **Align only:** works if `configure` can still **log in** (`.env` already matches WebUI, **or** temp password in `docker compose logs qbittorrent`). To invent a new password, use `credentials set qbit`, not hand-edit alone. |
 | **Radarr / Sonarr API key** regenerated in that app’s UI | `.env`, Decluttarr, Unpackerr, Prowlarr Apps, Bazarr, Seerr; Recyclarr / Maintainerr if already wired | `./bin/flixbox configure` (syncs `.env` from `config.xml`, refreshes Prowlarr/Bazarr/Seerr, recreates Decluttarr/Unpackerr). Then: update **Maintainerr** in its UI; edit `${CONFIG_DIR}/recyclarr/recyclarr.yml` if placeholders were already replaced. |
-| Lost qBit WebUI password (no temp in logs) | `configure` cannot auth | Set a new password in the qBit UI (or wipe `${CONFIG_DIR}/qbittorrent/`), align `.env`, then `--sync-qbit-auth` |
+| Lost qBit WebUI password (no temp in logs) | `configure` / rotate cannot auth | Set a new password in the qBit UI (or wipe `${CONFIG_DIR}/qbittorrent/`), put it in `.env`, then `--sync-qbit-auth` |
 
-#### `configure` vs `--sync-qbit-auth`
+#### Rotate vs align vs `configure`
 
 | Command | Typical use |
 | --- | --- |
+| `./bin/flixbox credentials set qbit …` | **Rotate** WebUI password (old → new); writes `.env` only after qBit accepts the change. |
 | `./bin/flixbox configure` | Idempotent first-run wiring; heals drifted qBit API keys on *arr and drifted *arr API keys on Prowlarr/Bazarr/Seerr when Test/compare detects mismatch. |
-| `./bin/flixbox configure --sync-qbit-auth` | **Force** `.env` WebUI password onto qBit, rewrite *arr download clients, recreate Decluttarr/Unpackerr — after a manual password change or when you want a full qBit auth refresh. |
+| `./bin/flixbox configure --sync-qbit-auth` | **Align:** force current `.env` WebUI password onto qBit, rewrite *arr download clients, recreate Decluttarr/Unpackerr — when `.env` already matches a loginable password. |
+| `./bin/flixbox configure --sync-arr-ui` | **Force** `FLIXBOX_ARR_UI_*` onto Prowlarr/Radarr/Sonarr Forms (`shared` only — ADR 0020). |
+| `./bin/flixbox credentials show\|set …` | Read or rotate operator secrets without hand-editing `.env` — [Credential rotation](15-credential-rotation.md). |
 
 **Recyclarr** uses Radarr/Sonarr API keys in `${CONFIG_DIR}/recyclarr/recyclarr.yml` (template copied by `init`). `configure` only replaces `REPLACE_*` placeholders — it does not rewrite keys already saved in that file.
 
-The stack **starts** without after-first-run keys. Unpackerr cannot talk to *arr until `RADARR_API_KEY` and `SONARR_API_KEY` are set. Decluttarr **idles** (no qBit login) until both `QBITTORRENT_USERNAME` and `QBITTORRENT_PASSWORD` are set — see [ADR 0008](../adr/0008-maintenance-decluttarr-maintainerr.md). After editing **qBit** creds in `.env`, prefer `configure --sync-qbit-auth`. After editing only `RADARR_API_KEY` / `SONARR_API_KEY`, `configure` or `./bin/flixbox reload` is enough for Compose consumers.
+The stack **starts** without after-first-run keys. Unpackerr cannot talk to *arr until `RADARR_API_KEY` and `SONARR_API_KEY` are set. Decluttarr **idles** (no qBit login) until both `QBITTORRENT_USERNAME` and `QBITTORRENT_PASSWORD` are set — see [ADR 0008](../adr/0008-maintenance-decluttarr-maintainerr.md). After hand-editing **qBit** creds in `.env` to match the WebUI, use `configure --sync-qbit-auth`. To change the password Flixbox manages, prefer `credentials set qbit`. After editing only `RADARR_API_KEY` / `SONARR_API_KEY`, `configure` or `./bin/flixbox reload` is enough for Compose consumers.
 
 ### `.env` variables (after first-run)
 
@@ -175,10 +179,10 @@ Most Flixbox apps talk over the Docker network (`flixbox_net`). Only **Unpackerr
 | **Decluttarr** | Radarr, Sonarr, qBit | *arr API keys + qBit **user/pass** | `.env` — table above |
 | **Jellyfin** | *(served to users)* | Admin account + optional users | Jellyfin first-run wizard |
 | **Seerr** | *(request portal users)* | Seerr login accounts | Seerr UI (separate from Jellyfin users) |
-| **Homepage** | *(links only)* | *(none)* | `${CONFIG_DIR}/homepage/services.yaml` — no API auth |
+| **Homepage** | Dashboard links + optional widgets | **`trusted`:** may sync qBit user/pass and *arr API keys into widget blocks. **`shared`:** admin widgets (qBit/*arr/Bazarr/Maintainerr/Byparr) are **removed**; Jellyfin (and Seerr if a key is present) widgets may still sync. | `${CONFIG_DIR}/homepage/services.yaml` — Homepage UI has no login; do not expose to WAN ([§13](13-access-profiles.md#threat-model-homelab)) |
 | **Byparr** | *(CF proxy)* | *(none)* | No login; not exposed beyond your LAN unless you publish it |
 
-There is no `SEERR_API_KEY` in `.env` — Seerr exposes its own API key only if you integrate it externally. `PROWLARR_API_KEY` **is** generated by `init` and used by Compose / `configure`.
+There is no required `SEERR_API_KEY` in `.env` — Seerr exposes its own API key in the UI if you integrate it externally. If you set `SEERR_API_KEY` (or `JELLYFIN_API_KEY`) in the environment, Homepage may sync them into consumer widgets. `PROWLARR_API_KEY` **is** generated by `init` and used by Compose / `configure`.
 
 ## Decluttarr tuning
 

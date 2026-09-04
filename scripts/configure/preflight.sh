@@ -171,6 +171,11 @@ configure_dry_run_preflight() {
   dry "Wait for qBittorrent, *arr, Bazarr, Jellyfin HTTP (parallel warm-up)"
   dry "Discover API keys from container config"
   dry "Verify authenticated *arr/Bazarr APIs (parallel)"
+  # Placeholders so later dry-run steps expand safely under `set -u`
+  export QBIT_USERNAME="${QBITTORRENT_USERNAME:-admin}"
+  export QBIT_PASSWORD="${QBITTORRENT_PASSWORD:-}"
+  export QBIT_TEMP_PASSWORD="${QBIT_TEMP_PASSWORD:-}"
+  export QBIT_API_KEY="${QBIT_API_KEY:-}"
 }
 
 configure_preflight() {

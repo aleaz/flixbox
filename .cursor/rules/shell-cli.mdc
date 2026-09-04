@@ -10,9 +10,10 @@ alwaysApply: false
 - Start scripts with `set -euo pipefail`.
 - Trap EXIT/INT/TERM when altering terminal state or temp files.
 - Respect `NO_COLOR` and non-TTY output.
-- MVP commands: `init`, `up`, `down`, `restart`, `reload`, `status`, `logs`, `vpn-test`, `configure`.
+- MVP commands: `init`, `up`, `down`, `restart`, `reload`, `status`, `logs`, `vpn-test`, `configure`, `credentials`.
 - `init` must create data/config trees, generate empty Servarr API keys / passwords when missing, and write local untracked env — never commit secrets.
 - `configure` is idempotent (GET → skip if correct); closes the Decluttarr/Unpackerr secret loop; does not invent indexer credentials.
+- `credentials show|set` (ADR 0020): operator secret read/rotate; `arr-ui` apply only under `shared` via Host Config; never print secrets from `status`.
 - Warn on unsafe layouts: config on NFS/SMB, data on WSL `/mnt/c` / NTFS when detectable.
 - Download client host for *arr / Decluttarr is always `qbittorrent` (port `8080`) in VPN and Direct — ADR 0014 (Gluetun aliases `qbittorrent` in VPN mode). Do not document or wire mode-specific `gluetun` as the *arr host.
 - Create `torrents/incomplete` under the data tree during `init`.

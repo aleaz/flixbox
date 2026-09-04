@@ -13,6 +13,7 @@ alwaysApply: true
 - Preserve `${DATA_DIR}:/data` hardlink contract including `torrents/incomplete`.
 - Preserve VPN dual-mode: only qBit in Gluetun netns; publish qBit ports on Gluetun; *arr / Decluttarr host always `qbittorrent:8080` (ADR 0014).
 - Access profiles (`trusted` / `shared`): follow ADR 0015; `up`/`reload` sync derived bind/auth keys.
+- Operator credentials day-2: ADR 0020 (`flixbox credentials show|set`; Forms via Host Config / `--sync-arr-ui`).
 - Maintainerr defaults to Jellyfin; do not enable destructive cleanup rules by default.
 - No secrets in git-tracked files.
 - Do not commit unless the user explicitly asks.

@@ -406,6 +406,10 @@ grep -q 'configure_entry_recreate_admin_services' scripts/lib/configure-entry.sh
   fail C-63 'configure-entry must recreate admin-bound services on drift'
 grep -q 'configure_entry_prepare' scripts/lib/configure-entry.sh || \
   fail C-63 'configure-entry must expose configure_entry_prepare'
+grep -q 'configure_entry_sync_homepage' scripts/lib/configure-entry.sh || \
+  fail C-63 'configure-entry must sync Homepage (shared admin widget purge)'
+grep -q 'homepage-sync.py' scripts/lib/configure-entry.sh || \
+  fail C-63 'configure-entry Homepage sync must call homepage-sync.py'
 grep -q 'ensure_shared_ui_credentials' bin/flixbox || \
   fail C-63 'bin/flixbox must ensure shared UI credentials on init'
 grep -q 'Admin surface matrix' docs/adr/0015-access-profiles.md || \
@@ -603,6 +607,69 @@ grep -q '0018-runtime-secrets' docs/user/06-configuration.md || \
   fail C-78 'configuration doc must reference ADR 0018'
 pass C-78
 
+# --- C-87: operator credentials CLI (ADR 0020) ---
+grep -q 'credentials' bin/flixbox || \
+  fail C-87 'bin/flixbox must expose credentials command'
+grep -q 'cmd_credentials' bin/flixbox || \
+  fail C-87 'bin/flixbox must dispatch credentials'
+grep -q 'flixbox_apply_arr_ui_credentials' scripts/lib/credentials.sh || \
+  fail C-87 'credentials.sh must apply arr-ui via Host Config'
+grep -q 'flixbox_apply_qbit_password_rotate' scripts/lib/credentials.sh || \
+  fail C-87 'credentials.sh must rotate qBit before writing .env'
+grep -q 'qbit-password-rotate.sh' scripts/lib/credentials.sh || \
+  fail C-87 'credentials must call qbit-password-rotate.sh'
+[[ -f scripts/lib/qbit-password-rotate.sh ]] || \
+  fail C-87 'missing qbit-password-rotate.sh'
+grep -q 'exit 3' scripts/lib/qbit-password-rotate.sh || \
+  fail C-87 'qbit-password-rotate must exit 3 when setPreferences committed but re-auth fails'
+grep -qE 'case "\$rc" in' scripts/lib/credentials.sh || \
+  fail C-87 'credentials set qbit must branch on rotate exit codes'
+grep -qE '^\s*3\)' scripts/lib/credentials.sh || \
+  fail C-87 'credentials must persist .env on rotate exit 3'
+grep -q 'FLIXBOX_ARR_UI_PASSWORD_OVERRIDE' scripts/lib/credentials.sh || \
+  fail C-87 'arr-ui set must apply with in-memory password override'
+grep -q 'Host Config apply failed on all apps — .env left unchanged' scripts/lib/credentials.sh || \
+  fail C-87 'arr-ui must leave .env unchanged when all Host Config applies fail'
+if grep -q 'configure-apps.sh" --sync-qbit-auth' scripts/lib/credentials.sh; then
+  fail C-87 'credentials set qbit must not call full configure --sync-qbit-auth'
+fi
+grep -q 'Rotate vs align' docs/user/06-configuration.md || \
+  fail C-87 '06-configuration must document rotate vs align'
+grep -q '*Auth cookie' scripts/lib/arr-host-config-auth.py || \
+  fail C-87 'arr-host-config-auth must require *Auth cookie on login verify'
+grep -q 'QBIT_API_KEY=' scripts/configure/preflight.sh || \
+  fail C-87 'dry-run preflight must export QBIT_API_KEY placeholder'
+grep -q 'admin widgets' docs/user/06-configuration.md || \
+  fail C-87 '06-configuration Homepage row must describe trusted vs shared widgets'
+grep -q 'also syncs Homepage' docs/user/06-configuration.md || \
+  fail C-87 '06-configuration must note configure syncs Homepage on profile change'
+grep -q 'ARR_API_KEY' scripts/lib/arr-host-config-auth.py || \
+  fail C-87 'arr-host-config-auth must read ARR_API_KEY from env'
+if grep -q 'sys.argv\[2\]' scripts/lib/arr-host-config-auth.py; then
+  fail C-87 'arr-host-config-auth must not take API key from argv'
+fi
+grep -q 'do not pass URL/API key on argv' scripts/lib/arr-host-config-auth.py || \
+  fail C-87 'arr-host-config-auth must reject argv secrets'
+grep -q '_redact' scripts/lib/arr-host-config-auth.py || \
+  fail C-87 'arr-host-config-auth must redact error bodies'
+grep -q 'ARR_HOST_CONFIG_URL' scripts/lib/credentials.sh || \
+  fail C-87 'credentials must pass ARR_HOST_CONFIG_URL via env'
+grep -q 'arr-host-config-auth.py' scripts/lib/credentials.sh || \
+  fail C-87 'credentials must call arr-host-config-auth.py'
+[[ -f scripts/lib/arr-host-config-auth.py ]] || \
+  fail C-87 'missing arr-host-config-auth.py'
+grep -q 'sync-arr-ui' scripts/configure-apps.sh || \
+  fail C-87 'configure must support --sync-arr-ui'
+grep -q '0020-operator-credentials' docs/adr/README.md || \
+  fail C-87 'ADR index must list 0020'
+grep -q 'credentials show' docs/user/REFERENCE.md || \
+  fail C-87 'REFERENCE must document credentials CLI'
+grep -q 'ADR 0020' docs/user/15-credential-rotation.md || \
+  fail C-87 'credential rotation must reference ADR 0020'
+grep -q 'rotate' docs/user/15-credential-rotation.md || \
+  fail C-87 'credential rotation must describe qBit rotate vs align'
+pass C-87
+
 # --- C-79: configure modules use json_query only (no json_extract) ---
 if grep -r 'json_extract' scripts/configure/ 2>/dev/null; then
   fail C-79 'scripts/configure must not use json_extract (use json_query)'
@@ -650,10 +717,11 @@ grep -q 'Gluetun recreate' docs/user/10-troubleshooting.md || \
   fail C-80 'troubleshooting must cover Gluetun recreate'
 pass C-80
 
-# --- C-86: Homepage port sync (ADR 0014 / services.yaml non-destructive sync) ---
+# --- C-86: Homepage port & widget sync (ADR 0014 / services.yaml non-destructive sync) ---
 [[ -f scripts/lib/homepage-sync.py ]] || fail C-86 'missing scripts/lib/homepage-sync.py'
 [[ -x scripts/lib/homepage-sync.py ]] || fail C-86 'homepage-sync.py must be executable'
 grep -q 'homepage-sync.py' bin/flixbox || fail C-86 'bin/flixbox must invoke homepage-sync.py'
+grep -q 'disk: /data' templates/homepage/widgets.yaml || fail C-86 'widgets.yaml must monitor /data storage'
 python3 - <<'PY' || fail C-86 'homepage-sync unit test failed'
 import os, subprocess, tempfile
 from pathlib import Path
@@ -670,6 +738,14 @@ sample = """---
         widget:
           type: qbittorrent
           url: http://qbittorrent:8080
+          username: admin
+          password: password
+    - Radarr:
+        href: http://localhost:7878
+        widget:
+          type: radarr
+          url: http://radarr:7878
+          key: ""
     - Custom App:
         href: http://localhost:8080
 """
@@ -680,19 +756,57 @@ with tempfile.NamedTemporaryFile("w+", delete=False) as f:
     path = f.name
 
 try:
-    env = {**os.environ, "QBITTORRENT_PORT": "9898", "JELLYFIN_PORT": "8097", "SEERR_PORT": "5056"}
+    env = {
+        **os.environ,
+        "FLIXBOX_ACCESS_PROFILE": "trusted",
+        "QBITTORRENT_PORT": "9898",
+        "QBITTORRENT_USERNAME": "testuser",
+        "QBITTORRENT_PASSWORD": "testpassword",
+        "RADARR_API_KEY": "secret_radarr_key",
+        "JELLYFIN_PORT": "8097",
+        "SEERR_PORT": "5056",
+    }
     res = subprocess.run(["python3", "scripts/lib/homepage-sync.py", path], env=env, capture_output=True, text=True)
     if res.returncode != 0:
         raise AssertionError(f"homepage-sync.py exited with {res.returncode}")
 
     content = Path(path).read_text()
     assert "href: http://localhost:9898" in content, "qBittorrent port not updated"
+    assert "username: testuser" in content, "qBittorrent username not updated"
+    assert "password: testpassword" in content, "qBittorrent password not updated"
+    assert "key: secret_radarr_key" in content, "Radarr API key not updated"
     assert "href: http://localhost:8097" in content, "Jellyfin port not updated"
     assert "href: http://nas.local:5056" in content, "Seerr custom host not preserved"
     assert "url: http://qbittorrent:8080" in content, "qBit widget URL was incorrectly altered"
     assert "Custom App:\n        href: http://localhost:8080" in content, "Custom app was altered"
 
+    # shared: must not inject/retain admin widget secrets; drop admin widget blocks
+    Path(path).write_text(sample)
+    env_shared = {
+        **env,
+        "FLIXBOX_ACCESS_PROFILE": "shared",
+        "QBITTORRENT_PASSWORD": "should-not-appear",
+        "RADARR_API_KEY": "should-not-appear-radarr",
+    }
+    res_s = subprocess.run(
+        ["python3", "scripts/lib/homepage-sync.py", path],
+        env=env_shared,
+        capture_output=True,
+        text=True,
+    )
+    if res_s.returncode != 0:
+        raise AssertionError(f"homepage-sync shared exited {res_s.returncode}: {res_s.stderr}")
+    shared_content = Path(path).read_text()
+    assert "should-not-appear" not in shared_content, "shared profile injected admin secrets"
+    assert "password: password" not in shared_content, "shared profile left sample qBit password"
+    assert "href: http://localhost:9898" in shared_content, "shared profile must still sync ports"
+    # Admin widget blocks removed (qBit / Radarr); service hrefs remain
+    assert "type: qbittorrent" not in shared_content, "shared must remove qBit admin widget"
+    assert "type: radarr" not in shared_content, "shared must remove Radarr admin widget"
+    assert "qBittorrent:" in shared_content and "Radarr:" in shared_content
+
     # Test idempotency (no modifications on re-run)
+    Path(path).write_text(content)
     res2 = subprocess.run(["python3", "scripts/lib/homepage-sync.py", path], env=env, capture_output=True, text=True)
     assert res2.stdout.strip() == "", "homepage-sync.py is not idempotent"
 finally:

@@ -11,7 +11,9 @@ Cheat sheet for operators. Defaults assume a local install with `./bin/flixbox i
 | `./bin/flixbox init [--non-interactive]` | Create `.env`, dirs, templates; generate API keys/passwords. **Linux:** set writable `DATA_DIR`/`CONFIG_DIR` in `.env` before `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
 | `./bin/flixbox up [profiles...]` | Start stack (`plex`, `proxy`, `socket-proxy`, `recyclarr`) |
 | `./bin/flixbox reload [profiles...]` | Recreate containers after `.env` / compose changes |
-| `./bin/flixbox configure [--dry-run] [--sync-qbit-auth]` | Idempotent wiring; heals drifted API keys. `--dry-run` previews only (no `.env`/API changes). `--sync-qbit-auth` forces qBit WebUI password from `.env` into qBit + *arr + Decluttarr |
+| `./bin/flixbox configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]` | Idempotent wiring; heals drifted API keys. `--dry-run` previews only (no `.env`/API changes). `--sync-qbit-auth` forces qBit WebUI password from `.env` into qBit + *arr + Decluttarr. `--sync-arr-ui` applies `FLIXBOX_ARR_UI_*` Forms under `shared` (ADR 0020) |
+| `./bin/flixbox credentials show <target>` | Print operator secret (`qbit`, `arr-ui`, `admin`, or `api radarr\|sonarr\|prowlarr`) — stdout only; keep private |
+| `./bin/flixbox credentials set <target> --generate\|--prompt` | Write `.env` and apply. `qbit` = **rotate** (auth with current password first). `arr-ui` = shared Forms Host Config. `admin` = best-effort Jellyfin. Align-only qBit path remains `configure --sync-qbit-auth` |
 | `./bin/flixbox status` | Container status + mode + download-client URL |
 | `./bin/flixbox logs [service]` | Tail logs |
 | `./bin/flixbox vpn-test` | VPN egress check (VPN mode only) |
@@ -114,7 +116,7 @@ Preview configure without changes:
 | `FLIXBOX_ADMIN_*` | Jellyfin startup, Seerr login | `.env` (init) |
 | Jellyfin API key | Seerr, Maintainerr | Created by configure → `.env` |
 
-*arr auth follows `FLIXBOX_ACCESS_PROFILE` (ADR 0015): default **`trusted`** = no UI login on LAN; **`shared`** = Forms login + admin ports on `127.0.0.1` — create users manually with `FLIXBOX_ARR_UI_*` after `configure`. See [13 — Access profiles](13-access-profiles.md). Do not publish *arr ports to the WAN.
+*arr auth follows `FLIXBOX_ACCESS_PROFILE` (ADR 0015): default **`trusted`** = no UI login on LAN; **`shared`** = Forms login + admin ports on `127.0.0.1` — apply with `credentials set arr-ui` / `configure --sync-arr-ui` (ADR 0020). See [13 — Access profiles](13-access-profiles.md). Do not publish *arr ports to the WAN.
 
 Full detail: [Configuration — Credentials](06-configuration.md#credentials-and-api-keys).
 

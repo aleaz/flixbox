@@ -40,12 +40,34 @@ configure_entry_recreate_admin_services() {
   fi
 }
 
+# Sync Homepage services.yaml (ports/widgets). Under shared, strips admin widget blocks (ADR 0015/0020).
+configure_entry_sync_homepage() {
+  local services_yaml="${CONFIG_DIR:-}/homepage/services.yaml"
+  [[ -n "${CONFIG_DIR:-}" && -f "$services_yaml" ]] || return 0
+  if ${DRY_RUN:-false}; then
+    dry "Sync Homepage services.yaml (ports/widgets; strip admin widgets under shared)"
+    return 0
+  fi
+  local out=""
+  if ! out="$(FLIXBOX_ACCESS_PROFILE="$(flixbox_access_profile)" \
+    python3 "${ROOT_DIR}/scripts/lib/homepage-sync.py" "$services_yaml" 2>&1)"; then
+    warn "Homepage sync failed — run: ./bin/flixbox reload"
+    return 1
+  fi
+  if [[ -n "$out" ]]; then
+    info "$out"
+  else
+    info "Homepage services.yaml aligned (profile=$(flixbox_access_profile))"
+  fi
+}
+
 # Idempotent: validate profile, sync derived .env keys, optional shared UI placeholders, recreate on drift.
 configure_entry_prepare() {
   if ${DRY_RUN:-false}; then
     dry "Validate access profile and sync derived .env keys"
     dry "Ensure shared FLIXBOX_ARR_UI_* placeholders when profile is shared"
     dry "Recreate admin-bound services when profile derived keys drift"
+    configure_entry_sync_homepage
     return 0
   fi
 
@@ -73,4 +95,5 @@ configure_entry_prepare() {
       warn "Access profile keys synced but admin service recreate failed — run: ./bin/flixbox reload"
     fi
   fi
+  configure_entry_sync_homepage || true
 }

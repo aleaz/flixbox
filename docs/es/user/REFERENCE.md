@@ -11,7 +11,8 @@ Hoja de consulta para operadores. Valores por defecto tras `./bin/flixbox init`.
 | `./bin/flixbox init [--non-interactive]` | Crear `.env`, carpetas, plantillas. **Linux:** paths escribibles en `.env` antes de `--non-interactive` — [Install § paths (EN)](../../user/04-install.md#storage-paths-and-permissions) |
 | `./bin/flixbox up [perfiles...]` | Levantar stack (`plex`, `proxy`, `socket-proxy`, `recyclarr`) |
 | `./bin/flixbox reload [perfiles...]` | Recrear contenedores tras cambios en `.env` o compose |
-| `./bin/flixbox configure [--dry-run]` | Cablear carpetas raíz, clientes de descarga, Byparr, apps Prowlarr, Bazarr |
+| `./bin/flixbox configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]` | Cablear apps; `--sync-arr-ui` aplica Forms en `shared` |
+| `./bin/flixbox credentials show\|set …` | Ver / rotar secretos de operador (ADR 0020) |
 | `./bin/flixbox status` | Estado + modo + URL del cliente de descarga |
 | `./bin/flixbox logs [servicio]` | Ver logs |
 | `./bin/flixbox vpn-test` | Comprobar VPN (solo modo VPN) |

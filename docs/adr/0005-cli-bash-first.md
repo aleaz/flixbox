@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-27
-- **Updated:** 2026-08-31 (access profiles `trusted` / `shared` — ADR 0015)
+- **Updated:** 2026-09-04 (operator `credentials` CLI — ADR 0020); 2026-08-31 (access profiles `trusted` / `shared` — ADR 0015)
 
 ## Context
 
@@ -14,15 +14,15 @@ Servarr v4+ requires authentication; there is no stable public “create first a
 
 ## Decision
 
-- MVP ships only **`bin/flixbox`** (Bash) with: `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`, **`configure`**, **`reload`**.
+- MVP ships only **`bin/flixbox`** (Bash) with: `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`, **`configure`**, **`reload`**, **`credentials`** (ADR 0020).
 - PowerShell CLI is **post-MVP**.
 - Extra commands (`sync-profiles`, `backup`, `restore`, `update`) are roadmap, not MVP blockers.
 - **`configure`** is the idempotent first-run wirer (GET → skip if already correct → POST/PUT). It MUST:
   - Wire qBittorrent categories/prefs (VPN: bind BitTorrent to `tun0`), Radarr/Sonarr root folders + qBit client, Prowlarr Byparr + app sync, Bazarr connections.
   - Close the secret loop: write discovered/generated API keys into `.env` when empty; patch Recyclarr placeholders; enable Homepage widgets when keys exist; recreate Decluttarr/Unpackerr when hygiene keys change.
   - Prefer API automation for Jellyfin libraries and Seerr ↔ Jellyfin/*arr when credentials allow.
-- **`init`** MAY generate random `RADARR_API_KEY` / `SONARR_API_KEY` / `PROWLARR_API_KEY` when empty and compose MUST pass them as Servarr `__AUTH__APIKEY` overrides. **`FLIXBOX_ACCESS_PROFILE`** (ADR 0015) sets `*__AUTH__METHOD` and `*__AUTH__REQUIRED` (`trusted` default: External + DisabledForLocalAddresses; `shared`: Forms + Enabled). **`init`** syncs derived auth vars and MAY generate `FLIXBOX_ARR_UI_USER` / `FLIXBOX_ARR_UI_PASSWORD` for `shared` as **reference values** for manual Forms signup (not applied by Compose or `configure`).
-- **Still manual:** Prowlarr indexer credentials; optional Maintainerr destructive rules; operator-chosen admin passwords for Jellyfin/qBit when not set in `.env`.
+- **`init`** MAY generate random `RADARR_API_KEY` / `SONARR_API_KEY` / `PROWLARR_API_KEY` when empty and compose MUST pass them as Servarr `__AUTH__APIKEY` overrides. **`FLIXBOX_ACCESS_PROFILE`** (ADR 0015) sets `*__AUTH__METHOD` and `*__AUTH__REQUIRED` (`trusted` default: External + DisabledForLocalAddresses; `shared`: Forms + Enabled). **`init`** syncs derived auth vars and MAY generate `FLIXBOX_ARR_UI_USER` / `FLIXBOX_ARR_UI_PASSWORD` for `shared`. Those values are applied to Forms via **`flixbox credentials set arr-ui`** or **`configure --sync-arr-ui`** (ADR 0020) — not by Compose env and not on every `configure`.
+- **Still manual:** Prowlarr indexer credentials; optional Maintainerr destructive rules; first Forms create if Host Config apply fails (fallback).
 - **Forbidden claim:** “fully zero-touch” while indexers remain manual.
 
 ## Consequences

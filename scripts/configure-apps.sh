@@ -3,8 +3,8 @@
 # Idempotent API wiring for Flixbox after first container start (ADR 0005).
 #
 # Usage:
-#   ./scripts/configure-apps.sh [--dry-run] [--verbose] [--sync-qbit-auth]
-#   ./bin/flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth]
+#   ./scripts/configure-apps.sh [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
+#   ./bin/flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
 #
 # Module layout: scripts/configure/*.sh (preflight, arr-common, per-service modules).
 # Shared helpers: scripts/lib/configure-helpers.sh
@@ -26,6 +26,7 @@ DRY_RUN=false
 VERBOSE=false
 # Exported: consumed by sourced configure modules (ShellCheck SC2034).
 export SYNC_QBIT_AUTH=false
+export SYNC_ARR_UI=false
 export QBIT_COOKIE=""
 
 while [[ $# -gt 0 ]]; do
@@ -33,13 +34,14 @@ while [[ $# -gt 0 ]]; do
     --dry-run) DRY_RUN=true; shift ;;
     --verbose|-v) VERBOSE=true; shift ;;
     --sync-qbit-auth) SYNC_QBIT_AUTH=true; shift ;;
+    --sync-arr-ui) SYNC_ARR_UI=true; shift ;;
     --help|-h)
       sed -n '2,28p' "$0"
       exit 0
       ;;
     *)
       echo "Unknown option: $1" >&2
-      echo "Usage: $0 [--dry-run] [--verbose] [--sync-qbit-auth]" >&2
+      echo "Usage: $0 [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]" >&2
       exit 1
       ;;
   esac
@@ -62,7 +64,7 @@ for _configure_module in preflight arr-common qbittorrent prowlarr bazarr jellyf
 done
 
 if [[ "${FLIXBOX_ACCESS_PROFILE:-trusted}" == "shared" ]]; then
-  info "Access profile: shared — admin ports on 127.0.0.1; after configure, create Forms users with FLIXBOX_ARR_UI_* (docs/user/13-access-profiles.md#create-arr-login-shared)"
+  info "Access profile: shared — admin ports on 127.0.0.1; apply Forms with ./bin/flixbox credentials set arr-ui or configure --sync-arr-ui (ADR 0020)"
 fi
 
 echo "=== Flixbox app configuration ==="
@@ -90,6 +92,24 @@ echo ""
 configure_seerr
 echo ""
 reload_hygiene_if_needed
+
+if [[ "${SYNC_ARR_UI:-false}" == "true" ]]; then
+  echo ""
+  log "Syncing *arr Forms credentials from FLIXBOX_ARR_UI_* (ADR 0020)..."
+  # shellcheck disable=SC1091
+  source "${ROOT_DIR}/scripts/lib/credentials.sh"
+  if [[ "${DRY_RUN:-false}" == "true" ]]; then
+    if [[ "${FLIXBOX_ACCESS_PROFILE:-trusted}" == "shared" ]]; then
+      dry "Apply FLIXBOX_ARR_UI_* via Host Config to Prowlarr/Radarr/Sonarr"
+    else
+      dry "Skip arr-ui Host Config apply (profile=${FLIXBOX_ACCESS_PROFILE:-trusted}; need shared)"
+    fi
+  elif flixbox_apply_arr_ui_credentials; then
+    ok "arr-ui Forms sync complete"
+  else
+    fail "arr-ui Forms sync incomplete — see warnings above"
+  fi
+fi
 
 echo ""
 log "Done: ${CONFIGURED} configured, ${SKIPPED} skipped, ${FAILED} failed"

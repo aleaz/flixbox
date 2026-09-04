@@ -214,7 +214,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-43 | No `:latest` image tags | grep `compose/*.yml` for `:latest` (ADR 0010) |
 | C-61 | Configure JSON payload contract | `json-payload.py` + `configure-runtime.sh`; no shell-interpolated secrets in `configure-apps.sh`; qBit login via stdin script (not `docker exec` argv) |
 | C-62 | Configure module layout | `scripts/configure/*.sh` sourced from `configure-apps.sh`; unified `scripts/lib/flixbox-env.sh` |
-| C-63 | Access profile recreate + UI sync | `configure-entry` recreate on drift; `FLIXBOX_ARR_UI_*` on init/`shared`; ADR 0015 |
+| C-63 | Access profile recreate + UI sync | `configure-entry` recreate on drift; Homepage sync; `FLIXBOX_ARR_UI_*` on init/`shared`; ADR 0015 |
 | C-64 | CI workflow alignment | `ci-compose-render.sh` shared render; `security` job + `ci-trivy.sh`; Dependabot for Actions |
 | C-65 | Operator docs + Maintainerr pack | `rule-pack.md` copied by init; `15-credential-rotation.md`; ADR 0011 ES scope |
 | C-66 | `.env.example` access-profile keys | Active `FLIXBOX_ARR_AUTH_*`, `FLIXBOX_ADMIN_BIND_IP`, `FLIXBOX_ARR_UI_*` assignments (in-place sync) |
@@ -238,6 +238,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-84 | qBit WebUI runtime contract | ADR 0019; custom-service in both downloader modes |
 | C-85 | WebUI contract QA remediation | host-header OK matches json-query; copy_templates on up/reload; shared prefs JSON templates; no on-disk temp password; Decluttarr refresh after bootstrap |
 | C-86 | Homepage port sync | `homepage-sync.py` non-destructive port sync; preserves widgets, custom hosts, and custom services |
+| C-87 | Operator credentials CLI | ADR 0020; `credentials show|set`; qBit rotate exit 0/3 persist; arr-ui apply-before-env; Arr key via env; `--sync-arr-ui`; Homepage shared drops admin widgets |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 

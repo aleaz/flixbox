@@ -82,7 +82,7 @@ FLIXBOX_ACCESS_PROFILE=shared
 | S2 | Host bind | `ss -lntp \| grep -E '7878\|8989\|9696\|8191\|8080'` (or `docker port`) | Listen on `127.0.0.1`, not `0.0.0.0` |
 | S3 | LAN blocked | From another LAN device, open `http://<host>:7878` | Connection refused / timeout |
 | S4 | Host OK | On the server: `http://127.0.0.1:7878` | Forms / create-account UI |
-| S5 | Manual Forms users | Create admin in Radarr, Sonarr, Prowlarr with `FLIXBOX_ARR_UI_*` | Login works; `configure` still OK via API keys |
+| S5 | Forms users (`shared`) | `./bin/flixbox credentials set arr-ui --generate` (or `--sync-arr-ui`) | Login works with `credentials show arr-ui`; `configure` still OK via API keys |
 | S6 | Consumers on LAN | Jellyfin `:8096`, Seerr `:5055`, Homepage `:3000` from LAN | Still reachable |
 | S7 | Byparr | LAN `:8191` | Unreachable; Prowlarr indexer proxy still works |
 

@@ -60,6 +60,17 @@ def jellyfin_auth() -> str:
     return json.dumps({"Username": env["USERNAME"], "Pw": env["PASSWORD"]})
 
 
+def jellyfin_password_change() -> str:
+    env = _require("CURRENT_PW", "NEW_PW")
+    return json.dumps(
+        {
+            "CurrentPw": env["CURRENT_PW"],
+            "NewPw": env["NEW_PW"],
+            "ResetPassword": False,
+        }
+    )
+
+
 def seerr_login() -> str:
     env = _require("USERNAME", "PASSWORD")
     payload: dict[str, object] = {
@@ -279,6 +290,7 @@ def jellyfin_url_quote() -> str:
 TEMPLATES: dict[str, Callable] = {
     "jellyfin-startup-user": jellyfin_startup_user,
     "jellyfin-auth": jellyfin_auth,
+    "jellyfin-password-change": jellyfin_password_change,
     "jellyfin-library-options": jellyfin_library_options,
     "jellyfin-url-quote": jellyfin_url_quote,
     "seerr-login": seerr_login,

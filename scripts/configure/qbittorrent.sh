@@ -7,8 +7,10 @@ configure_qbittorrent() {
     dry "Apply WebUI host-header fix for remapped QBITTORRENT_PORT"
     dry "Create categories tv/movies under /data/torrents/{tv,movies}"
     dry "Prefs: auto TMM, UPnP off, encryption, limits; tun0 bind if VPN"
-    $SYNC_QBIT_AUTH && dry "Force-push .env password to qBit + *arr download clients + Decluttarr"
-    return
+    if $SYNC_QBIT_AUTH; then
+      dry "Force-push .env password to qBit + *arr download clients + Decluttarr"
+    fi
+    return 0
   fi
 
   if ! configure_ensure_qbittorrent_ready; then

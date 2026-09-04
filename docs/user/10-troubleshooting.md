@@ -50,7 +50,7 @@
 | `configure` / *arr auth errors after wiping `${CONFIG_DIR}` | `.env` API keys stale vs new container `config.xml` | Re-run `./bin/flixbox configure` (syncs keys from container). Or `./bin/flixbox init --non-interactive` if keys were empty |
 | `Invalid FLIXBOX_ACCESS_PROFILE=…` on `up` / `configure` | Typo in `.env` | Set `trusted` or `shared`; run `./bin/flixbox init --non-interactive` |
 | Warn: Access profile out of sync (then auto-sync + recreate admin services) | Changed `FLIXBOX_ACCESS_PROFILE` or empty derived bind/auth keys | `up`/`reload`/`configure` sync derived keys and force-recreate admin-bound services — [§13](13-access-profiles.md) |
-| `shared` profile: *arr login fails with `.env` password | Forms user never created in that app | Servarr does not read `FLIXBOX_ARR_UI_*` from env — create account manually in each *arr UI — [§13 — Create login](13-access-profiles.md#create-arr-login-shared) |
+| `shared` profile: *arr login fails with `.env` password | Forms not applied or never created | `./bin/flixbox configure --sync-arr-ui` or `credentials set arr-ui`; fallback: create account in each *arr UI — [§13](13-access-profiles.md#create-arr-login-shared) |
 | `shared` profile: cannot open Radarr from phone on Wi‑Fi | Admin ports bind to `127.0.0.1` | Expected — use host browser or SSH tunnel; Jellyfin/Seerr stay on LAN — [§13](13-access-profiles.md) |
 | `trusted` profile but *arr asks for login from LAN (IPv6) | Servarr RFC1918 bypass does not cover all IPv6 LAN clients | Use `shared`, or access *arr from IPv4 / localhost |
 | Scripts fail with `\r` errors | CRLF line endings on Windows clone | Ensure LF via `.gitattributes` |

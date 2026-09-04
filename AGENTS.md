@@ -15,6 +15,7 @@ Flixbox is a **docs-first** open-source Docker media stack (MVP Compose + CLI ar
 - **No secrets in git** (`.env`, VPN keys, API tokens).
 - **MVP inventory only** — see ADR 0006. Includes Seerr, Byparr, Decluttarr, Maintainerr.
 - **Do not** add Lidarr, Readarr, SABnzbd, Whisper, Overseerr, Jellyseerr, Autobrr, Profilarr, Authelia, PowerShell CLI unless scope changes.
+- Operator secrets day-2: `./bin/flixbox credentials show|set` (ADR 0020); Forms under `shared` via Host Config / `configure --sync-arr-ui`.
 - **Never break** the `/data` hardlink contract (include `torrents/incomplete`).
 - **Never break** VPN dual-mode; only qBit uses Gluetun netns; publish qBit ports on Gluetun; *arr / Decluttarr download host is always `qbittorrent:8080` ([ADR 0014](docs/adr/0014-stable-qbit-download-hostname.md)).
 - **Access profiles** (`trusted` / `shared`): follow [ADR 0015](docs/adr/0015-access-profiles.md); do not leave derived bind/auth keys empty under `shared`.
