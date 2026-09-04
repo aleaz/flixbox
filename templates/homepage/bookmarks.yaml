@@ -1,0 +1,21 @@
+---
+# Operator docs — not social startpage links.
+- Docs:
+    - Overview:
+        - abbr: OV
+          href: https://github.com/aleaz/flixbox/blob/main/docs/user/01-overview.md
+    - First run:
+        - abbr: FR
+          href: https://github.com/aleaz/flixbox/blob/main/docs/user/05-first-run.md
+    - Access profiles:
+        - abbr: AP
+          href: https://github.com/aleaz/flixbox/blob/main/docs/user/13-access-profiles.md
+    - VPN & Direct:
+        - abbr: VPN
+          href: https://github.com/aleaz/flixbox/blob/main/docs/user/07-vpn-and-direct.md
+    - Credentials:
+        - abbr: CR
+          href: https://github.com/aleaz/flixbox/blob/main/docs/user/15-credential-rotation.md
+    - GitHub:
+        - abbr: GH
+          href: https://github.com/aleaz/flixbox

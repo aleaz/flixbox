@@ -175,6 +175,15 @@ copy_templates() {
     cp "${ROOT_DIR}/templates/homepage/settings.yaml" "${CONFIG_DIR}/homepage/settings.yaml"
   [[ -f "${CONFIG_DIR}/homepage/widgets.yaml" ]] || \
     cp "${ROOT_DIR}/templates/homepage/widgets.yaml" "${CONFIG_DIR}/homepage/widgets.yaml"
+  [[ -f "${CONFIG_DIR}/homepage/bookmarks.yaml" ]] || \
+    cp "${ROOT_DIR}/templates/homepage/bookmarks.yaml" "${CONFIG_DIR}/homepage/bookmarks.yaml"
+  [[ -f "${CONFIG_DIR}/homepage/custom.css" ]] || \
+    cp "${ROOT_DIR}/templates/homepage/custom.css" "${CONFIG_DIR}/homepage/custom.css"
+  mkdir -p "${CONFIG_DIR}/homepage/images"
+  [[ -f "${CONFIG_DIR}/homepage/images/logo.png" ]] || \
+    cp "${ROOT_DIR}/templates/homepage/images/logo.png" "${CONFIG_DIR}/homepage/images/logo.png"
+  [[ -f "${CONFIG_DIR}/homepage/images/background.jpg" ]] || \
+    cp "${ROOT_DIR}/templates/homepage/images/background.jpg" "${CONFIG_DIR}/homepage/images/background.jpg"
   [[ -f "${CONFIG_DIR}/homepage/docker.yaml" ]] || \
     cp "${ROOT_DIR}/templates/homepage/docker.yaml" "${CONFIG_DIR}/homepage/docker.yaml"
   [[ -f "${CONFIG_DIR}/caddy/Caddyfile" ]] || \

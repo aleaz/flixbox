@@ -1,3 +1,4 @@
-# Optional Docker integration for Homepage.
-# Prefer profile socket-proxy and point widgets at http://docker-socket-proxy:2375
-{}
+# Docker integration for Homepage.
+# Uses read-only local docker socket mounted in compose/dashboard.yml.
+local-docker:
+  socket: /var/run/docker.sock

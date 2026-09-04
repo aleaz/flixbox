@@ -1,0 +1,689 @@
+/* ==========================================================================
+   Flixbox Enterprise Dark Minimalist Theme for Homepage
+   Inspired by Red Hat / OpenShift & Modern Telemetry Consoles
+   ========================================================================== */
+
+:root {
+  --bg-deep: #0b0d13;
+  --bg-overlay: rgba(11, 13, 19, 0.72);
+  --card-bg: rgba(22, 26, 35, 0.78);
+  --card-border: rgba(255, 255, 255, 0.07);
+  --card-border-hover: rgba(255, 255, 255, 0.22);
+  --stat-box-bg: rgba(12, 14, 20, 0.68);
+  --stat-box-border: rgba(255, 255, 255, 0.05);
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --status-healthy: #10b981;
+  --status-warning: #f59e0b;
+  --status-danger: #f43f5e;
+  --error-bg: rgba(248, 81, 73, 0.12);
+  --error-border: rgba(248, 81, 73, 0.28);
+  --error-text: #fca5a5;
+}
+
+/* --------------------------------------------------------------------------
+   1. Background & Layout
+   -------------------------------------------------------------------------- */
+
+html,
+#__next,
+#page_wrapper,
+#inner_wrapper,
+.container {
+  background-color: transparent !important;
+}
+
+body {
+  background-color: var(--bg-deep) !important;
+  background-image:
+    radial-gradient(ellipse at 50% 15%, rgba(10, 13, 19, 0.40) 0%, rgba(8, 10, 15, 0.72) 100%),
+    url("/images/background.jpg") !important;
+  background-attachment: fixed !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Ensure parent service grids do not clip card borders (avoid matching every *grid* utility) */
+.services-group,
+.services-list,
+[class*="services-grid"] {
+  overflow: visible !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. Header & Precision Divider
+   -------------------------------------------------------------------------- */
+
+header,
+[class*="Header_header"],
+[class*="header_header"] {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  padding-bottom: 1.25rem !important;
+  margin-bottom: 1.75rem !important;
+}
+
+/* Flixbox Header Logo Styling */
+[class*="Logo_logo"] img,
+[class*="logo"] img,
+.information-widget-logo img {
+  border-radius: 6px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  max-height: 34px !important;
+  width: auto !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transition: opacity 0.2s ease !important;
+}
+
+[class*="Logo_logo"] img:hover,
+[class*="logo"] img:hover,
+.information-widget-logo:hover img {
+  opacity: 0.92 !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   2b. Header brand stack + quiet right telemetry (disk | time)
+   -------------------------------------------------------------------------- */
+
+/* Layout: logo | Flixbox/slogan | chip | spacer | /data | time
+   nth-child order matches templates/homepage/widgets.yaml — keep in sync.
+   Must live in @layer utilities so display:grid beats Tailwind .flex !important. */
+@layer utilities {
+  #information-widgets #widgets-wrap {
+    display: grid !important;
+    grid-template-columns: auto auto auto minmax(0.75rem, 1fr) auto auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 0.55rem;
+    row-gap: 0;
+    width: 100%;
+  }
+
+  /* 1 logo */
+  #information-widgets #widgets-wrap > :nth-child(1) {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+
+  /* 2 Flixbox */
+  #information-widgets #widgets-wrap > :nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    padding: 0 !important;
+  }
+
+  /* 3 slogan under brand */
+  #information-widgets #widgets-wrap > :nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    padding: 0 !important;
+    margin-top: -1px !important;
+  }
+
+  /* 4 mode · profile chip — beside brand stack, not beside /data */
+  #information-widgets #widgets-wrap > :nth-child(4) {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    align-self: center;
+    padding-left: 0.15rem !important;
+  }
+
+  /* 5 /data — right cluster with clock */
+  #information-widgets #widgets-wrap > :nth-child(5) {
+    grid-column: 5;
+    grid-row: 1 / span 2;
+    align-self: center;
+    justify-self: end;
+    padding: 0 !important;
+    margin: 0 0.65rem 0 0 !important;
+  }
+
+  /* 6 datetime (information-widgets-right) */
+  #information-widgets #widgets-wrap > :nth-child(6) {
+    grid-column: 6;
+    grid-row: 1 / span 2;
+    align-self: center;
+    justify-self: end;
+    margin: 0 !important;
+    flex-grow: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+  }
+
+  #information-widgets #information-widgets-right {
+    margin: 0 !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    justify-content: flex-end !important;
+    gap: 0.5rem !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  @media (max-width: 720px) {
+    #information-widgets #widgets-wrap {
+      grid-template-columns: auto 1fr auto;
+      grid-template-rows: auto auto auto;
+    }
+
+    #information-widgets #widgets-wrap > :nth-child(1) {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }
+
+    #information-widgets #widgets-wrap > :nth-child(2) {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    #information-widgets #widgets-wrap > :nth-child(3) {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    #information-widgets #widgets-wrap > :nth-child(4) {
+      grid-column: 3;
+      grid-row: 1 / span 2;
+    }
+
+    #information-widgets #widgets-wrap > :nth-child(5) {
+      grid-column: 1 / 3;
+      grid-row: 3;
+      justify-self: start;
+      margin: 0.35rem 0 0 !important;
+    }
+
+    #information-widgets #widgets-wrap > :nth-child(6) {
+      grid-column: 3;
+      grid-row: 3;
+      justify-self: end;
+      margin: 0.35rem 0 0 !important;
+    }
+  }
+}
+
+/* Default greeting shell — no chrome */
+[class*="Greeting_greeting"],
+[class*="greeting"],
+.information-widget-greeting {
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  filter: none !important;
+  max-width: none !important;
+}
+
+/* Brand: Flixbox (text_size: xl) */
+.information-widget-greeting span.text-xl,
+[class*="Greeting_greeting"] span.text-xl,
+[class*="greeting"] .text-xl {
+  font-family: Manrope, Manrope-Fallback, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 1.45rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.15 !important;
+  color: #f0f6fc !important;
+  text-transform: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Slogan under Flixbox (text_size: md) */
+.information-widget-greeting span.text-md,
+[class*="Greeting_greeting"] span.text-md,
+[class*="greeting"] .text-md,
+.information-widget-greeting span.text-base,
+[class*="Greeting_greeting"] span.text-base,
+[class*="greeting"] .text-base {
+  font-family: Manrope, Manrope-Fallback, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.2 !important;
+  color: #94a3b8 !important;
+  text-transform: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  max-width: 16rem !important;
+  white-space: nowrap !important;
+}
+
+/* Mode · profile chip (text_size: sm) — sole header badge */
+.information-widget-greeting span.text-sm,
+[class*="Greeting_greeting"] span.text-sm,
+[class*="greeting"] .text-sm {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
+  font-size: 0.68rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: #94a3b8 !important;
+  background: rgba(18, 22, 30, 0.7) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 9999px !important;
+  padding: 3px 10px !important;
+  max-width: none !important;
+}
+
+/* Clock: plain telemetry — same quiet band as /data */
+.information-widget-datetime {
+  align-self: center !important;
+}
+
+.information-widget-datetime span {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.03em !important;
+  color: #64748b !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.information-widget-datetime span:hover {
+  color: #94a3b8 !important;
+  border: none !important;
+}
+
+/* Quiet /data telemetry (Option A) — right cluster with clock */
+#information-widgets .information-widget-resource,
+#information-widgets [class*="information-widget-resource"] {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  backdrop-filter: none !important;
+}
+
+#information-widgets .information-widget-resource .resource-icon,
+#information-widgets .information-widget-resource svg.resource-icon {
+  width: 14px !important;
+  height: 14px !important;
+  color: #64748b !important;
+  opacity: 0.85 !important;
+}
+
+#information-widgets .information-widget-resource .text-xs,
+#information-widgets .information-widget-resource [class*="text-xs"] {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
+  font-size: 0.68rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.03em !important;
+  color: #64748b !important;
+}
+
+#information-widgets .information-widget-resource .resource-usage,
+#information-widgets .information-widget-resource [class*="resource-usage"] {
+  height: 2px !important;
+  margin-top: 3px !important;
+  background-color: rgba(148, 163, 184, 0.15) !important;
+  min-width: 72px !important;
+}
+
+#information-widgets .information-widget-resource .resource-usage > div,
+#information-widgets .information-widget-resource [class*="resource-usage"] > div {
+  background-color: rgba(148, 163, 184, 0.45) !important;
+}
+
+/* /data label — same quiet mono as clock */
+#information-widgets .ml-6.pt-1.text-xs,
+#information-widgets [class*="widget-container"] .text-xs.text-center {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
+  font-size: 0.65rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em !important;
+  color: #64748b !important;
+  margin-left: 0.35rem !important;
+  padding-top: 0 !important;
+}
+
+/* Strip boxed chrome ONLY on header info widgets — do not touch service cards */
+#information-widgets > #widgets-wrap > .widget-container,
+#information-widgets #widgets-wrap .widget-container {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Restore side gutters (Homepage m-5 / sm:m-9). Never collapse horizontal margin. */
+@layer utilities {
+  #information-widgets {
+    margin-left: 2.25rem !important;
+    margin-right: 2.25rem !important;
+    margin-top: 2.25rem !important;
+    margin-bottom: 0.75rem !important;
+    padding-bottom: 0.85rem !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .container.relative {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+
+/* Flixbox Logo Widget — sizing lives with §2 logo rules */
+.information-widget-logo {
+  align-self: center !important;
+}
+
+/* Minimal Search Bar */
+[class*="search_input"],
+input[type="text"] {
+  background: rgba(18, 22, 30, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 6px !important;
+  color: #f0f6fc !important;
+  backdrop-filter: blur(8px) !important;
+  transition: all 0.18s ease !important;
+}
+
+[class*="search_input"]:focus,
+input[type="text"]:focus {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12) !important;
+  outline: none !important;
+}
+
+/* Header information widgets — Option A: no boxed peers next to brand */
+[class*="InformationWidget_informationWidget"] {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Resource gauge bars (service cards may still use progress) */
+progress,
+[class*="progress_bar"],
+[role="progressbar"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 9999px !important;
+  height: 3px !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. Service Cards (Glassmorphic Slate)
+   Homepage cards are often `li.service > div` without a stable service_card class.
+   -------------------------------------------------------------------------- */
+
+li.service > div,
+.service-card,
+[class*="service_card"],
+[class*="card_card"] {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s ease !important;
+  position: relative !important;
+}
+
+li.service > div:hover,
+.service-card:hover,
+[class*="service_card"]:hover,
+[class*="card_card"]:hover {
+  position: relative !important;
+  z-index: 20 !important;
+  border-color: var(--card-border-hover) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. Inset Metric Stat Blocks (Signature Telemetry Styling)
+   -------------------------------------------------------------------------- */
+
+/* Stat containers inside service widgets */
+[class*="widget_stats"],
+[class*="widget-stats"],
+[class*="service_widget"] {
+  margin-top: 0.35rem !important;
+}
+
+/* Individual Inset Stat Box — do not use broad *stat* attribute selectors (they match status-*). */
+
+[class*="widget_stats"] > div,
+[class*="widget-stats"] > div {
+  background-color: var(--stat-box-bg) !important;
+  border: 1px solid var(--stat-box-border) !important;
+  border-radius: 6px !important;
+  padding: 5px 8px !important;
+  margin: 2px !important;
+  transition: background-color 0.15s ease !important;
+}
+
+/* Metric Value */
+[class*="widget_stats"] [class*="font-semibold"],
+[class*="widget-stats"] [class*="font-semibold"] {
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  font-size: 0.92rem !important;
+}
+
+/* Metric Label */
+[class*="widget_stats"] [class*="text-xs"],
+[class*="widget-stats"] [class*="text-xs"] {
+  font-size: 0.63rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--text-secondary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   5. Typography & Section Titles
+   -------------------------------------------------------------------------- */
+
+h2,
+[class*="group_title"],
+[class*="Group_title"] {
+  color: #e6edf3 !important;
+  font-weight: 600 !important;
+  font-size: 1.25rem !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  text-shadow: none !important;
+  margin-bottom: 0.85rem !important;
+}
+
+/* Service Card Titles and Subtitles */
+[class*="service_title"],
+[class*="card_title"] {
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  font-size: 0.98rem !important;
+}
+
+[class*="service_description"],
+[class*="card_description"] {
+  color: var(--text-secondary) !important;
+  font-size: 0.8rem !important;
+}
+
+/* --------------------------------------------------------------------------
+   6. Status Dots (Crisp Emerald Telemetry)
+   -------------------------------------------------------------------------- */
+
+[class*="status-dot-green"],
+[class*="bg-emerald-"],
+[class*="bg-green-"] {
+  background-color: var(--status-healthy) !important;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6) !important;
+}
+
+[class*="status-dot-red"],
+[class*="bg-rose-"],
+[class*="bg-red-"] {
+  background-color: var(--status-danger) !important;
+  box-shadow: 0 0 6px rgba(244, 63, 94, 0.6) !important;
+}
+
+[class*="status-dot-amber"],
+[class*="bg-amber-"],
+[class*="bg-yellow-"] {
+  background-color: var(--status-warning) !important;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6) !important;
+}
+
+/* --------------------------------------------------------------------------
+   7. Discrete & Subtle Error Styling (Non-invasive)
+   -------------------------------------------------------------------------- */
+
+/* Error summary toggle: boxless, subtle text indicator */
+details summary,
+summary[class*="bg-rose"],
+summary[class*="bg-red"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #94a3b8 !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  padding: 4px 8px !important;
+  margin: 6px auto 0 !important;
+  border-radius: 4px !important;
+  width: fit-content !important;
+  max-width: 90% !important;
+  opacity: 0.8 !important;
+  transition: opacity 0.2s ease, background-color 0.2s ease !important;
+}
+
+details summary:hover,
+summary[class*="bg-rose"]:hover,
+summary[class*="bg-red"]:hover {
+  opacity: 1 !important;
+  background-color: rgba(248, 113, 113, 0.08) !important;
+  color: #f87171 !important;
+}
+
+/* Subtle warning icon inside summary */
+details summary svg,
+summary[class*="bg-rose"] svg,
+summary[class*="bg-red"] svg {
+  color: #f87171 !important;
+  display: inline-block !important;
+  vertical-align: -2px !important;
+  margin-right: 5px !important;
+  width: 13px !important;
+  height: 13px !important;
+}
+
+/* Detailed error dropdown: clean obsidian terminal styling */
+details > div,
+details div[class*="bg-white"],
+details div[class*="dark:bg-"] {
+  background-color: rgba(14, 17, 23, 0.95) !important;
+  border: 1px solid rgba(248, 113, 113, 0.2) !important;
+  border-radius: 6px !important;
+  color: #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+details div ul span {
+  color: #f87171 !important;
+}
+
+/* Ensure service cards with error states preserve clean dark slate background */
+.service-card[class*="red"],
+.service-card[class*="rose"],
+[class*="service_card"][class*="red"],
+[class*="service_card"][class*="rose"] {
+  background-color: var(--card-bg) !important;
+  border-color: var(--card-border) !important;
+}
+
+/* --------------------------------------------------------------------------
+   8. Header datetime — styles live with brand hierarchy (§2b)
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   9. Compact density (glance board)
+   -------------------------------------------------------------------------- */
+
+/* Tighter section gaps */
+[class*="services_group"],
+[class*="group_services"],
+section {
+  margin-bottom: 0.65rem !important;
+}
+
+h2,
+[class*="group_title"],
+[class*="Group_title"] {
+  font-size: 1.05rem !important;
+  margin-bottom: 0.45rem !important;
+}
+
+/* Nested Household: less chrome */
+[class*="services_group"] [class*="services_group"] h2,
+[class*="group"] [class*="group"] [class*="group_title"] {
+  font-size: 0.85rem !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 0.35rem !important;
+}
+
+/* One-row cards when widget has only 1–2 field blocks (community pattern) */
+.service-card:has(.service-container > :first-child:nth-last-child(-n+2)),
+[class*="service_card"]:has([class*="service-container"] > :first-child:nth-last-child(-n+2)) {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.5rem !important;
+}
+
+.service-card:has(.service-container > :first-child:nth-last-child(-n+2)) .service-container,
+[class*="service_card"]:has([class*="service-container"] > :first-child:nth-last-child(-n+2)) [class*="service-container"] {
+  width: auto !important;
+  flex: 1 1 auto !important;
+  justify-content: flex-end !important;
+  margin-top: 0 !important;
+}
+
+/* Smaller inset stats */
+[class*="widget_stats"] > div,
+[class*="widget-stats"] > div {
+  padding: 3px 6px !important;
+  margin: 1px !important;
+}
+
+[class*="widget_stats"] [class*="font-semibold"],
+[class*="widget-stats"] [class*="font-semibold"] {
+  font-size: 0.82rem !important;
+}
+
+/* Tabs sit cleanly under header */
+[class*="tab"],
+nav[class*="Tab"] {
+  margin-bottom: 0.75rem !important;
+}
+

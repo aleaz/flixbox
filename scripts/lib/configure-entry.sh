@@ -45,11 +45,13 @@ configure_entry_sync_homepage() {
   local services_yaml="${CONFIG_DIR:-}/homepage/services.yaml"
   [[ -n "${CONFIG_DIR:-}" && -f "$services_yaml" ]] || return 0
   if ${DRY_RUN:-false}; then
-    dry "Sync Homepage services.yaml (ports/widgets; strip admin widgets under shared)"
+    dry "Sync Homepage services.yaml + status chips in widgets.yaml (shared strips admin widgets)"
     return 0
   fi
   local out=""
   if ! out="$(FLIXBOX_ACCESS_PROFILE="$(flixbox_access_profile)" \
+    FLIXBOX_MODE="${FLIXBOX_MODE:-direct}" \
+    VPN_ENABLED="${VPN_ENABLED:-false}" \
     python3 "${ROOT_DIR}/scripts/lib/homepage-sync.py" "$services_yaml" 2>&1)"; then
     warn "Homepage sync failed — run: ./bin/flixbox reload"
     return 1
@@ -57,7 +59,7 @@ configure_entry_sync_homepage() {
   if [[ -n "$out" ]]; then
     info "$out"
   else
-    info "Homepage services.yaml aligned (profile=$(flixbox_access_profile))"
+    info "Homepage aligned (profile=$(flixbox_access_profile) mode=${FLIXBOX_MODE:-direct})"
   fi
 }
 

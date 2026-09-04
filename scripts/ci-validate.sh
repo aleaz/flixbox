@@ -721,7 +721,39 @@ pass C-80
 [[ -f scripts/lib/homepage-sync.py ]] || fail C-86 'missing scripts/lib/homepage-sync.py'
 [[ -x scripts/lib/homepage-sync.py ]] || fail C-86 'homepage-sync.py must be executable'
 grep -q 'homepage-sync.py' bin/flixbox || fail C-86 'bin/flixbox must invoke homepage-sync.py'
-grep -q 'disk: /data' templates/homepage/widgets.yaml || fail C-86 'widgets.yaml must monitor /data storage'
+grep -q 'sync_homepage_widgets' scripts/lib/homepage-sync.py || \
+  fail C-86 'homepage-sync must sync status chips in widgets.yaml'
+grep -q 'text: "Flixbox"' templates/homepage/widgets.yaml || \
+  fail C-86 'widgets.yaml must show Flixbox as brand greeting'
+grep -q 'From request to play' templates/homepage/widgets.yaml || \
+  fail C-86 'widgets.yaml must use product slogan as subtitle'
+grep -q 'timeStyle: short' templates/homepage/widgets.yaml || \
+  fail C-86 'widgets.yaml datetime must prefer time-only'
+if grep -qE 'dateStyle:' templates/homepage/widgets.yaml; then
+  fail C-86 'widgets.yaml datetime must not show dateStyle (time-only header)'
+fi
+grep -q 'Household:' templates/homepage/services.yaml || \
+  fail C-86 'services must nest Watch/Request under Household'
+grep -q 'tab: Ops' templates/homepage/settings.yaml || \
+  fail C-86 'settings must use Ops tab for primary glance'
+grep -q 'tab: Docs' templates/homepage/settings.yaml || \
+  fail C-86 'settings must put Docs on a secondary tab'
+grep -q 'headerStyle: clean' templates/homepage/settings.yaml || \
+  fail C-86 'settings headerStyle must be clean (Option A: demoted hardware)'
+if grep -q 'headerStyle: boxedWidgets' templates/homepage/settings.yaml; then
+  fail C-86 'boxedWidgets makes /data compete with Flixbox title'
+fi
+grep -q 'label: /data' templates/homepage/widgets.yaml || \
+  fail C-86 'header resources must prefer /data disk over CPU/RAM hero'
+grep -q 'disk: /data' templates/homepage/widgets.yaml || \
+  fail C-86 'widgets.yaml must monitor /data storage'
+if grep -qE '^\s+cpu:\s*true' templates/homepage/widgets.yaml; then
+  fail C-86 'widgets.yaml must not put CPU in the brand header'
+fi
+grep -q 'Docs:' templates/homepage/bookmarks.yaml || \
+  fail C-86 'bookmarks must be Flixbox docs (not social filler)'
+grep -q 'bookmarks.yaml' bin/flixbox || \
+  fail C-86 'copy_templates must install bookmarks.yaml'
 python3 - <<'PY' || fail C-86 'homepage-sync unit test failed'
 import os, subprocess, tempfile
 from pathlib import Path
@@ -804,6 +836,48 @@ try:
     assert "type: qbittorrent" not in shared_content, "shared must remove qBit admin widget"
     assert "type: radarr" not in shared_content, "shared must remove Radarr admin widget"
     assert "qBittorrent:" in shared_content and "Radarr:" in shared_content
+
+    # widgets.yaml: rewrite mode·profile chip only; keep brand + slogan
+    with tempfile.TemporaryDirectory() as td:
+        tdir = Path(td)
+        target_services = tdir / "services.yaml"
+        target_widgets = tdir / "widgets.yaml"
+        target_services.write_text(sample)
+        target_widgets.write_text(
+            """---
+- logo:
+    icon: /images/logo.png
+- greeting:
+    text: "Flixbox"
+    text_size: xl
+- greeting:
+    text: "From request to play"
+    text_size: md
+- greeting:
+    text: "direct · trusted"
+    text_size: sm
+- datetime:
+    text_size: sm
+    format:
+      timeStyle: short
+- resources:
+    label: /data
+    disk: /data
+"""
+        )
+        env_vpn = {**env, "FLIXBOX_MODE": "vpn", "FLIXBOX_ACCESS_PROFILE": "trusted"}
+        res_w = subprocess.run(
+            ["python3", "scripts/lib/homepage-sync.py", str(target_services)],
+            env=env_vpn,
+            capture_output=True,
+            text=True,
+        )
+        if res_w.returncode != 0:
+            raise AssertionError(f"widgets sync exited {res_w.returncode}: {res_w.stderr}")
+        w = target_widgets.read_text()
+        assert 'text: "Flixbox"' in w, "brand greeting must stay Flixbox"
+        assert "From request to play" in w, "slogan must not be overwritten by chip sync"
+        assert 'text: "vpn · trusted"' in w, "status chip must sync to vpn · trusted"
 
     # Test idempotency (no modifications on re-run)
     Path(path).write_text(content)

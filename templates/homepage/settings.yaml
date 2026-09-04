@@ -1,6 +1,44 @@
 ---
-# Minimal Homepage settings — copy to ${CONFIG_DIR}/homepage/settings.yaml
+# Dense Ops glance; Docs on a second tab.
 title: Flixbox
 theme: dark
-color: slate
+color: zinc
 headerStyle: clean
+hideVersion: true
+useEqualHeights: true
+statusStyle: dot
+layout:
+  Household:
+    tab: Ops
+    style: row
+    columns: 2
+    Watch:
+      style: row
+      columns: 1
+    Request:
+      style: row
+      columns: 1
+  Acquire:
+    tab: Ops
+    style: row
+    columns: 3
+  Index & subs:
+    tab: Ops
+    style: row
+    columns: 2
+  Keep tidy:
+    tab: Ops
+    style: row
+    columns: 3
+  Network:
+    tab: Ops
+    style: row
+    columns: 2
+  Host:
+    tab: Ops
+    style: row
+    columns: 1
+  Docs:
+    tab: Docs
+    style: row
+    columns: 6

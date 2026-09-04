@@ -1,8 +1,26 @@
 ---
+# Brand-first header: Flixbox + slogan + chip (left).
+# Quiet right telemetry: /data then time (CSS grid places disk next to clock).
+# Widget child order is a CSS-grid contract with custom.css (@layer utilities) — do not reorder lightly.
+# Status greeting (text_size: sm, mode · profile) synced by homepage-sync.py from .env.
+# Start typing anywhere for Quick Launch.
+- logo:
+    icon: /images/logo.png
+    href: https://github.com/aleaz/flixbox
+- greeting:
+    text: "Flixbox"
+    text_size: xl
+- greeting:
+    text: "From request to play"
+    text_size: md
+- greeting:
+    text: "direct · trusted"
+    text_size: sm
 - resources:
-    cpu: true
-    memory: true
-    disk: /
-- search:
-    provider: duckduckgo
-    target: _blank
+    label: /data
+    disk: /data
+    expanded: false
+- datetime:
+    text_size: sm
+    format:
+      timeStyle: short

@@ -31,7 +31,9 @@ services:
       HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS:-localhost:3000,127.0.0.1:3000}
     volumes:
       - ${CONFIG_DIR}/homepage:/app/config
+      - ${CONFIG_DIR}/homepage/images:/app/public/images:ro
       - ${DATA_DIR}:/data:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - ${HOMEPAGE_PORT:-3000}:3000
     restart: unless-stopped

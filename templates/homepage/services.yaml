@@ -1,32 +1,99 @@
 ---
-# Homepage starter — copy to ${CONFIG_DIR}/homepage/services.yaml
-- Media:
-    - Jellyfin:
-        href: http://localhost:8096
-        description: Media server
-        icon: jellyfin.png
-    - Seerr:
-        href: http://localhost:5055
-        description: Requests
-        icon: overseerr.png  # Homepage icon pack name; product is Seerr
-- Downloads:
+# Compact glance: Household (Watch|Request) → Acquire → Index → Tidy → Network → Host.
+# Docs live on a separate tab (settings.yaml). Synced by homepage-sync.py.
+- Household:
+    - Watch:
+        - Jellyfin:
+            href: http://localhost:8096
+            description: Media library
+            icon: jellyfin.png
+    - Request:
+        - Seerr:
+            href: http://localhost:5055
+            description: Household requests
+            icon: overseerr.png
+- Acquire:
     - qBittorrent:
         href: http://localhost:8080
-        description: Torrents
+        description: Downloads
         icon: qbittorrent.png
-    - Prowlarr:
-        href: http://localhost:9696
-        icon: prowlarr.png
+        widget:
+          type: qbittorrent
+          url: http://qbittorrent:8080
+          username: admin
+          password: password
+          fields: ["download", "upload", "leech", "seed"]
     - Radarr:
         href: http://localhost:7878
+        description: Movies
         icon: radarr.png
+        widget:
+          type: radarr
+          url: http://radarr:7878
+          key: ""
+          fields: ["wanted", "queued", "movies"]
     - Sonarr:
         href: http://localhost:8989
+        description: TV
         icon: sonarr.png
-- Hygiene:
-    - Maintainerr:
-        href: http://localhost:6246
-        icon: mdi-broom
+        widget:
+          type: sonarr
+          url: http://sonarr:8989
+          key: ""
+          fields: ["wanted", "queued", "series"]
+- Index & subs:
+    - Prowlarr:
+        href: http://localhost:9696
+        description: Indexers
+        icon: prowlarr.png
+        widget:
+          type: prowlarr
+          url: http://prowlarr:9696
+          key: ""
+          fields: ["grabs", "queries"]
     - Bazarr:
         href: http://localhost:6767
+        description: Subtitles
         icon: bazarr.png
+- Keep tidy:
+    - Maintainerr:
+        href: http://localhost:6246
+        description: Library cleanup rules
+        icon: mdi-broom
+        widget:
+          type: maintainerr
+          url: http://maintainerr:6246
+    - Decluttarr:
+        href: https://github.com/aleaz/flixbox/blob/main/docs/adr/0008-maintenance-decluttarr-maintainerr.md
+        description: Queue cleanup daemon
+        icon: mdi-delete-sweep
+    - Unpackerr:
+        href: https://github.com/aleaz/flixbox/blob/main/docs/01-scope.md
+        description: Archive extraction daemon
+        icon: unpackerr.png
+- Network:
+    - Network Status:
+        href: https://github.com/aleaz/flixbox/blob/main/docs/user/07-vpn-and-direct.md
+        description: Direct (No VPN) — qBit uses host IP
+        icon: mdi-shield-alert
+    - Byparr:
+        href: http://localhost:8191
+        description: Cloudflare bypass
+        icon: flaresolverr.png
+        ping: http://byparr:8191/health
+        widget:
+          type: customapi
+          url: http://byparr:8191/health
+          refreshInterval: 30000
+          mappings:
+            - field: msg
+              label: Status
+              format: text
+            - field: version
+              label: Version
+              format: text
+- Host:
+    - Operator CLI:
+        href: https://github.com/aleaz/flixbox/blob/main/docs/user/REFERENCE.md
+        description: status · configure · credentials · reload
+        icon: mdi-console

@@ -37,23 +37,36 @@ DEFAULT_PORTS = {
 }
 
 OPTIONAL_WIDGET_TEMPLATES = {
-    "Seerr": """        widget:
-          type: overseerr
-          url: http://seerr:5055
-          key: {key}
+    "Seerr": """widget:
+  type: seerr
+  url: http://seerr:5055
+  key: {key}
+  fields: ["pending", "approved", "available"]
 """,
-    "Jellyfin": """        widget:
-          type: jellyfin
-          url: http://jellyfin:8096
-          key: {key}
-          enableNowPlaying: true
+    "Jellyfin": """widget:
+  type: jellyfin
+  url: http://jellyfin:8096
+  key: {key}
+  enableNowPlaying: true
 """,
-    "Bazarr": """        widget:
-          type: bazarr
-          url: http://bazarr:6767
-          key: {key}
+    "Bazarr": """widget:
+  type: bazarr
+  url: http://bazarr:6767
+  key: {key}
 """,
 }
+
+
+def _indent_block(block: str, spaces: int) -> str:
+    pad = " " * spaces
+    out = []
+    for raw in block.splitlines():
+        if raw.strip() == "":
+            out.append("\n")
+        else:
+            # block uses 2-space nested indent relative to first line
+            out.append(f"{pad}{raw}\n")
+    return "".join(out)
 
 DIRECT_CARD = """    - Network Status:
         href: https://github.com/aleaz/flixbox/blob/main/docs/user/07-vpn-and-direct.md
@@ -233,26 +246,31 @@ def sync_homepage_services(filepath: Path) -> bool:
     # Paso 3: Sincronizar puertos href, credenciales existentes e inyectar widgets cuando corresponda
     final_lines = []
     current_service = None
+    current_key_indent = 8
     in_widget = False
 
-    def maybe_inject_widget(svc):
+    def maybe_inject_widget(svc, key_indent: int):
         if svc in OPTIONAL_WIDGET_TEMPLATES and not has_widget.get(svc):
             k = optional_keys.get(svc)
             if k:
-                final_lines.append(OPTIONAL_WIDGET_TEMPLATES[svc].format(key=k))
+                body = OPTIONAL_WIDGET_TEMPLATES[svc].format(key=k)
+                final_lines.append(_indent_block(body, key_indent))
                 has_widget[svc] = True
 
     for line in step1_lines:
         m_svc = svc_regex.match(line)
         if m_svc:
-            maybe_inject_widget(current_service)
+            maybe_inject_widget(current_service, current_key_indent)
             current_service = m_svc.group(2)
+            # Keys under "- Service:" sit 4 spaces deeper than the dash column.
+            dash_col = len(line) - len(line.lstrip(" "))
+            current_key_indent = dash_col + 4
             in_widget = False
             final_lines.append(line)
             continue
 
         if item_regex.match(line):
-            maybe_inject_widget(current_service)
+            maybe_inject_widget(current_service, current_key_indent)
             current_service = None
             in_widget = False
 
@@ -324,7 +342,7 @@ def sync_homepage_services(filepath: Path) -> bool:
 
         final_lines.append(line)
 
-    maybe_inject_widget(current_service)
+    maybe_inject_widget(current_service, current_key_indent)
 
     new_content = "".join(final_lines)
     if new_content != orig_content:
@@ -349,6 +367,90 @@ def sync_homepage_services(filepath: Path) -> bool:
     return False
 
 
+def sync_homepage_widgets(filepath: Path) -> bool:
+    """Rewrite the compact status greeting from FLIXBOX_MODE / FLIXBOX_ACCESS_PROFILE."""
+    if not filepath.is_file():
+        return False
+
+    mode = (os.environ.get("FLIXBOX_MODE") or "direct").strip().lower() or "direct"
+    vpn_enabled = (os.environ.get("VPN_ENABLED") or "false").strip().lower()
+    if mode not in ("vpn", "direct"):
+        mode = "vpn" if vpn_enabled == "true" else "direct"
+    profile = (os.environ.get("FLIXBOX_ACCESS_PROFILE") or "trusted").strip().lower() or "trusted"
+    chip = f"{mode} · {profile}"
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        orig = f.read()
+    lines = orig.splitlines(keepends=True)
+
+    out: list[str] = []
+    i = 0
+    changed = False
+    while i < len(lines):
+        line = lines[i]
+        if re.match(r"^-\s*greeting:\s*$", line):
+            block = [line]
+            j = i + 1
+            while j < len(lines) and (
+                lines[j].startswith(" ") or lines[j].startswith("\t") or lines[j].strip() == ""
+            ):
+                if re.match(r"^-\s+\S", lines[j]):
+                    break
+                block.append(lines[j])
+                j += 1
+            # Only rewrite the mode · profile chip (sm), not slogan (md) or brand (xl).
+            is_sm = any(re.search(r"text_size:\s*sm\b", b) for b in block)
+            is_chip = any(
+                re.search(
+                    r'text:\s*"(?:vpn|direct)\s*·\s*(?:trusted|shared)"',
+                    b,
+                    re.IGNORECASE,
+                )
+                for b in block
+            )
+            if is_sm and is_chip:
+                new_block: list[str] = []
+                for b in block:
+                    if re.match(r"^(\s*text:\s*).*$", b):
+                        m = re.match(r"^(\s*text:\s*).*$", b)
+                        assert m is not None
+                        nl = f'{m.group(1)}"{chip}"'
+                        if b.endswith("\r\n"):
+                            nl += "\r\n"
+                        elif b.endswith("\n"):
+                            nl += "\n"
+                        if nl != b:
+                            changed = True
+                        new_block.append(nl)
+                    else:
+                        new_block.append(b)
+                out.extend(new_block)
+            else:
+                out.extend(block)
+            i = j
+            continue
+        out.append(line)
+        i += 1
+
+    if not changed:
+        return False
+
+    new_content = "".join(out)
+    tmp_path = filepath.with_suffix(filepath.suffix + ".tmp")
+    try:
+        orig_mode = filepath.stat().st_mode
+    except OSError:
+        orig_mode = 0o644
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        f.write(new_content)
+    try:
+        os.chmod(tmp_path, orig_mode)
+    except OSError:
+        pass
+    os.replace(tmp_path, filepath)
+    return True
+
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(0)
@@ -357,9 +459,16 @@ def main():
     if not target_file.exists():
         sys.exit(0)
 
-    changed = sync_homepage_services(target_file)
-    if changed:
-        print(f"Synced Homepage in {target_file}")
+    messages: list[str] = []
+    if sync_homepage_services(target_file):
+        messages.append(f"Synced Homepage services in {target_file}")
+
+    widgets_file = target_file.parent / "widgets.yaml"
+    if widgets_file.is_file() and sync_homepage_widgets(widgets_file):
+        messages.append(f"Synced Homepage status chips in {widgets_file}")
+
+    for msg in messages:
+        print(msg)
 
 
 if __name__ == "__main__":
