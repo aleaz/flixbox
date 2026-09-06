@@ -635,7 +635,7 @@ if grep -q 'configure-apps.sh" --sync-qbit-auth' scripts/lib/credentials.sh; the
 fi
 grep -q 'Rotate vs align' docs/user/06-configuration.md || \
   fail C-87 '06-configuration must document rotate vs align'
-grep -q '*Auth cookie' scripts/lib/arr-host-config-auth.py || \
+grep -Fq '*Auth cookie' scripts/lib/arr-host-config-auth.py || \
   fail C-87 'arr-host-config-auth must require *Auth cookie on login verify'
 grep -q 'QBIT_API_KEY=' scripts/configure/preflight.sh || \
   fail C-87 'dry-run preflight must export QBIT_API_KEY placeholder'
