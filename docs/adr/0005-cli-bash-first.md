@@ -16,7 +16,7 @@ Servarr v4+ requires authentication; there is no stable public “create first a
 
 - MVP ships only **`bin/flixbox`** (Bash) with: `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`, **`configure`**, **`reload`**, **`credentials`** (ADR 0020).
 - PowerShell CLI is **post-MVP**.
-- Extra commands (`sync-profiles`, `backup`, `restore`, `update`) are roadmap, not MVP blockers.
+- Extra commands (`sync-profiles`, `backup`, `restore`, `update`) and professional UX contract (`version`, `doctor`, exit codes, `--json`, completions) are roadmap — see [ADR 0021](0021-cli-ux-contract.md) (Accepted).
 - **`configure`** is the idempotent first-run wirer (GET → skip if already correct → POST/PUT). It MUST:
   - Wire qBittorrent categories/prefs (VPN: bind BitTorrent to `tun0`), Radarr/Sonarr root folders + qBit client, Prowlarr Byparr + app sync, Bazarr connections.
   - Close the secret loop: write discovered/generated API keys into `.env` when empty; patch Recyclarr placeholders; enable Homepage widgets when keys exist; recreate Decluttarr/Unpackerr when hygiene keys change.

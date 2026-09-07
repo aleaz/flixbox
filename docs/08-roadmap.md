@@ -33,8 +33,9 @@ Deliverables:
 
 ## After MVP — v0.2
 
-- CLI: `sync-profiles`, `backup`, `restore`, `update`
-- Stronger init validation (hardlink probe, config-on-NFS guard, exFAT guard)
+- CLI UX contract — [ADR 0021](adr/0021-cli-ux-contract.md) (**Accepted**, full UX/QA/security contract): Phase A `version`/help/exits/`doctor`/`status --json`; Phase B `backup`/`restore`/`update`/`recyclarr`/completions; Phase C taxonomy hardening
+- CLI: `sync-profiles`, `backup`, `restore`, `update` (names locked by ADR 0021 Phase B)
+- Stronger init validation (hardlink probe, config-on-NFS guard, exFAT guard) — fold into `doctor` where practical
 - [x] CI phase 2: Trivy (warn-only) + shared compose render — [10-ci-plan.md](10-ci-plan.md)
 - Optional digest pins (`@sha256:`) for stricter supply chain
 - **Notifications:** optional Apprise API profile (Telegram via Apprise URL, not a Flixbox bot) — [ADR 0012](adr/0012-notifications-apprise-hub.md)
