@@ -1,5 +1,5 @@
 ---
-# Dense Ops glance; Docs on a second tab.
+# Dense Ops glance; Docs on a second tab (group header hidden — avoids Docs/Docs echo).
 title: Flixbox
 theme: dark
 color: zinc
@@ -7,6 +7,7 @@ headerStyle: clean
 hideVersion: true
 useEqualHeights: true
 statusStyle: dot
+iconStyle: theme
 layout:
   Household:
     tab: Ops
@@ -40,5 +41,6 @@ layout:
     columns: 1
   Docs:
     tab: Docs
+    header: false
     style: row
-    columns: 6
+    columns: 2

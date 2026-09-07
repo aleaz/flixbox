@@ -1,21 +1,28 @@
 ---
-# Operator docs — not social startpage links.
+# Operator docs shelf — tab label is Docs; group heading hidden in settings.yaml.
 - Docs:
     - Overview:
-        - abbr: OV
+        - icon: mdi-book-open-variant
           href: https://github.com/aleaz/flixbox/blob/main/docs/user/01-overview.md
+          description: What Flixbox is and how the stack fits together
     - First run:
-        - abbr: FR
+        - icon: mdi-rocket-launch-outline
           href: https://github.com/aleaz/flixbox/blob/main/docs/user/05-first-run.md
+          description: Bring-up checklist after install
     - Access profiles:
-        - abbr: AP
+        - icon: mdi-shield-account-outline
           href: https://github.com/aleaz/flixbox/blob/main/docs/user/13-access-profiles.md
+          description: trusted vs shared LAN exposure
     - VPN & Direct:
-        - abbr: VPN
+        - icon: mdi-shield-lock-outline
           href: https://github.com/aleaz/flixbox/blob/main/docs/user/07-vpn-and-direct.md
+          description: Gluetun mode and Direct fallback
     - Credentials:
-        - abbr: CR
+        - icon: mdi-key-variant
           href: https://github.com/aleaz/flixbox/blob/main/docs/user/15-credential-rotation.md
+          description: Rotate qBit and Forms passwords safely
     - GitHub:
-        - abbr: GH
+        # Simple Icons for brands (MDI brand glyphs are deprecated upstream).
+        - icon: si-github
           href: https://github.com/aleaz/flixbox
+          description: Source, issues, and releases

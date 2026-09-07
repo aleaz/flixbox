@@ -179,6 +179,8 @@ copy_templates() {
     cp "${ROOT_DIR}/templates/homepage/bookmarks.yaml" "${CONFIG_DIR}/homepage/bookmarks.yaml"
   [[ -f "${CONFIG_DIR}/homepage/custom.css" ]] || \
     cp "${ROOT_DIR}/templates/homepage/custom.css" "${CONFIG_DIR}/homepage/custom.css"
+  [[ -f "${CONFIG_DIR}/homepage/custom.js" ]] || \
+    cp "${ROOT_DIR}/templates/homepage/custom.js" "${CONFIG_DIR}/homepage/custom.js"
   mkdir -p "${CONFIG_DIR}/homepage/images"
   [[ -f "${CONFIG_DIR}/homepage/images/logo.png" ]] || \
     cp "${ROOT_DIR}/templates/homepage/images/logo.png" "${CONFIG_DIR}/homepage/images/logo.png"

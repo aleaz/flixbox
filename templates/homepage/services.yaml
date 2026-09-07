@@ -1,22 +1,32 @@
 ---
 # Compact glance: Household (Watch|Request) → Acquire → Index → Tidy → Network → Host.
 # Docs live on a separate tab (settings.yaml). Synced by homepage-sync.py.
+# Status dots: 1 = Docker only; 2 = Docker + siteMonitor (HTTP). Daemons are Docker-only by design.
 - Household:
     - Watch:
         - Jellyfin:
             href: http://localhost:8096
             description: Media library
             icon: jellyfin.png
+            server: local-docker
+            container: flixbox-jellyfin
+            siteMonitor: http://jellyfin:8096
     - Request:
         - Seerr:
             href: http://localhost:5055
             description: Household requests
             icon: overseerr.png
+            server: local-docker
+            container: flixbox-seerr
+            siteMonitor: http://seerr:5055
 - Acquire:
     - qBittorrent:
         href: http://localhost:8080
         description: Downloads
         icon: qbittorrent.png
+        server: local-docker
+        container: flixbox-qbittorrent
+        siteMonitor: http://qbittorrent:8080
         widget:
           type: qbittorrent
           url: http://qbittorrent:8080
@@ -27,50 +37,104 @@
         href: http://localhost:7878
         description: Movies
         icon: radarr.png
+        server: local-docker
+        container: flixbox-radarr
+        siteMonitor: http://radarr:7878
         widget:
           type: radarr
           url: http://radarr:7878
           key: ""
           fields: ["wanted", "queued", "movies"]
+          highlight:
+            wanted:
+              numeric:
+                - level: warn
+                  when: gte
+                  value: 10
+                - level: danger
+                  when: gte
+                  value: 25
+            queued:
+              numeric:
+                - level: warn
+                  when: gte
+                  value: 10
+                - level: danger
+                  when: gte
+                  value: 25
     - Sonarr:
         href: http://localhost:8989
         description: TV
         icon: sonarr.png
+        server: local-docker
+        container: flixbox-sonarr
+        siteMonitor: http://sonarr:8989
         widget:
           type: sonarr
           url: http://sonarr:8989
           key: ""
           fields: ["wanted", "queued", "series"]
+          highlight:
+            wanted:
+              numeric:
+                - level: warn
+                  when: gte
+                  value: 10
+                - level: danger
+                  when: gte
+                  value: 25
+            queued:
+              numeric:
+                - level: warn
+                  when: gte
+                  value: 10
+                - level: danger
+                  when: gte
+                  value: 25
 - Index & subs:
     - Prowlarr:
         href: http://localhost:9696
         description: Indexers
         icon: prowlarr.png
+        server: local-docker
+        container: flixbox-prowlarr
+        siteMonitor: http://prowlarr:9696
         widget:
           type: prowlarr
           url: http://prowlarr:9696
           key: ""
-          fields: ["grabs", "queries"]
+          fields: ["numberOfGrabs", "numberOfQueries"]
     - Bazarr:
         href: http://localhost:6767
         description: Subtitles
         icon: bazarr.png
+        server: local-docker
+        container: flixbox-bazarr
+        siteMonitor: http://bazarr:6767
 - Keep tidy:
     - Maintainerr:
         href: http://localhost:6246
         description: Library cleanup rules
         icon: mdi-broom
+        server: local-docker
+        container: flixbox-maintainerr
+        siteMonitor: http://maintainerr:6246
         widget:
           type: maintainerr
           url: http://maintainerr:6246
+          fields: ["itemsHandled", "reclaimable"]
     - Decluttarr:
         href: https://github.com/aleaz/flixbox/blob/main/docs/adr/0008-maintenance-decluttarr-maintainerr.md
         description: Queue cleanup daemon
         icon: mdi-delete-sweep
+        server: local-docker
+        container: flixbox-decluttarr
     - Unpackerr:
         href: https://github.com/aleaz/flixbox/blob/main/docs/01-scope.md
         description: Archive extraction daemon
         icon: unpackerr.png
+        server: local-docker
+        container: flixbox-unpackerr
 - Network:
     - Network Status:
         href: https://github.com/aleaz/flixbox/blob/main/docs/user/07-vpn-and-direct.md
@@ -80,7 +144,9 @@
         href: http://localhost:8191
         description: Cloudflare bypass
         icon: flaresolverr.png
-        ping: http://byparr:8191/health
+        server: local-docker
+        container: flixbox-byparr
+        siteMonitor: http://byparr:8191/health
         widget:
           type: customapi
           url: http://byparr:8191/health
@@ -88,9 +154,6 @@
           mappings:
             - field: msg
               label: Status
-              format: text
-            - field: version
-              label: Version
               format: text
 - Host:
     - Operator CLI:

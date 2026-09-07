@@ -1,8 +1,9 @@
 ---
-# Brand-first header: Flixbox + slogan + chip (left).
+# Brand-first header: Flixbox + slogan + two status chips (left).
+# Chip A = network mode (vpn|direct); Chip B = LAN access profile (trusted|shared).
 # Quiet right telemetry: /data then time (CSS grid places disk next to clock).
 # Widget child order is a CSS-grid contract with custom.css (@layer utilities) — do not reorder lightly.
-# Status greeting (text_size: sm, mode · profile) synced by homepage-sync.py from .env.
+# Mode/profile greetings (text_size: sm) synced by homepage-sync.py from .env.
 # Start typing anywhere for Quick Launch.
 - logo:
     icon: /images/logo.png
@@ -14,7 +15,10 @@
     text: "From request to play"
     text_size: md
 - greeting:
-    text: "direct · trusted"
+    text: "direct"
+    text_size: sm
+- greeting:
+    text: "trusted"
     text_size: sm
 - resources:
     label: /data

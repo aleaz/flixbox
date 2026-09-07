@@ -41,7 +41,7 @@ OPTIONAL_WIDGET_TEMPLATES = {
   type: seerr
   url: http://seerr:5055
   key: {key}
-  fields: ["pending", "approved", "available"]
+  fields: ["pending", "approved"]
 """,
     "Jellyfin": """widget:
   type: jellyfin
@@ -78,6 +78,8 @@ VPN_CARD = """    - VPN Tunnel:
         href: https://github.com/aleaz/flixbox/blob/main/docs/user/07-vpn-and-direct.md
         description: Protected P2P Tunnel
         icon: gluetun.png
+        server: local-docker
+        container: flixbox-gluetun
         widget:
           type: gluetun
           url: http://qbittorrent:8000
@@ -368,7 +370,12 @@ def sync_homepage_services(filepath: Path) -> bool:
 
 
 def sync_homepage_widgets(filepath: Path) -> bool:
-    """Rewrite the compact status greeting from FLIXBOX_MODE / FLIXBOX_ACCESS_PROFILE."""
+    """Rewrite mode + profile status greetings from FLIXBOX_MODE / FLIXBOX_ACCESS_PROFILE.
+
+    Two separate sm greetings (not a combined \"mode · profile\" chip):
+      - network mode: vpn | direct
+      - LAN access profile: trusted | shared
+    """
     if not filepath.is_file():
         return False
 
@@ -377,7 +384,8 @@ def sync_homepage_widgets(filepath: Path) -> bool:
     if mode not in ("vpn", "direct"):
         mode = "vpn" if vpn_enabled == "true" else "direct"
     profile = (os.environ.get("FLIXBOX_ACCESS_PROFILE") or "trusted").strip().lower() or "trusted"
-    chip = f"{mode} · {profile}"
+    if profile not in ("trusted", "shared"):
+        profile = "trusted"
 
     with open(filepath, "r", encoding="utf-8") as f:
         orig = f.read()
@@ -398,23 +406,37 @@ def sync_homepage_widgets(filepath: Path) -> bool:
                     break
                 block.append(lines[j])
                 j += 1
-            # Only rewrite the mode · profile chip (sm), not slogan (md) or brand (xl).
+            # Only rewrite sm status chips — not slogan (md) or brand (xl).
             is_sm = any(re.search(r"text_size:\s*sm\b", b) for b in block)
-            is_chip = any(
+            block_text = "\n".join(block)
+            is_mode = bool(
+                re.search(r'text:\s*"(?:vpn|direct)"\s*$', block_text, re.IGNORECASE | re.M)
+            )
+            is_profile = bool(
+                re.search(r'text:\s*"(?:trusted|shared)"\s*$', block_text, re.IGNORECASE | re.M)
+            )
+            # Migrate legacy combined chip → mode text (profile is a sibling greeting).
+            is_legacy = bool(
                 re.search(
                     r'text:\s*"(?:vpn|direct)\s*·\s*(?:trusted|shared)"',
-                    b,
+                    block_text,
                     re.IGNORECASE,
                 )
-                for b in block
             )
-            if is_sm and is_chip:
+            target: str | None = None
+            if is_sm and is_mode:
+                target = mode
+            elif is_sm and is_profile:
+                target = profile
+            elif is_sm and is_legacy:
+                target = mode
+            if target is not None:
                 new_block: list[str] = []
                 for b in block:
                     if re.match(r"^(\s*text:\s*).*$", b):
                         m = re.match(r"^(\s*text:\s*).*$", b)
                         assert m is not None
-                        nl = f'{m.group(1)}"{chip}"'
+                        nl = f'{m.group(1)}"{target}"'
                         if b.endswith("\r\n"):
                             nl += "\r\n"
                         elif b.endswith("\n"):

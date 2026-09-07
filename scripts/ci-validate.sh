@@ -752,6 +752,50 @@ if grep -qE '^\s+cpu:\s*true' templates/homepage/widgets.yaml; then
 fi
 grep -q 'Docs:' templates/homepage/bookmarks.yaml || \
   fail C-86 'bookmarks must be Flixbox docs (not social filler)'
+grep -q 'header: false' templates/homepage/settings.yaml || \
+  fail C-86 'Docs layout must hide duplicate Docs group heading'
+grep -qE 'icon: (mdi|si)-' templates/homepage/bookmarks.yaml || \
+  fail C-86 'Docs bookmarks must use mdi-/si- icons (not abbr tiles)'
+[[ -f templates/homepage/custom.js ]] || \
+  fail C-86 'missing templates/homepage/custom.js (header refresh + chip status)'
+grep -q 'flixbox-header-refresh' templates/homepage/custom.js || \
+  fail C-86 'custom.js must relocate #revalidate beside the clock'
+grep -q 'flixbox-chip--vpn' templates/homepage/custom.js || \
+  fail C-86 'custom.js must tag vpn/direct chip classes'
+grep -q 'flixbox-chip--profile' templates/homepage/custom.js || \
+  fail C-86 'custom.js must tag LAN access-profile chip'
+grep -qE 'text: "(direct|vpn)"' templates/homepage/widgets.yaml || \
+  fail C-86 'widgets.yaml must have a separate network-mode chip (vpn|direct)'
+grep -qE 'text: "(trusted|shared)"' templates/homepage/widgets.yaml || \
+  fail C-86 'widgets.yaml must have a separate access-profile chip (trusted|shared)'
+if grep -qE 'text: "(vpn|direct)\s*·\s*(trusted|shared)"' templates/homepage/widgets.yaml; then
+  fail C-86 'mode and profile must be separate chips (not combined with ·)'
+fi
+grep -q 'custom.js' bin/flixbox || \
+  fail C-86 'copy_templates must install custom.js'
+grep -q 'server: local-docker' templates/homepage/services.yaml || \
+  fail C-86 'services must bind Docker status via local-docker'
+grep -q 'container: flixbox-jellyfin' templates/homepage/services.yaml || \
+  fail C-86 'Jellyfin must expose Docker container status'
+grep -q 'siteMonitor: http://jellyfin:8096' templates/homepage/services.yaml || \
+  fail C-86 'Jellyfin must use internal siteMonitor'
+grep -q 'siteMonitor: http://byparr:8191/health' templates/homepage/services.yaml || \
+  fail C-86 'Byparr must use siteMonitor (HTTP health), not ICMP ping'
+grep -q 'numberOfGrabs' templates/homepage/services.yaml || \
+  fail C-86 'Prowlarr fields must use Homepage keys numberOfGrabs/numberOfQueries'
+grep -q 'useEqualHeights: true' templates/homepage/settings.yaml || \
+  fail C-86 'Ops cards must useEqualHeights for row rhythm'
+grep -q 'min-height: 6.75rem' templates/homepage/custom.css || \
+  fail C-86 'Ops cards must share min-height rhythm (6.75rem)'
+grep -q 'flex: 1 1 0' templates/homepage/custom.css || \
+  fail C-86 'metric chips must share card width evenly (flex 1 1 0)'
+grep -q 'fields: \["itemsHandled", "reclaimable"\]' templates/homepage/services.yaml || \
+  fail C-86 'Maintainerr must limit glance fields to itemsHandled + reclaimable'
+if grep -qE '^\s+ping:\s*http' templates/homepage/services.yaml; then
+  fail C-86 'HTTP health checks must use siteMonitor, not ping:'
+fi
+grep -q 'container: flixbox-gluetun' scripts/lib/homepage-sync.py || \
+  fail C-86 'VPN Tunnel card must bind flixbox-gluetun for Docker status'
 grep -q 'bookmarks.yaml' bin/flixbox || \
   fail C-86 'copy_templates must install bookmarks.yaml'
 python3 - <<'PY' || fail C-86 'homepage-sync unit test failed'
@@ -837,7 +881,7 @@ try:
     assert "type: radarr" not in shared_content, "shared must remove Radarr admin widget"
     assert "qBittorrent:" in shared_content and "Radarr:" in shared_content
 
-    # widgets.yaml: rewrite mode·profile chip only; keep brand + slogan
+    # widgets.yaml: rewrite mode + profile chips separately; keep brand + slogan
     with tempfile.TemporaryDirectory() as td:
         tdir = Path(td)
         target_services = tdir / "services.yaml"
@@ -854,7 +898,10 @@ try:
     text: "From request to play"
     text_size: md
 - greeting:
-    text: "direct · trusted"
+    text: "direct"
+    text_size: sm
+- greeting:
+    text: "trusted"
     text_size: sm
 - datetime:
     text_size: sm
@@ -877,7 +924,9 @@ try:
         w = target_widgets.read_text()
         assert 'text: "Flixbox"' in w, "brand greeting must stay Flixbox"
         assert "From request to play" in w, "slogan must not be overwritten by chip sync"
-        assert 'text: "vpn · trusted"' in w, "status chip must sync to vpn · trusted"
+        assert 'text: "vpn"' in w, "mode chip must sync to vpn"
+        assert 'text: "trusted"' in w, "profile chip must sync to trusted"
+        assert "vpn · trusted" not in w, "must not recombine mode·profile into one chip"
 
     # Test idempotency (no modifications on re-run)
     Path(path).write_text(content)

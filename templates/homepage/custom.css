@@ -3,14 +3,27 @@
    Inspired by Red Hat / OpenShift & Modern Telemetry Consoles
    ========================================================================== */
 
+/* Montserrat = UI (Netflix Sans–adjacent). Bebas Neue = brand wordmark only. Both legal Google Fonts. */
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@500;600;700&display=swap");
+
 :root {
+  --font-ui: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-brand: "Bebas Neue", "Montserrat", ui-sans-serif, system-ui, sans-serif;
   --bg-deep: #0b0d13;
   --bg-overlay: rgba(11, 13, 19, 0.72);
-  --card-bg: rgba(22, 26, 35, 0.78);
-  --card-border: rgba(255, 255, 255, 0.07);
-  --card-border-hover: rgba(255, 255, 255, 0.22);
-  --stat-box-bg: rgba(12, 14, 20, 0.68);
-  --stat-box-border: rgba(255, 255, 255, 0.05);
+  --card-bg: rgba(22, 26, 35, 0.80);
+  --card-border: rgba(255, 255, 255, 0.12);
+  /* Slate lift — not white; matches muted text / telemetry palette */
+  --card-border-hover: rgba(148, 163, 184, 0.35);
+  --card-bg-hover: rgba(22, 26, 35, 0.88);
+  --stat-box-bg: rgba(12, 14, 20, 0.55);
+  --stat-box-border: rgba(255, 255, 255, 0.08);
+  --highlight-warn-bg: rgba(245, 158, 11, 0.12);
+  --highlight-warn-border: rgba(245, 158, 11, 0.35);
+  --highlight-warn-text: #fcd34d;
+  --highlight-danger-bg: rgba(244, 63, 94, 0.12);
+  --highlight-danger-border: rgba(244, 63, 94, 0.35);
+  --highlight-danger-text: #fda4af;
   --text-primary: #f0f6fc;
   --text-secondary: #8b949e;
   --text-muted: #6e7681;
@@ -35,6 +48,10 @@ html,
 }
 
 body {
+  font-family: var(--font-ui) !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
   background-color: var(--bg-deep) !important;
   background-image:
     radial-gradient(ellipse at 50% 15%, rgba(10, 13, 19, 0.40) 0%, rgba(8, 10, 15, 0.72) 100%),
@@ -64,13 +81,13 @@ header,
   margin-bottom: 1.75rem !important;
 }
 
-/* Flixbox Header Logo Styling */
+/* Flixbox Header Logo Styling — brand mark leads; service card icons stay ~36–40px */
 [class*="Logo_logo"] img,
 [class*="logo"] img,
 .information-widget-logo img {
-  border-radius: 6px !important;
+  border-radius: 8px !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  max-height: 34px !important;
+  max-height: 48px !important;
   width: auto !important;
   box-shadow: none !important;
   filter: none !important;
@@ -89,18 +106,19 @@ header,
    2b. Header brand stack + quiet right telemetry (disk | time)
    -------------------------------------------------------------------------- */
 
-/* Layout: logo | Flixbox/slogan | chip | spacer | /data | time
+/* Layout: logo | Flixbox/slogan | mode | profile | spacer | /data | time
    nth-child order matches templates/homepage/widgets.yaml — keep in sync.
    Must live in @layer utilities so display:grid beats Tailwind .flex !important. */
 @layer utilities {
   #information-widgets #widgets-wrap {
     display: grid !important;
-    grid-template-columns: auto auto auto minmax(0.75rem, 1fr) auto auto;
+    grid-template-columns: auto auto auto auto minmax(0.75rem, 1fr) auto auto;
     grid-template-rows: auto auto;
     align-items: center;
-    column-gap: 0.55rem;
+    column-gap: 0.45rem;
     row-gap: 0;
     width: 100%;
+    min-height: 48px;
   }
 
   /* 1 logo */
@@ -127,27 +145,35 @@ header,
     margin-top: -1px !important;
   }
 
-  /* 4 mode · profile chip — beside brand stack, not beside /data */
+  /* 4 network mode chip (vpn|direct) */
   #information-widgets #widgets-wrap > :nth-child(4) {
     grid-column: 3;
     grid-row: 1 / span 2;
     align-self: center;
-    padding-left: 0.15rem !important;
+    padding-left: 0.2rem !important;
   }
 
-  /* 5 /data — right cluster with clock */
+  /* 5 LAN access profile chip (trusted|shared) */
   #information-widgets #widgets-wrap > :nth-child(5) {
-    grid-column: 5;
+    grid-column: 4;
+    grid-row: 1 / span 2;
+    align-self: center;
+    padding-left: 0 !important;
+  }
+
+  /* 6 /data — right cluster with clock */
+  #information-widgets #widgets-wrap > :nth-child(6) {
+    grid-column: 6;
     grid-row: 1 / span 2;
     align-self: center;
     justify-self: end;
     padding: 0 !important;
-    margin: 0 0.65rem 0 0 !important;
+    margin: 0 !important;
   }
 
-  /* 6 datetime (information-widgets-right) */
-  #information-widgets #widgets-wrap > :nth-child(6) {
-    grid-column: 6;
+  /* 7 datetime (information-widgets-right) */
+  #information-widgets #widgets-wrap > :nth-child(7) {
+    grid-column: 7;
     grid-row: 1 / span 2;
     align-self: center;
     justify-self: end;
@@ -162,14 +188,15 @@ header,
     flex-grow: 0 !important;
     flex-shrink: 0 !important;
     justify-content: flex-end !important;
-    gap: 0.5rem !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
     width: auto !important;
     max-width: none !important;
   }
 
   @media (max-width: 720px) {
     #information-widgets #widgets-wrap {
-      grid-template-columns: auto 1fr auto;
+      grid-template-columns: auto 1fr auto auto;
       grid-template-rows: auto auto auto;
     }
 
@@ -194,14 +221,19 @@ header,
     }
 
     #information-widgets #widgets-wrap > :nth-child(5) {
+      grid-column: 4;
+      grid-row: 1 / span 2;
+    }
+
+    #information-widgets #widgets-wrap > :nth-child(6) {
       grid-column: 1 / 3;
       grid-row: 3;
       justify-self: start;
       margin: 0.35rem 0 0 !important;
     }
 
-    #information-widgets #widgets-wrap > :nth-child(6) {
-      grid-column: 3;
+    #information-widgets #widgets-wrap > :nth-child(7) {
+      grid-column: 3 / 5;
       grid-row: 3;
       justify-self: end;
       margin: 0.35rem 0 0 !important;
@@ -219,17 +251,17 @@ header,
   max-width: none !important;
 }
 
-/* Brand: Flixbox (text_size: xl) */
+/* Brand: Flixbox (text_size: xl) — Bebas Neue is display/all-caps */
 .information-widget-greeting span.text-xl,
 [class*="Greeting_greeting"] span.text-xl,
 [class*="greeting"] .text-xl {
-  font-family: Manrope, Manrope-Fallback, ui-sans-serif, system-ui, sans-serif !important;
-  font-size: 1.45rem !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
-  line-height: 1.15 !important;
+  font-family: var(--font-brand) !important;
+  font-size: 2.15rem !important;
+  font-weight: 400 !important; /* Bebas Neue is a single weight */
+  letter-spacing: 0.06em !important;
+  line-height: 1 !important;
   color: #f0f6fc !important;
-  text-transform: none !important;
+  text-transform: uppercase !important;
   padding: 0 !important;
   margin: 0 !important;
   background: none !important;
@@ -244,10 +276,10 @@ header,
 .information-widget-greeting span.text-base,
 [class*="Greeting_greeting"] span.text-base,
 [class*="greeting"] .text-base {
-  font-family: Manrope, Manrope-Fallback, ui-sans-serif, system-ui, sans-serif !important;
-  font-size: 0.78rem !important;
+  font-family: var(--font-ui) !important;
+  font-size: 0.9rem !important;
   font-weight: 500 !important;
-  letter-spacing: -0.01em !important;
+  letter-spacing: 0 !important;
   line-height: 1.2 !important;
   color: #94a3b8 !important;
   text-transform: none !important;
@@ -260,31 +292,95 @@ header,
   white-space: nowrap !important;
 }
 
-/* Mode · profile chip (text_size: sm) — sole header badge */
+/* Status chips — two axes: mode (vpn|direct) + profile (trusted|shared) */
 .information-widget-greeting span.text-sm,
 [class*="Greeting_greeting"] span.text-sm,
 [class*="greeting"] .text-sm {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
-  font-size: 0.68rem !important;
-  font-weight: 500 !important;
-  letter-spacing: 0.04em !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
   text-transform: uppercase !important;
+  display: inline-flex !important;
+  align-items: center !important;
   color: #94a3b8 !important;
-  background: rgba(18, 22, 30, 0.7) !important;
-  border: 1px solid var(--card-border) !important;
-  border-radius: 9999px !important;
-  padding: 3px 10px !important;
+  background: rgba(18, 22, 30, 0.55) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  border-radius: 8px !important;
+  padding: 3px 8px !important;
   max-width: none !important;
+  gap: 0 !important;
+  line-height: 1.2 !important;
 }
 
-/* Clock: plain telemetry — same quiet band as /data */
+/* Mode chip A — quiet tint (not hero green) */
+.information-widget-greeting span.text-sm.flixbox-chip--vpn,
+[class*="Greeting_greeting"] span.text-sm.flixbox-chip--vpn,
+[class*="greeting"] .text-sm.flixbox-chip--vpn {
+  color: #6ee7b7 !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(16, 185, 129, 0.22) !important;
+}
+
+.information-widget-greeting span.text-sm.flixbox-chip--direct,
+[class*="Greeting_greeting"] span.text-sm.flixbox-chip--direct,
+[class*="greeting"] .text-sm.flixbox-chip--direct {
+  color: #fbbf24 !important;
+  background: rgba(245, 158, 11, 0.08) !important;
+  border-color: rgba(245, 158, 11, 0.22) !important;
+}
+
+/* Profile chip B — slate only (LAN exposure; never inherits VPN green) */
+.information-widget-greeting span.text-sm.flixbox-chip--profile,
+[class*="Greeting_greeting"] span.text-sm.flixbox-chip--profile,
+[class*="greeting"] .text-sm.flixbox-chip--profile {
+  color: #94a3b8 !important;
+  background: rgba(18, 22, 30, 0.45) !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+}
+
+/* Lock glyphs only on network-mode chips */
+.information-widget-greeting span.text-sm.flixbox-chip--vpn::before,
+.information-widget-greeting span.text-sm.flixbox-chip--direct::before,
+[class*="Greeting_greeting"] span.text-sm.flixbox-chip--vpn::before,
+[class*="Greeting_greeting"] span.text-sm.flixbox-chip--direct::before,
+[class*="greeting"] .text-sm.flixbox-chip--vpn::before,
+[class*="greeting"] .text-sm.flixbox-chip--direct::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 0.68rem !important;
+  height: 0.68rem !important;
+  margin-right: 0.35rem !important;
+  flex-shrink: 0 !important;
+  background-color: currentColor !important;
+  -webkit-mask: no-repeat center / contain !important;
+  mask: no-repeat center / contain !important;
+}
+
+.information-widget-greeting span.text-sm.flixbox-chip--vpn::before,
+[class*="Greeting_greeting"] span.text-sm.flixbox-chip--vpn::before,
+[class*="greeting"] .text-sm.flixbox-chip--vpn::before {
+  /* lock closed */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12 1a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V6a5 5 0 00-5-5zm-3 5a3 3 0 116 0v3H9V6zm3 8a1.5 1.5 0 110 3 1.5 1.5 0 010-3z'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12 1a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V6a5 5 0 00-5-5zm-3 5a3 3 0 116 0v3H9V6zm3 8a1.5 1.5 0 110 3 1.5 1.5 0 010-3z'/%3E%3C/svg%3E") !important;
+}
+
+.information-widget-greeting span.text-sm.flixbox-chip--direct::before,
+[class*="Greeting_greeting"] span.text-sm.flixbox-chip--direct::before,
+[class*="greeting"] .text-sm.flixbox-chip--direct::before {
+  /* lock open */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12 1a5 5 0 00-5 5h2a3 3 0 015.9.8V9H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V6.8A5 5 0 0012 1zm3 8H9v-2a3 3 0 016 0v2zm-3 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12 1a5 5 0 00-5 5h2a3 3 0 015.9.8V9H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V6.8A5 5 0 0012 1zm3 8H9v-2a3 3 0 016 0v2zm-3 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z'/%3E%3C/svg%3E") !important;
+}
+
+/* Right telemetry: quiet /data + time + muted refresh; hairline separators */
 .information-widget-datetime {
   align-self: center !important;
 }
 
 .information-widget-datetime span {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
-  font-size: 0.78rem !important;
+  font-size: 0.85rem !important;
   font-weight: 500 !important;
   letter-spacing: 0.03em !important;
   color: #64748b !important;
@@ -303,7 +399,74 @@ header,
   border: none !important;
 }
 
-/* Quiet /data telemetry (Option A) — right cluster with clock */
+#information-widgets-right {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+}
+
+#revalidate.flixbox-header-refresh,
+.flixbox-header-refresh {
+  margin: 0 !important;
+  padding: 0 0 0 0.55rem !important;
+  border-left: 1px solid rgba(148, 163, 184, 0.18) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  align-self: center !important;
+  cursor: pointer !important;
+  opacity: 0.85 !important;
+  transition: opacity 0.15s ease, color 0.15s ease !important;
+}
+
+#revalidate.flixbox-header-refresh svg,
+.flixbox-header-refresh svg {
+  width: 14px !important;
+  height: 14px !important;
+  color: #94a3b8 !important;
+}
+
+#revalidate.flixbox-header-refresh:hover,
+.flixbox-header-refresh:hover {
+  opacity: 1 !important;
+}
+
+#revalidate.flixbox-header-refresh:hover svg,
+.flixbox-header-refresh:hover svg {
+  color: #f0f6fc !important;
+}
+
+/* Footer chrome collapses once refresh is moved to the header */
+#footer #style:not(:has(#revalidate)) {
+  display: none !important;
+}
+
+#footer:not(:has(#revalidate)):not(:has(#version:not(:empty))) {
+  min-height: 0 !important;
+  padding: 0.5rem 0 !important;
+}
+
+/* Quiet /data telemetry — Option A: one line "3.26 TB · /data"
+   Hide icon, Free label, and usage bar; flatten Homepage's stacked resource widget. */
+#information-widgets #widgets-wrap > :nth-child(6) {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  min-height: 0 !important;
+  height: auto !important;
+  /* separator lives on the clock column — strip chrome clears borders here */
+  border: none !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
+
+#information-widgets #widgets-wrap > :nth-child(6) > .flex.flex-row {
+  display: contents !important;
+}
+
 #information-widgets .information-widget-resource,
 #information-widgets [class*="information-widget-resource"] {
   background: transparent !important;
@@ -312,48 +475,98 @@ header,
   padding: 0 !important;
   margin: 0 !important;
   backdrop-filter: none !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
 }
 
-#information-widgets .information-widget-resource .resource-icon,
-#information-widgets .information-widget-resource svg.resource-icon {
-  width: 14px !important;
-  height: 14px !important;
-  color: #64748b !important;
-  opacity: 0.85 !important;
+#information-widgets .information-widget-resource svg,
+#information-widgets .information-widget-resource .resource-icon {
+  display: none !important;
 }
 
-#information-widgets .information-widget-resource .text-xs,
-#information-widgets .information-widget-resource [class*="text-xs"] {
+#information-widgets .information-widget-resource .flex.flex-col,
+#information-widgets .information-widget-resource [class*="min-w-"] {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+  min-width: 0 !important;
+  gap: 0 !important;
+  padding: 0 !important;
+}
+
+#information-widgets .information-widget-resource .flex.flex-row.justify-between,
+#information-widgets .information-widget-resource [class*="justify-between"] {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0 !important;
+  width: auto !important;
+}
+
+/* Value only — drop "Free" */
+#information-widgets .information-widget-resource .pr-1 {
+  display: none !important;
+}
+
+#information-widgets .information-widget-resource .pl-0\\.5,
+#information-widgets .information-widget-resource .pl-0.5 {
+  padding: 0 !important;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
-  font-size: 0.68rem !important;
+  font-size: 0.85rem !important;
   font-weight: 500 !important;
-  letter-spacing: 0.03em !important;
+  letter-spacing: 0.02em !important;
   color: #64748b !important;
+  white-space: nowrap !important;
 }
 
+/* Hide usage gauge (header glance — not a disk dashboard) */
 #information-widgets .information-widget-resource .resource-usage,
-#information-widgets .information-widget-resource [class*="resource-usage"] {
-  height: 2px !important;
-  margin-top: 3px !important;
-  background-color: rgba(148, 163, 184, 0.15) !important;
-  min-width: 72px !important;
+#information-widgets .information-widget-resource [class*="resource-usage"],
+#information-widgets .information-widget-resource .mt-0\\.5.w-full,
+#information-widgets .information-widget-resource .w-full.rounded-full,
+#information-widgets .information-widget-resource div.w-full.rounded-full,
+#information-widgets .information-widget-resource [class*="bg-theme-800"][class*="rounded-full"],
+#information-widgets .information-widget-resource [class*="rounded-full"][class*="h-1"] {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
 
-#information-widgets .information-widget-resource .resource-usage > div,
-#information-widgets .information-widget-resource [class*="resource-usage"] > div {
-  background-color: rgba(148, 163, 184, 0.45) !important;
+/* Any leftover gauge fill inside the resource col */
+#information-widgets .information-widget-resource .flex.flex-col > div.w-full,
+#information-widgets .information-widget-resource [class*="flex-col"] > div[class*="w-full"] {
+  display: none !important;
 }
 
-/* /data label — same quiet mono as clock */
-#information-widgets .ml-6.pt-1.text-xs,
-#information-widgets [class*="widget-container"] .text-xs.text-center {
+/* /data mount — quieter than capacity + clock so it doesn't blend with the time */
+#information-widgets #widgets-wrap > :nth-child(6) > .ml-6.pt-1,
+#information-widgets #widgets-wrap > :nth-child(6) > .text-xs.text-center {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
-  font-size: 0.65rem !important;
+  font-size: 0.78rem !important;
   font-weight: 500 !important;
-  letter-spacing: 0.04em !important;
-  color: #64748b !important;
-  margin-left: 0.35rem !important;
-  padding-top: 0 !important;
+  letter-spacing: 0.02em !important;
+  color: #475569 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+#information-widgets #widgets-wrap > :nth-child(6) > .ml-6.pt-1::before,
+#information-widgets #widgets-wrap > :nth-child(6) > .text-xs.text-center::before {
+  content: "· ";
+  color: #475569;
 }
 
 /* Strip boxed chrome ONLY on header info widgets — do not touch service cards */
@@ -367,20 +580,57 @@ header,
   margin-top: 0 !important;
 }
 
-/* Restore side gutters (Homepage m-5 / sm:m-9). Never collapse horizontal margin. */
+/* Disk | clock separator — must come AFTER strip chrome (which clears borders) */
+#information-widgets #widgets-wrap > :nth-child(7) {
+  border-left: 1px solid rgba(148, 163, 184, 0.32) !important;
+  padding-left: 0.75rem !important;
+  margin-left: 0.5rem !important;
+}
+
+/* Restore side gutters — match content column so brand aligns with cards/tabs.
+   Homepage defaults differ (widgets m-9 vs groups m-8); force one gutter. */
 @layer utilities {
   #information-widgets {
-    margin-left: 2.25rem !important;
-    margin-right: 2.25rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     margin-top: 2.25rem !important;
     margin-bottom: 0.75rem !important;
     padding-bottom: 0.85rem !important;
     border-bottom-color: rgba(255, 255, 255, 0.08) !important;
   }
 
+  #layout-groups,
+  div:has(> #myTab) {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
   .container.relative {
     margin-left: auto !important;
     margin-right: auto !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+
+  /* Equal-height rows: fill the grid cell; keep overflow visible so metrics are not clipped */
+  li.service {
+    display: flex !important;
+    align-self: stretch !important;
+    height: auto !important;
+  }
+
+  li.service > div {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 6.75rem !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  ul.services-list,
+  .services-list {
+    align-items: stretch !important;
   }
 }
 
@@ -429,20 +679,32 @@ progress,
 /* --------------------------------------------------------------------------
    3. Service Cards (Glassmorphic Slate)
    Homepage cards are often `li.service > div` without a stable service_card class.
+   useEqualHeights + h-[calc(...)] + overflow:clip was clipping widget metrics —
+   force auto height and visible overflow so labels are not cut off.
    -------------------------------------------------------------------------- */
 
 li.service > div,
 .service-card,
 [class*="service_card"],
 [class*="card_card"] {
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  /* Heavy blur frosts the bg and kills perceived transparency — keep none/light. */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   background-color: var(--card-bg) !important;
   border: 1px solid var(--card-border) !important;
   border-radius: 10px !important;
   box-shadow: none !important;
-  transition: border-color 0.15s ease !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease !important;
   position: relative !important;
+  /* Fill equal-height row (useEqualHeights); overflow visible avoids historic clip */
+  height: 100% !important;
+  min-height: 6.75rem !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0.55rem 0.65rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
 }
 
 li.service > div:hover,
@@ -451,6 +713,7 @@ li.service > div:hover,
 [class*="card_card"]:hover {
   position: relative !important;
   z-index: 20 !important;
+  background-color: var(--card-bg-hover) !important;
   border-color: var(--card-border-hover) !important;
   box-shadow: none !important;
   transform: none !important;
@@ -484,16 +747,16 @@ li.service > div:hover,
 [class*="widget-stats"] [class*="font-semibold"] {
   font-weight: 700 !important;
   color: #ffffff !important;
-  font-size: 0.92rem !important;
+  font-size: 1rem !important;
 }
 
 /* Metric Label */
 [class*="widget_stats"] [class*="text-xs"],
 [class*="widget-stats"] [class*="text-xs"] {
-  font-size: 0.63rem !important;
+  font-size: 0.72rem !important;
   font-weight: 600 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
+  letter-spacing: 0.04em !important;
   color: var(--text-secondary) !important;
 }
 
@@ -506,8 +769,8 @@ h2,
 [class*="Group_title"] {
   color: #e6edf3 !important;
   font-weight: 600 !important;
-  font-size: 1.25rem !important;
-  letter-spacing: -0.01em !important;
+  font-size: 1.35rem !important;
+  letter-spacing: 0 !important;
   text-transform: none !important;
   background: none !important;
   -webkit-text-fill-color: initial !important;
@@ -517,41 +780,169 @@ h2,
 
 /* Service Card Titles and Subtitles */
 [class*="service_title"],
-[class*="card_title"] {
+[class*="card_title"],
+.service-name,
+li.service .service-name {
   font-weight: 600 !important;
   color: #ffffff !important;
-  font-size: 0.98rem !important;
+  font-size: 1.05rem !important;
+  letter-spacing: 0 !important;
 }
 
 [class*="service_description"],
-[class*="card_description"] {
+[class*="card_description"],
+.service-description,
+li.service .service-description {
   color: var(--text-secondary) !important;
+  font-size: 0.88rem !important;
+  font-weight: 500 !important; /* Montserrat light (300) looks muddy at small sizes */
+  letter-spacing: 0 !important;
+}
+
+/* Widget status lines inside cards (e.g. "No Active Streams") */
+li.service .absolute.left-2.text-xs,
+li.service [class*="absolute"][class*="left-2"][class*="text-xs"] {
   font-size: 0.8rem !important;
+  font-weight: 500 !important;
 }
 
 /* --------------------------------------------------------------------------
    6. Status Dots (Crisp Emerald Telemetry)
+   Ping/dot tags default to absolute top-right flush — with card padding +
+   radius that sits on the border. Inset and shrink the hit box to the dot.
+   Docker "View container stats" button ships with padding-top that drops its
+   dot ~3px below siteMonitor — force one baseline for both tags.
    -------------------------------------------------------------------------- */
 
-[class*="status-dot-green"],
-[class*="bg-emerald-"],
-[class*="bg-green-"] {
-  background-color: var(--status-healthy) !important;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6) !important;
+li.service .service-tags {
+  top: 0.55rem !important;
+  right: 0.55rem !important;
+  gap: 0.2rem !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  height: 8px !important;
+  min-height: 8px !important;
+  line-height: 0 !important;
 }
 
-[class*="status-dot-red"],
-[class*="bg-rose-"],
-[class*="bg-red-"] {
-  background-color: var(--status-danger) !important;
-  box-shadow: 0 0 6px rgba(244, 63, 94, 0.6) !important;
+li.service .service-tags > .service-tag,
+li.service .service-tag.service-site-monitor,
+li.service .service-tag.service-container-stats,
+li.service .service-tags button.service-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 8px !important;
+  min-height: 8px !important;
+  max-height: 8px !important;
+  width: auto !important;
+  line-height: 0 !important;
+  border: none !important;
+  background: transparent !important;
 }
 
-[class*="status-dot-amber"],
-[class*="bg-amber-"],
-[class*="bg-yellow-"] {
-  background-color: var(--status-warning) !important;
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6) !important;
+li.service .service-ping,
+li.service .service-tag.service-ping {
+  width: auto !important;
+  height: 8px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+li.service .ping-status,
+li.service .site-monitor-status,
+li.service .service-tags [class*="overflow-hidden"] {
+  width: auto !important;
+  height: 8px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+li.service .ping-status > div,
+li.service .service-tags .rounded-full {
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+}
+
+/* Scope glow to status dots only — broad bg-amber/emerald matched highlight
+   metric boxes and painted them as solid CTA blocks. */
+li.service .rounded-full.h-3.w-3[class*="bg-emerald-"],
+li.service .rounded-full.h-3.w-3[class*="bg-green-"],
+li.service [class*="status-dot-green"] {
+  background-color: rgba(16, 185, 129, 0.72) !important;
+  box-shadow: none !important;
+  width: 8px !important;
+  height: 8px !important;
+  opacity: 0.85 !important;
+}
+
+li.service .rounded-full.h-3.w-3[class*="bg-rose-"],
+li.service .rounded-full.h-3.w-3[class*="bg-red-"],
+li.service [class*="status-dot-red"] {
+  background-color: rgba(244, 63, 94, 0.85) !important;
+  box-shadow: none !important;
+  width: 8px !important;
+  height: 8px !important;
+  opacity: 0.9 !important;
+}
+
+li.service .rounded-full.h-3.w-3[class*="bg-amber-"],
+li.service .rounded-full.h-3.w-3[class*="bg-yellow-"],
+li.service [class*="status-dot-amber"] {
+  background-color: rgba(245, 158, 11, 0.8) !important;
+  box-shadow: none !important;
+  width: 8px !important;
+  height: 8px !important;
+  opacity: 0.9 !important;
+}
+
+/* Widget highlight (warn/danger): tint + border, not solid fill */
+li.service .service-container > div.flex-1[class*="bg-amber"],
+li.service .service-container > div.flex-1[class*="bg-yellow"],
+li.service [class*="widget"] > div.flex-1[class*="bg-amber"],
+li.service [class*="widget"] > div.flex-1[class*="bg-yellow"],
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-amber"],
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-yellow"] {
+  background-color: var(--highlight-warn-bg) !important;
+  border: 1px solid var(--highlight-warn-border) !important;
+  box-shadow: none !important;
+  color: var(--highlight-warn-text) !important;
+}
+
+li.service .service-container > div.flex-1[class*="bg-rose"],
+li.service .service-container > div.flex-1[class*="bg-red"],
+li.service [class*="widget"] > div.flex-1[class*="bg-rose"],
+li.service [class*="widget"] > div.flex-1[class*="bg-red"],
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-rose"],
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-red"] {
+  background-color: var(--highlight-danger-bg) !important;
+  border: 1px solid var(--highlight-danger-border) !important;
+  box-shadow: none !important;
+  color: var(--highlight-danger-text) !important;
+}
+
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-amber"] [class*="font-semibold"],
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-yellow"] [class*="font-semibold"],
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-amber"] [class*="text-xs"],
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-yellow"] [class*="text-xs"] {
+  color: var(--highlight-warn-text) !important;
+}
+
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-rose"] [class*="font-semibold"],
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-red"] [class*="font-semibold"],
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-rose"] [class*="text-xs"],
+li.service div.flex-1.flex.flex-col.items-center[class*="bg-red"] [class*="text-xs"] {
+  color: var(--highlight-danger-text) !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -566,7 +957,7 @@ summary[class*="bg-red"] {
   border: none !important;
   box-shadow: none !important;
   color: #94a3b8 !important;
-  font-size: 0.75rem !important;
+  font-size: 0.82rem !important;
   font-weight: 500 !important;
   padding: 4px 8px !important;
   margin: 6px auto 0 !important;
@@ -626,47 +1017,285 @@ details div ul span {
    -------------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------------------
-   9. Compact density (glance board)
+   9. Section rhythm (Ops chapters + Docs shelf)
    -------------------------------------------------------------------------- */
 
-/* Tighter section gaps */
-[class*="services_group"],
-[class*="group_services"],
-section {
-  margin-bottom: 0.65rem !important;
+/* Top-level groups: modest separation between categories */
+.services-group,
+[class*="bookmarks-group"],
+[class*="BookmarksGroup"] {
+  margin-bottom: 1.25rem !important;
 }
 
+/* Nested Household (Watch/Request): stay tighter under parent */
+.services-group .services-group {
+  margin-bottom: 0.55rem !important;
+}
+
+/* Title → cards. Margin lives on the collapse row, not on h2 —
+   h2 margin-bottom inside flex mis-centers the chevron below the label. */
+h2.service-group-name,
 h2,
 [class*="group_title"],
 [class*="Group_title"] {
-  font-size: 1.05rem !important;
-  margin-bottom: 0.45rem !important;
-}
-
-/* Nested Household: less chrome */
-[class*="services_group"] [class*="services_group"] h2,
-[class*="group"] [class*="group"] [class*="group_title"] {
-  font-size: 0.85rem !important;
-  color: var(--text-secondary) !important;
-  margin-bottom: 0.35rem !important;
-}
-
-/* One-row cards when widget has only 1–2 field blocks (community pattern) */
-.service-card:has(.service-container > :first-child:nth-last-child(-n+2)),
-[class*="service_card"]:has([class*="service-container"] > :first-child:nth-last-child(-n+2)) {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 0.5rem !important;
-}
-
-.service-card:has(.service-container > :first-child:nth-last-child(-n+2)) .service-container,
-[class*="service_card"]:has([class*="service-container"] > :first-child:nth-last-child(-n+2)) [class*="service-container"] {
-  width: auto !important;
-  flex: 1 1 auto !important;
-  justify-content: flex-end !important;
+  font-size: 1.12rem !important;
+  margin-bottom: 0 !important;
   margin-top: 0 !important;
+  line-height: 1.25 !important;
+}
+
+/* Collapse header row: title + triangle on one optical baseline */
+.services-group > button.group,
+.services-group > button[aria-expanded],
+button.group:has(> h2.service-group-name) {
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 0.7rem !important;
+}
+
+.services-group > button.group > h2.service-group-name,
+.services-group > button[aria-expanded] > h2,
+button.group > h2.service-group-name {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.25 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.services-group > button.group > svg,
+.services-group > button[aria-expanded] > svg,
+button.group > svg.ml-auto,
+button.group > svg {
+  align-self: center !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  flex-shrink: 0 !important;
+  width: 1rem !important;
+  height: 1rem !important;
+  display: block !important;
+}
+
+/* Nested titles quieter */
+.services-group .services-group h2,
+.services-group .services-group [class*="group_title"],
+[class*="group"] [class*="group"] [class*="group_title"] {
+  font-size: 0.92rem !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 0 !important;
+}
+
+.services-group .services-group > button.group,
+.services-group .services-group > button[aria-expanded] {
+  margin-bottom: 0.4rem !important;
+}
+
+/* Tabs: keep compact segment chrome, but span full content width */
+div:has(> #myTab) {
+  margin-bottom: 0.7rem !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+#myTab {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 2px !important;
+  gap: 0 !important;
+  background: rgba(18, 22, 30, 0.55) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+}
+
+#myTab > li {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+}
+
+#myTab > li > button,
+#myTab [role="tab"] {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0.4rem 0.85rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  line-height: 1.2 !important;
+  color: #64748b !important;
+  background: transparent !important;
+  border-radius: 6px !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-align: center !important;
+}
+
+#myTab > li > button[aria-selected="true"],
+#myTab [role="tab"][aria-selected="true"] {
+  color: #e2e8f0 !important;
+  background: rgba(148, 163, 184, 0.14) !important;
+}
+
+#myTab > li > button:hover,
+#myTab [role="tab"]:hover {
+  color: #94a3b8 !important;
+}
+
+#layout-groups {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.bookmark-group {
+  padding-top: 0 !important;
+}
+
+/* Docs shelf: air between tiles (Homepage default gap-x-2 is 8px — too tight) */
+.bookmark-group ul.grid,
+.bookmark-group ul {
+  /* Force 2 comfortable columns regardless of cached layout.columns */
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.85rem 1.35rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+@media (max-width: 767px) {
+  .bookmark-group ul.grid,
+  .bookmark-group ul {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+li.bookmark {
+  border-radius: 8px !important;
+}
+
+li.bookmark > a {
+  margin-bottom: 0 !important;
+  min-height: 3.1rem !important;
+  background-color: var(--card-bg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--card-border) !important;
+  box-shadow: none !important;
+}
+
+li.bookmark > a:hover {
+  background-color: var(--card-bg-hover) !important;
+  border-color: var(--card-border-hover) !important;
+}
+
+/* Title above description — avoids name|desc colliding across columns */
+li.bookmark .bookmark-text {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 0.15rem !important;
+  padding: 0.55rem 0.9rem 0.55rem 0.15rem !important;
+}
+
+li.bookmark .bookmark-name {
+  padding: 0 0 0 0.65rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: var(--text-primary) !important;
+}
+
+li.bookmark .bookmark-description {
+  padding: 0 0 0 0.65rem !important;
+  font-size: 0.8rem !important;
+  line-height: 1.3 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  max-width: 100% !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Metric chips share the card width evenly (equal flex), one row */
+li.service .service-container,
+li.service [class*="service-container"] {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: stretch !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  margin-top: auto !important;
+  padding-top: 0.35rem !important;
+  gap: 0.25rem !important;
+}
+
+li.service .service-container .service-block {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 2px 4px !important;
+  box-sizing: border-box !important;
+}
+
+/* B — hairline chips: quiet telemetry, not CTA buttons */
+li.service .service-container .service-block:not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-rose"]):not([class*="bg-red"]) {
+  background-color: rgba(12, 14, 20, 0.28) !important;
+  border: 1px solid rgba(148, 163, 184, 0.12) !important;
+}
+
+li.service .service-container .service-block .font-bold:not(.text-xs),
+li.service .service-container .service-block > div:first-child {
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  color: #cbd5e1 !important;
+  line-height: 1.15 !important;
+}
+
+li.service .service-container .service-block .font-bold.text-xs,
+li.service .service-container .service-block [class*="text-xs"] {
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  color: #64748b !important;
+}
+
+/* Soften Homepage highlight fills on metric chips */
+li.service .service-container .service-block[class*="bg-amber"],
+li.service .service-container .service-block[class*="bg-yellow"] {
+  background-color: var(--highlight-warn-bg) !important;
+  border: 1px solid var(--highlight-warn-border) !important;
+  color: var(--highlight-warn-text) !important;
+}
+
+li.service .service-container .service-block[class*="bg-rose"],
+li.service .service-container .service-block[class*="bg-red"] {
+  background-color: var(--highlight-danger-bg) !important;
+  border: 1px solid var(--highlight-danger-border) !important;
+  color: var(--highlight-danger-text) !important;
+}
+
+li.service .service-container .service-block[class*="bg-amber"] .font-bold.text-xs,
+li.service .service-container .service-block[class*="bg-yellow"] .font-bold.text-xs,
+li.service .service-container .service-block[class*="bg-amber"] [class*="text-xs"],
+li.service .service-container .service-block[class*="bg-yellow"] [class*="text-xs"] {
+  color: var(--highlight-warn-text) !important;
+}
+
+li.service .service-container .service-block[class*="bg-rose"] .font-bold.text-xs,
+li.service .service-container .service-block[class*="bg-red"] .font-bold.text-xs,
+li.service .service-container .service-block[class*="bg-rose"] [class*="text-xs"],
+li.service .service-container .service-block[class*="bg-red"] [class*="text-xs"] {
+  color: var(--highlight-danger-text) !important;
 }
 
 /* Smaller inset stats */
@@ -678,12 +1307,6 @@ h2,
 
 [class*="widget_stats"] [class*="font-semibold"],
 [class*="widget-stats"] [class*="font-semibold"] {
-  font-size: 0.82rem !important;
-}
-
-/* Tabs sit cleanly under header */
-[class*="tab"],
-nav[class*="Tab"] {
-  margin-bottom: 0.75rem !important;
+  font-size: 0.9rem !important;
 }
 
