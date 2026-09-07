@@ -239,6 +239,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-85 | WebUI contract QA remediation | host-header OK matches json-query; copy_templates on up/reload; shared prefs JSON templates; no on-disk temp password; Decluttarr refresh after bootstrap |
 | C-86 | Homepage port sync | `homepage-sync.py` non-destructive port sync; preserves widgets, custom hosts, and custom services |
 | C-87 | Operator credentials CLI | ADR 0020; `credentials show|set`; qBit rotate exit 0/3 persist; arr-ui apply-before-env; Arr key via env; `--sync-arr-ui`; Homepage shared drops admin widgets |
+| C-88 | Homepage template refresh | `.flixbox-template-rev`; `homepage-templates.sh`; `homepage refresh` / `reload --reset-homepage`; stale warn; stamp on first create only |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 

@@ -937,6 +937,96 @@ finally:
 PY
 pass C-86
 
+# --- C-88: Homepage template refresh (warn + opt-in apply) ---
+[[ -f templates/homepage/.flixbox-template-rev ]] || \
+  fail C-88 'missing templates/homepage/.flixbox-template-rev'
+rev="$(tr -d '[:space:]' <templates/homepage/.flixbox-template-rev)"
+[[ "$rev" =~ ^[0-9]+$ ]] || fail C-88 "template-rev must be a positive integer (got: ${rev})"
+[[ -f scripts/lib/homepage-templates.sh ]] || fail C-88 'missing scripts/lib/homepage-templates.sh'
+[[ -x scripts/lib/homepage-templates.sh ]] || fail C-88 'homepage-templates.sh must be executable'
+grep -q 'flixbox_homepage_refresh' scripts/lib/homepage-templates.sh || \
+  fail C-88 'homepage-templates.sh must define flixbox_homepage_refresh'
+grep -q 'homepage-templates.sh' bin/flixbox || \
+  fail C-88 'bin/flixbox must source homepage-templates.sh'
+grep -q 'cmd_homepage' bin/flixbox || fail C-88 'bin/flixbox must define cmd_homepage'
+grep -q 'homepage refresh' bin/flixbox || fail C-88 'bin/flixbox usage must mention homepage refresh'
+grep -q -- '--reset-homepage' bin/flixbox || \
+  fail C-88 'bin/flixbox reload must support --reset-homepage'
+grep -q 'flixbox_homepage_warn_if_stale' bin/flixbox || \
+  fail C-88 'up/reload/status must warn when Homepage templates are stale'
+grep -q 'flixbox_homepage_stamp_applied_from_template' bin/flixbox || \
+  fail C-88 'copy_templates must stamp applied-rev only on first services.yaml create'
+grep -q 'homepage refresh' docs/user/REFERENCE.md || \
+  fail C-88 'REFERENCE must document homepage refresh'
+# Managed files listed in lib must exist in templates
+while IFS= read -r rel; do
+  [[ -z "$rel" ]] && continue
+  [[ -f "templates/homepage/${rel}" ]] || \
+    fail C-88 "managed Homepage template missing: ${rel}"
+done < <(bash -c 'source scripts/lib/homepage-templates.sh; flixbox_homepage_managed_files')
+# Unit: stale warn + refresh stamp in temp CONFIG_DIR
+bash -c '
+set -euo pipefail
+ROOT_DIR="$(pwd)"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/homepage-templates.sh"
+log() { :; }
+ok() { :; }
+warn() { printf "%s\n" "$*" >&2; }
+CONFIG_DIR="$(mktemp -d)"
+export CONFIG_DIR ROOT_DIR
+trap "rm -rf \"$CONFIG_DIR\"" EXIT
+mkdir -p "${CONFIG_DIR}/homepage/images"
+cp templates/homepage/services.yaml "${CONFIG_DIR}/homepage/services.yaml"
+cp templates/homepage/settings.yaml "${CONFIG_DIR}/homepage/settings.yaml"
+cp templates/homepage/widgets.yaml "${CONFIG_DIR}/homepage/widgets.yaml"
+cp templates/homepage/bookmarks.yaml "${CONFIG_DIR}/homepage/bookmarks.yaml"
+cp templates/homepage/docker.yaml "${CONFIG_DIR}/homepage/docker.yaml"
+cp templates/homepage/custom.css "${CONFIG_DIR}/homepage/custom.css"
+cp templates/homepage/custom.js "${CONFIG_DIR}/homepage/custom.js"
+cp templates/homepage/images/logo.png "${CONFIG_DIR}/homepage/images/logo.png"
+cp templates/homepage/images/background.jpg "${CONFIG_DIR}/homepage/images/background.jpg"
+# No applied-rev → stale
+flixbox_homepage_templates_stale
+out="$(flixbox_homepage_warn_if_stale 2>&1 || true)"
+echo "$out" | grep -q "homepage refresh" || { echo "warn missing refresh hint"; exit 1; }
+# Dry-run must not stamp
+flixbox_homepage_refresh --dry-run >/dev/null
+! flixbox_homepage_applied_rev >/dev/null 2>&1
+# Apply (skip docker restart by temporarily shadowing restart fn)
+flixbox_homepage_restart_container() { return 0; }
+flixbox_homepage_refresh >/dev/null
+applied="$(flixbox_homepage_applied_rev)"
+tmpl="$(flixbox_homepage_template_rev)"
+[[ "$applied" == "$tmpl" ]] || { echo "stamp mismatch $applied vs $tmpl"; exit 1; }
+! flixbox_homepage_templates_stale
+flixbox_homepage_refresh >/dev/null
+[[ "$(flixbox_homepage_applied_rev)" == "$tmpl" ]]
+ls -d "${CONFIG_DIR}"/homepage.bak.* >/dev/null
+' || fail C-88 'homepage template refresh unit test failed'
+# If git can see origin/main and managed templates changed, rev must change too
+if git rev-parse --verify origin/main >/dev/null 2>&1; then
+  if git diff --name-only origin/main...HEAD -- \
+      templates/homepage/services.yaml \
+      templates/homepage/settings.yaml \
+      templates/homepage/widgets.yaml \
+      templates/homepage/bookmarks.yaml \
+      templates/homepage/docker.yaml \
+      templates/homepage/custom.css \
+      templates/homepage/custom.js \
+      templates/homepage/images/logo.png \
+      templates/homepage/images/background.jpg \
+      | grep -q .; then
+    if ! git diff origin/main...HEAD -- templates/homepage/.flixbox-template-rev | grep -qE '^\+[0-9]+$'; then
+      # Allow first introduction of the rev file itself
+      if git cat-file -e origin/main:templates/homepage/.flixbox-template-rev 2>/dev/null; then
+        fail C-88 'managed Homepage templates changed without bumping .flixbox-template-rev'
+      fi
+    fi
+  fi
+fi
+pass C-88
+
 # --- Compose render (shared script — R4) ---
 "${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1
 pass compose-config

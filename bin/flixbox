@@ -19,6 +19,8 @@ source "${ROOT_DIR}/scripts/lib/preflight-host.sh"
 source "${ROOT_DIR}/scripts/lib/qbit-webui-bootstrap.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/credentials.sh"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/homepage-templates.sh"
 
 NO_COLOR="${NO_COLOR:-}"
 if [[ -t 1 && -z "${NO_COLOR}" ]]; then
@@ -168,8 +170,11 @@ copy_templates() {
 
   [[ -f "${CONFIG_DIR}/recyclarr/recyclarr.yml" ]] || \
     cp "${ROOT_DIR}/templates/recyclarr/recyclarr.yml" "${CONFIG_DIR}/recyclarr/recyclarr.yml"
-  [[ -f "${CONFIG_DIR}/homepage/services.yaml" ]] || \
+  local homepage_services_created=0
+  [[ -f "${CONFIG_DIR}/homepage/services.yaml" ]] || {
     cp "${ROOT_DIR}/templates/homepage/services.yaml" "${CONFIG_DIR}/homepage/services.yaml"
+    homepage_services_created=1
+  }
   python3 "${ROOT_DIR}/scripts/lib/homepage-sync.py" "${CONFIG_DIR}/homepage/services.yaml" >/dev/null 2>&1 || true
   [[ -f "${CONFIG_DIR}/homepage/settings.yaml" ]] || \
     cp "${ROOT_DIR}/templates/homepage/settings.yaml" "${CONFIG_DIR}/homepage/settings.yaml"
@@ -188,6 +193,10 @@ copy_templates() {
     cp "${ROOT_DIR}/templates/homepage/images/background.jpg" "${CONFIG_DIR}/homepage/images/background.jpg"
   [[ -f "${CONFIG_DIR}/homepage/docker.yaml" ]] || \
     cp "${ROOT_DIR}/templates/homepage/docker.yaml" "${CONFIG_DIR}/homepage/docker.yaml"
+  # Stamp only on first create of services.yaml — never silence stale existing installs.
+  if [[ "${homepage_services_created}" -eq 1 ]]; then
+    flixbox_homepage_stamp_applied_from_template || true
+  fi
   [[ -f "${CONFIG_DIR}/caddy/Caddyfile" ]] || \
     cp "${ROOT_DIR}/templates/caddy/Caddyfile" "${CONFIG_DIR}/caddy/Caddyfile"
   [[ -f "${CONFIG_DIR}/maintainerr/README.md" ]] || \
@@ -336,6 +345,7 @@ cmd_up() {
   # CONFIG only — never reclaim DATA_DIR while the stack may already be running.
   flixbox_prepare_config_for_host_write || true
   copy_templates
+  flixbox_homepage_warn_if_stale || true
   flixbox_apply_config_runtime_ownership || true
   flixbox_preflight_host_ports "${profiles[@]}"
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
@@ -394,8 +404,16 @@ cmd_reload() {
   assert_docker_accessible
   load_env
   ensure_access_profile
+  local reset_homepage=0
   local profiles=()
-  parse_profiles profiles "$@"
+  local args=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --reset-homepage) reset_homepage=1; shift ;;
+      *) args+=("$1"); shift ;;
+    esac
+  done
+  parse_profiles profiles "${args[@]+"${args[@]}"}"
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
     die "Directories missing. Run ./bin/flixbox init first."
   warn_mode_vpn_mismatch || true
@@ -403,6 +421,11 @@ cmd_reload() {
   source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
   flixbox_prepare_config_for_host_write || true
   copy_templates
+  if [[ "$reset_homepage" -eq 1 ]]; then
+    flixbox_homepage_refresh || die "Homepage refresh failed during reload --reset-homepage"
+  else
+    flixbox_homepage_warn_if_stale || true
+  fi
   flixbox_apply_config_runtime_ownership || true
   flixbox_preflight_host_ports "${profiles[@]}"
   log "Recreating containers (applies .env and compose changes)..."
@@ -421,6 +444,34 @@ cmd_reload() {
   log "If qBit auth or remapped-port WebUI broke: ./bin/flixbox configure --sync-qbit-auth"
 }
 
+cmd_homepage() {
+  load_env
+  local sub="${1:-}"
+  [[ -n "$sub" ]] || die "Usage: flixbox homepage refresh [--dry-run]"
+  shift || true
+  case "$sub" in
+    refresh)
+      # shellcheck disable=SC1091
+      source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
+      flixbox_prepare_config_for_host_write || true
+      flixbox_homepage_refresh "$@" || die "Homepage refresh failed"
+      ;;
+    -h|--help|help)
+      cat <<'EOF'
+Usage:
+  flixbox homepage refresh [--dry-run]
+
+Overwrite managed Homepage config from templates/homepage (with backup),
+sync ports/creds/chips, stamp applied revision, restart Homepage.
+See docs/user/REFERENCE.md and docs/plans/homepage-template-refresh.md.
+EOF
+      ;;
+    *)
+      die "Unknown homepage subcommand: ${sub} (try: refresh)"
+      ;;
+  esac
+}
+
 cmd_configure() {
   assert_docker_accessible
   load_env
@@ -437,6 +488,7 @@ cmd_status() {
   log "DATA_DIR=${DATA_DIR}"
   log "CONFIG_DIR=${CONFIG_DIR}"
   log "Download client URL for *arr / Decluttarr: http://qbittorrent:8080 (same in VPN and Direct — ADR 0014)"
+  flixbox_homepage_warn_if_stale || true
 }
 
 cmd_logs() {
@@ -462,7 +514,8 @@ Usage:
   flixbox up [plex|proxy|socket-proxy|recyclarr]...
   flixbox down [--volumes]
   flixbox restart <service>
-  flixbox reload [plex|proxy|socket-proxy|recyclarr]...
+  flixbox reload [--reset-homepage] [plex|proxy|socket-proxy|recyclarr]...
+  flixbox homepage refresh [--dry-run]
   flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
   flixbox credentials show <target>
   flixbox credentials set  <target> --generate|--prompt
@@ -472,6 +525,9 @@ Usage:
 
 Credentials targets: qbit | arr-ui | admin | api radarr|sonarr|prowlarr
   (arr-ui apply requires shared profile — ADR 0020)
+
+Homepage: after git pull, up/reload/status warn if templates are newer than live config.
+  Apply with: ./bin/flixbox homepage refresh  (or reload --reset-homepage)
 
 Recyclarr sync (one-shot):
   docker compose --profile recyclarr run --rm recyclarr sync
@@ -489,6 +545,7 @@ main() {
     down) cmd_down "$@" ;;
     restart) cmd_restart "$@" ;;
     reload) cmd_reload "$@" ;;
+    homepage) cmd_homepage "$@" ;;
     configure) cmd_configure "$@" ;;
     credentials) cmd_credentials "$@" ;;
     status) cmd_status "$@" ;;

@@ -10,7 +10,8 @@ Cheat sheet for operators. Defaults assume a local install with `./bin/flixbox i
 | --- | --- |
 | `./bin/flixbox init [--non-interactive]` | Create `.env`, dirs, templates; generate API keys/passwords. **Linux:** set writable `DATA_DIR`/`CONFIG_DIR` in `.env` before `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
 | `./bin/flixbox up [profiles...]` | Start stack (`plex`, `proxy`, `socket-proxy`, `recyclarr`) |
-| `./bin/flixbox reload [profiles...]` | Recreate containers after `.env` / compose changes |
+| `./bin/flixbox reload [--reset-homepage] [profiles...]` | Recreate containers after `.env` / compose changes. `--reset-homepage` also overwrites managed Homepage templates (with backup) |
+| `./bin/flixbox homepage refresh [--dry-run]` | Apply repo Homepage templates to live `${CONFIG_DIR}/homepage` (backup → overwrite managed files → sync → stamp → restart). Use after `git pull` when `up`/`reload` warn that templates are newer |
 | `./bin/flixbox configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]` | Idempotent wiring; heals drifted API keys. `--dry-run` previews only (no `.env`/API changes). `--sync-qbit-auth` forces qBit WebUI password from `.env` into qBit + *arr + Decluttarr. `--sync-arr-ui` applies `FLIXBOX_ARR_UI_*` Forms under `shared` (ADR 0020) |
 | `./bin/flixbox credentials show <target>` | Print operator secret (`qbit`, `arr-ui`, `admin`, or `api radarr\|sonarr\|prowlarr`) — stdout only; keep private |
 | `./bin/flixbox credentials set <target> --generate\|--prompt` | Write `.env` and apply. `qbit` = **rotate** (auth with current password first). `arr-ui` = shared Forms Host Config. `admin` = best-effort Jellyfin. Align-only qBit path remains `configure --sync-qbit-auth` |
