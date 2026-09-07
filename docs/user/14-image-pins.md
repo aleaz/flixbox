@@ -2,7 +2,7 @@
 
 Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010). Do not use `:latest` in `compose/`.
 
-**Pin set date:** 2026-08-31
+**Pin set date:** 2026-09-06
 
 | Service | Image | Tag |
 | --- | --- | --- |
@@ -14,13 +14,13 @@ Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010
 | Sonarr | `lscr.io/linuxserver/sonarr` | `4.0.19` |
 | Bazarr | `lscr.io/linuxserver/bazarr` | `1.6.0` |
 | Unpackerr | `ghcr.io/unpackerr/unpackerr` | `v0.16.1` |
-| Recyclarr | `ghcr.io/recyclarr/recyclarr` | `8.7.1` |
+| Recyclarr | `ghcr.io/recyclarr/recyclarr` | `8.7.2` |
 | Decluttarr | `ghcr.io/manimatter/decluttarr` | `v2.1.0` |
-| Maintainerr | `ghcr.io/maintainerr/maintainerr` | `3.26.0` |
+| Maintainerr | `ghcr.io/maintainerr/maintainerr` | `3.27.0` |
 | Seerr | `ghcr.io/seerr-team/seerr` | `v3.4.1` |
 | Jellyfin | `lscr.io/linuxserver/jellyfin` | `10.11.11` |
 | Plex (profile) | `lscr.io/linuxserver/plex` | `1.43.3` |
-| Homepage | `ghcr.io/gethomepage/homepage` | `v2.1.2` |
+| Homepage | `ghcr.io/gethomepage/homepage` | `v2.2.0` |
 | Caddy (profile) | `caddy` | `2.11.4` |
 | docker-socket-proxy (profile) | `tecnativa/docker-socket-proxy` | `v0.5.0` |
 

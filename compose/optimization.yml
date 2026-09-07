@@ -27,7 +27,7 @@ services:
       - flixbox_net
 
   recyclarr:
-    image: ghcr.io/recyclarr/recyclarr:8.7.1
+    image: ghcr.io/recyclarr/recyclarr:8.7.2
     container_name: flixbox-recyclarr
     profiles: ["recyclarr"]
     user: "${PUID:-1000}:${PGID:-1000}"
@@ -86,7 +86,7 @@ services:
       - flixbox_net
 
   maintainerr:
-    image: ghcr.io/maintainerr/maintainerr:3.26.0
+    image: ghcr.io/maintainerr/maintainerr:3.27.0
     container_name: flixbox-maintainerr
     user: "${PUID:-1000}:${PGID:-1000}"
     environment:
