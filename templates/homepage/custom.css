@@ -516,8 +516,7 @@ header,
   display: none !important;
 }
 
-#information-widgets .information-widget-resource .pl-0\\.5,
-#information-widgets .information-widget-resource .pl-0.5 {
+#information-widgets .information-widget-resource .pl-0\.5 {
   padding: 0 !important;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
   font-size: 0.85rem !important;
@@ -530,7 +529,7 @@ header,
 /* Hide usage gauge (header glance — not a disk dashboard) */
 #information-widgets .information-widget-resource .resource-usage,
 #information-widgets .information-widget-resource [class*="resource-usage"],
-#information-widgets .information-widget-resource .mt-0\\.5.w-full,
+#information-widgets .information-widget-resource .mt-0\.5.w-full,
 #information-widgets .information-widget-resource .w-full.rounded-full,
 #information-widgets .information-widget-resource div.w-full.rounded-full,
 #information-widgets .information-widget-resource [class*="bg-theme-800"][class*="rounded-full"],
@@ -548,14 +547,14 @@ header,
   display: none !important;
 }
 
-/* /data mount — quieter than capacity + clock so it doesn't blend with the time */
+/* /data mount — quiet telemetry label (WCAG AA compliant contrast) */
 #information-widgets #widgets-wrap > :nth-child(6) > .ml-6.pt-1,
 #information-widgets #widgets-wrap > :nth-child(6) > .text-xs.text-center {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
   font-size: 0.78rem !important;
   font-weight: 500 !important;
   letter-spacing: 0.02em !important;
-  color: #475569 !important;
+  color: #94a3b8 !important;
   margin: 0 !important;
   padding: 0 !important;
   text-align: left !important;
@@ -566,7 +565,7 @@ header,
 #information-widgets #widgets-wrap > :nth-child(6) > .ml-6.pt-1::before,
 #information-widgets #widgets-wrap > :nth-child(6) > .text-xs.text-center::before {
   content: "· ";
-  color: #475569;
+  color: #94a3b8;
 }
 
 /* Strip boxed chrome ONLY on header info widgets — do not touch service cards */
@@ -737,8 +736,8 @@ li.service > div:hover,
   background-color: var(--stat-box-bg) !important;
   border: 1px solid var(--stat-box-border) !important;
   border-radius: 6px !important;
-  padding: 5px 8px !important;
-  margin: 2px !important;
+  padding: 3px 6px !important;
+  margin: 1px !important;
   transition: background-color 0.15s ease !important;
 }
 
@@ -747,7 +746,7 @@ li.service > div:hover,
 [class*="widget-stats"] [class*="font-semibold"] {
   font-weight: 700 !important;
   color: #ffffff !important;
-  font-size: 1rem !important;
+  font-size: 0.9rem !important;
 }
 
 /* Metric Label */
@@ -761,6 +760,86 @@ li.service > div:hover,
 }
 
 /* --------------------------------------------------------------------------
+   4b. Metric Chips & Status Badges
+   -------------------------------------------------------------------------- */
+
+/* Metric chips share the card width evenly (equal flex), one row */
+li.service .service-container,
+li.service [class*="service-container"] {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: stretch !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  margin-top: auto !important;
+  padding-top: 0.35rem !important;
+  gap: 0.25rem !important;
+}
+
+li.service .service-container .service-block {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 2px 4px !important;
+  box-sizing: border-box !important;
+}
+
+/* B — hairline chips: quiet telemetry, not CTA buttons */
+li.service .service-container .service-block:not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-rose"]):not([class*="bg-red"]) {
+  background-color: rgba(12, 14, 20, 0.28) !important;
+  border: 1px solid rgba(148, 163, 184, 0.12) !important;
+}
+
+li.service .service-container .service-block .font-bold:not(.text-xs),
+li.service .service-container .service-block > div:first-child {
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  color: #cbd5e1 !important;
+  line-height: 1.15 !important;
+}
+
+li.service .service-container .service-block .font-bold.text-xs,
+li.service .service-container .service-block [class*="text-xs"] {
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  color: #64748b !important;
+}
+
+/* Soften Homepage highlight fills on metric chips */
+li.service .service-container .service-block[class*="bg-amber"],
+li.service .service-container .service-block[class*="bg-yellow"] {
+  background-color: var(--highlight-warn-bg) !important;
+  border: 1px solid var(--highlight-warn-border) !important;
+  color: var(--highlight-warn-text) !important;
+}
+
+li.service .service-container .service-block[class*="bg-rose"],
+li.service .service-container .service-block[class*="bg-red"] {
+  background-color: var(--highlight-danger-bg) !important;
+  border: 1px solid var(--highlight-danger-border) !important;
+  color: var(--highlight-danger-text) !important;
+}
+
+li.service .service-container .service-block[class*="bg-amber"] .font-bold.text-xs,
+li.service .service-container .service-block[class*="bg-yellow"] .font-bold.text-xs,
+li.service .service-container .service-block[class*="bg-amber"] [class*="text-xs"],
+li.service .service-container .service-block[class*="bg-yellow"] [class*="text-xs"] {
+  color: var(--highlight-warn-text) !important;
+}
+
+li.service .service-container .service-block[class*="bg-rose"] .font-bold.text-xs,
+li.service .service-container .service-block[class*="bg-red"] .font-bold.text-xs,
+li.service .service-container .service-block[class*="bg-rose"] [class*="text-xs"],
+li.service .service-container .service-block[class*="bg-red"] [class*="text-xs"] {
+  color: var(--highlight-danger-text) !important;
+}
+
+/* --------------------------------------------------------------------------
    5. Typography & Section Titles
    -------------------------------------------------------------------------- */
 
@@ -769,13 +848,15 @@ h2,
 [class*="Group_title"] {
   color: #e6edf3 !important;
   font-weight: 600 !important;
-  font-size: 1.35rem !important;
+  font-size: 1.12rem !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
   background: none !important;
   -webkit-text-fill-color: initial !important;
   text-shadow: none !important;
-  margin-bottom: 0.85rem !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  line-height: 1.25 !important;
 }
 
 /* Service Card Titles and Subtitles */
@@ -1032,17 +1113,7 @@ details div ul span {
   margin-bottom: 0.55rem !important;
 }
 
-/* Title → cards. Margin lives on the collapse row, not on h2 —
-   h2 margin-bottom inside flex mis-centers the chevron below the label. */
-h2.service-group-name,
-h2,
-[class*="group_title"],
-[class*="Group_title"] {
-  font-size: 1.12rem !important;
-  margin-bottom: 0 !important;
-  margin-top: 0 !important;
-  line-height: 1.25 !important;
-}
+/* Title → cards. Group typography is defined canonically in §5. */
 
 /* Collapse header row: title + triangle on one optical baseline */
 .services-group > button.group,
@@ -1150,6 +1221,12 @@ div:has(> #myTab) {
   color: #94a3b8 !important;
 }
 
+#myTab > li > button:focus-visible,
+#myTab [role="tab"]:focus-visible {
+  outline: 2px solid rgba(148, 163, 184, 0.45) !important;
+  outline-offset: 2px !important;
+}
+
 #layout-groups {
   margin-top: 0 !important;
   padding-top: 0 !important;
@@ -1222,91 +1299,5 @@ li.bookmark .bookmark-description {
   color: var(--text-secondary) !important;
 }
 
-/* Metric chips share the card width evenly (equal flex), one row */
-li.service .service-container,
-li.service [class*="service-container"] {
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  justify-content: stretch !important;
-  align-items: stretch !important;
-  width: 100% !important;
-  margin-top: auto !important;
-  padding-top: 0.35rem !important;
-  gap: 0.25rem !important;
-}
 
-li.service .service-container .service-block {
-  flex: 1 1 0 !important;
-  width: auto !important;
-  min-width: 0 !important;
-  max-width: none !important;
-  border-radius: 4px !important;
-  box-shadow: none !important;
-  margin: 0 !important;
-  padding: 2px 4px !important;
-  box-sizing: border-box !important;
-}
-
-/* B — hairline chips: quiet telemetry, not CTA buttons */
-li.service .service-container .service-block:not([class*="bg-amber"]):not([class*="bg-yellow"]):not([class*="bg-rose"]):not([class*="bg-red"]) {
-  background-color: rgba(12, 14, 20, 0.28) !important;
-  border: 1px solid rgba(148, 163, 184, 0.12) !important;
-}
-
-li.service .service-container .service-block .font-bold:not(.text-xs),
-li.service .service-container .service-block > div:first-child {
-  font-size: 0.92rem !important;
-  font-weight: 700 !important;
-  color: #cbd5e1 !important;
-  line-height: 1.15 !important;
-}
-
-li.service .service-container .service-block .font-bold.text-xs,
-li.service .service-container .service-block [class*="text-xs"] {
-  font-size: 0.68rem !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.03em !important;
-  color: #64748b !important;
-}
-
-/* Soften Homepage highlight fills on metric chips */
-li.service .service-container .service-block[class*="bg-amber"],
-li.service .service-container .service-block[class*="bg-yellow"] {
-  background-color: var(--highlight-warn-bg) !important;
-  border: 1px solid var(--highlight-warn-border) !important;
-  color: var(--highlight-warn-text) !important;
-}
-
-li.service .service-container .service-block[class*="bg-rose"],
-li.service .service-container .service-block[class*="bg-red"] {
-  background-color: var(--highlight-danger-bg) !important;
-  border: 1px solid var(--highlight-danger-border) !important;
-  color: var(--highlight-danger-text) !important;
-}
-
-li.service .service-container .service-block[class*="bg-amber"] .font-bold.text-xs,
-li.service .service-container .service-block[class*="bg-yellow"] .font-bold.text-xs,
-li.service .service-container .service-block[class*="bg-amber"] [class*="text-xs"],
-li.service .service-container .service-block[class*="bg-yellow"] [class*="text-xs"] {
-  color: var(--highlight-warn-text) !important;
-}
-
-li.service .service-container .service-block[class*="bg-rose"] .font-bold.text-xs,
-li.service .service-container .service-block[class*="bg-red"] .font-bold.text-xs,
-li.service .service-container .service-block[class*="bg-rose"] [class*="text-xs"],
-li.service .service-container .service-block[class*="bg-red"] [class*="text-xs"] {
-  color: var(--highlight-danger-text) !important;
-}
-
-/* Smaller inset stats */
-[class*="widget_stats"] > div,
-[class*="widget-stats"] > div {
-  padding: 3px 6px !important;
-  margin: 1px !important;
-}
-
-[class*="widget_stats"] [class*="font-semibold"],
-[class*="widget-stats"] [class*="font-semibold"] {
-  font-size: 0.9rem !important;
-}
 
