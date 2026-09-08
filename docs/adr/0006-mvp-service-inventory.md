@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-27
-- **Updated:** 2026-08-27 (Seerr, Byparr, Decluttarr, Maintainerr)
+- **Updated:** 2026-09-07 (socket-proxy always on with Homepage — ADR 0022)
 
 ## Context
 
@@ -12,7 +12,7 @@ The original proposal listed many services and outdated names (Jellyseerr, Flare
 
 MVP inventory is exactly:
 
-**Gluetun, qBittorrent, Prowlarr, Byparr, Radarr, Sonarr, Bazarr, Unpackerr, Recyclarr, Decluttarr, Maintainerr, Seerr, Jellyfin, Homepage, Caddy**, and optional **docker-socket-proxy**.
+**Gluetun, qBittorrent, Prowlarr, Byparr, Radarr, Sonarr, Bazarr, Unpackerr, Recyclarr, Decluttarr, Maintainerr, Seerr, Jellyfin, Homepage, Caddy**, and **docker-socket-proxy** (always on with Homepage — [ADR 0022](0022-operator-footgun-remediations.md)).
 
 Explicitly **not** MVP: Lidarr, Readarr, Audiobookshelf, SABnzbd, Whisper, Overseerr, Jellyseerr, Autobrr, cross-seed, Profilarr, Authelia/Authentik, Telegram bots, Vagrant, Streamystats.
 
@@ -22,3 +22,7 @@ FlareSolverr may be documented as an alternate Byparr-compatible image, not the 
 
 - Requirements and Compose modules must match this list.
 - Adding a service requires scope + roadmap updates (and often a new ADR).
+
+## Updates
+
+- **2026-09-07:** docker-socket-proxy required with Homepage (no longer an optional Compose profile).

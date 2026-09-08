@@ -7,7 +7,7 @@ alwaysApply: false
 # Compose rules
 
 - Use Compose v2 modular files under `compose/`; max ~150 lines per file.
-- Use profiles for optional services (Plex, proxy, socket-proxy, recyclarr).
+- Use profiles for optional services (Plex, proxy, recyclarr). `docker-socket-proxy` always runs with Homepage (ADR 0022).
 - Stateful services: `stop_grace_period: 60s`.
 - VPN mode: qBittorrent `network_mode: service:gluetun`; publish qBit ports on Gluetun; healthcheck gate.
 - Mount qBit cont-init at `/custom-cont-init.d` via `${CONFIG_DIR}/qbittorrent-cont-init` (not under `/config`).

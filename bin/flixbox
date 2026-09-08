@@ -191,8 +191,20 @@ copy_templates() {
     cp "${ROOT_DIR}/templates/homepage/images/logo.png" "${CONFIG_DIR}/homepage/images/logo.png"
   [[ -f "${CONFIG_DIR}/homepage/images/background.jpg" ]] || \
     cp "${ROOT_DIR}/templates/homepage/images/background.jpg" "${CONFIG_DIR}/homepage/images/background.jpg"
-  [[ -f "${CONFIG_DIR}/homepage/docker.yaml" ]] || \
-    cp "${ROOT_DIR}/templates/homepage/docker.yaml" "${CONFIG_DIR}/homepage/docker.yaml"
+  # ADR 0022: Homepage must use socket-proxy host, never raw docker.sock.
+  local homepage_docker="${CONFIG_DIR}/homepage/docker.yaml"
+  local homepage_docker_need=0
+  if [[ ! -f "${homepage_docker}" ]]; then
+    homepage_docker_need=1
+  elif grep -qE '^[[:space:]]*socket:' "${homepage_docker}" 2>/dev/null; then
+    homepage_docker_need=1
+  elif ! grep -qE 'host:[[:space:]]*docker-socket-proxy' "${homepage_docker}" 2>/dev/null; then
+    homepage_docker_need=1
+  fi
+  if [[ "${homepage_docker_need}" -eq 1 ]]; then
+    cp -f "${ROOT_DIR}/templates/homepage/docker.yaml" "${homepage_docker}"
+    log "Homepage docker.yaml → docker-socket-proxy:2375 (ADR 0022)"
+  fi
   # Stamp only on first create of services.yaml — never silence stale existing installs.
   if [[ "${homepage_services_created}" -eq 1 ]]; then
     flixbox_homepage_stamp_applied_from_template || true
@@ -302,7 +314,7 @@ cmd_init() {
   ensure_first_run_secrets
   load_env
   if ! flixbox_apply_runtime_ownership; then
-    warn "Runtime ownership incomplete — *arr/Seerr may hit permission errors until fixed."
+    die "Runtime ownership failed (Seerr requires UID 1000 on ${CONFIG_DIR}/seerr). See docs/user/10-troubleshooting.md"
   fi
   ok "Init complete."
   log "Access profile: $(flixbox_access_profile) (*arr UI auth — ADR 0015)"
@@ -346,10 +358,12 @@ cmd_up() {
   flixbox_prepare_config_for_host_write || true
   copy_templates
   flixbox_homepage_warn_if_stale || true
-  flixbox_apply_config_runtime_ownership || true
+  flixbox_apply_config_runtime_ownership || \
+    die "Config ownership failed (Seerr requires UID 1000 on ${CONFIG_DIR}/seerr). See docs/user/10-troubleshooting.md"
+  warn_legacy_socket_proxy_profile || true
   flixbox_preflight_host_ports "${profiles[@]}"
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
-  compose "${profiles[@]}" up -d
+  compose "${profiles[@]}" up -d --remove-orphans
   ok "Stack started. ./bin/flixbox status"
   if flixbox_qbit_webui_bootstrap; then
     # Decluttarr may have raced the temp-password window; recreate once auth is stable.
@@ -373,18 +387,38 @@ parse_profiles() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --profile)
-        _out+=(--profile "$2")
-        shift 2
+        if [[ "${2:-}" == "socket-proxy" ]]; then
+          warn "socket-proxy profile is obsolete (ADR 0022): docker-socket-proxy always runs with Homepage."
+          shift 2
+        else
+          _out+=(--profile "$2")
+          shift 2
+        fi
         ;;
-      plex|proxy|socket-proxy|recyclarr)
+      plex|proxy|recyclarr)
         _out+=(--profile "$1")
         shift
         ;;
+      socket-proxy)
+        warn "socket-proxy profile is obsolete (ADR 0022): docker-socket-proxy always runs with Homepage."
+        shift
+        ;;
       *)
-        die "Unknown profile argument: $1 (try plex|proxy|socket-proxy|recyclarr or --profile NAME)"
+        die "Unknown profile argument: $1 (try plex|proxy|recyclarr or --profile NAME)"
         ;;
     esac
   done
+}
+
+warn_legacy_socket_proxy_profile() {
+  local profiles="${COMPOSE_PROFILES:-}"
+  local normalized=""
+  [[ -n "$profiles" ]] || return 0
+  # Strip whitespace so "plex, socket-proxy" still matches.
+  normalized="$(printf '%s' "$profiles" | tr -d '[:space:]')"
+  if [[ ",${normalized}," == *",socket-proxy,"* ]]; then
+    warn "COMPOSE_PROFILES includes socket-proxy — remove it; proxy is always on with Homepage (ADR 0022)."
+  fi
 }
 
 cmd_down() {
@@ -426,11 +460,13 @@ cmd_reload() {
   else
     flixbox_homepage_warn_if_stale || true
   fi
-  flixbox_apply_config_runtime_ownership || true
+  flixbox_apply_config_runtime_ownership || \
+    die "Config ownership failed (Seerr requires UID 1000 on ${CONFIG_DIR}/seerr). See docs/user/10-troubleshooting.md"
+  warn_legacy_socket_proxy_profile || true
   flixbox_preflight_host_ports "${profiles[@]}"
   log "Recreating containers (applies .env and compose changes)..."
   log "Tip: prefer reload over down when you only changed config."
-  compose "${profiles[@]}" up -d --force-recreate
+  compose "${profiles[@]}" up -d --force-recreate --remove-orphans
   ok "Stack reloaded. ./bin/flixbox status"
   if flixbox_qbit_webui_bootstrap; then
     if docker inspect flixbox-decluttarr >/dev/null 2>&1; then
@@ -511,10 +547,10 @@ Flixbox CLI
 
 Usage:
   flixbox init [--force] [--non-interactive]
-  flixbox up [plex|proxy|socket-proxy|recyclarr]...
+  flixbox up [plex|proxy|recyclarr]...
   flixbox down [--volumes]
   flixbox restart <service>
-  flixbox reload [--reset-homepage] [plex|proxy|socket-proxy|recyclarr]...
+  flixbox reload [--reset-homepage] [plex|proxy|recyclarr]...
   flixbox homepage refresh [--dry-run]
   flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
   flixbox credentials show <target>

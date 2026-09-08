@@ -22,7 +22,7 @@ Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010
 | Plex (profile) | `lscr.io/linuxserver/plex` | `1.43.3` |
 | Homepage | `ghcr.io/gethomepage/homepage` | `v2.2.0` |
 | Caddy (profile) | `caddy` | `2.11.4` |
-| docker-socket-proxy (profile) | `tecnativa/docker-socket-proxy` | `v0.5.0` |
+| docker-socket-proxy | `tecnativa/docker-socket-proxy` | `v0.5.0` |
 
 ## Updating pins
 

@@ -110,7 +110,8 @@ Same leading number ⇒ hardlink OK.
 
 | # | Check | How | Pass |
 |---|-------|-----|------|
-| D1 | Switch mode | `FLIXBOX_MODE=vpn` in `.env`, fill Gluetun secrets, `./bin/flixbox up` | `gluetun` + `qbittorrent` healthy |
+| D1 | Switch mode | `FLIXBOX_MODE=vpn` in `.env`, fill Gluetun secrets, `./bin/flixbox up` (no separate `down` required — `--remove-orphans`) | `gluetun` + `qbittorrent` healthy |
+| D1b | Orphans cleared | From VPN, set `FLIXBOX_MODE=direct`, `./bin/flixbox up` | `gluetun` container gone; `qbittorrent` healthy on bridge |
 | D2 | qBit via Gluetun port | `http://localhost:8080` (or `127.0.0.1` if `shared`) | WebUI loads |
 | D3 | *arr download client | Radarr/Sonarr host `qbittorrent:8080` | Test succeeds |
 | D4 | Leak test | `./bin/flixbox vpn-test` | Container IP ≠ host public IP |
@@ -142,6 +143,16 @@ Reference: [Credentials and API keys](06-configuration.md#credentials-and-api-ke
 | F3 | Download + import | Grab releases to qBit | Import to `/data/media` |
 | F4 | Jellyfin playback | Play imported file | Streams |
 
+## Phase G — Footgun remediations (ADR 0022)
+
+| # | Check | How | Pass |
+|---|-------|-----|------|
+| G1 | Mode orphans | After D1b (or Direct↔VPN round-trip) | No leftover `flixbox-gluetun` when mode is `direct` |
+| G2 | Homepage Docker API | Homepage UI → Docker / service status chips | Status resolves (via `docker-socket-proxy:2375`, not host sock) |
+| G3 | Proxy healthy before Homepage | `docker inspect flixbox-docker-socket-proxy --format '{{.State.Health.Status}}'` after `up` | `healthy`; Homepage started after proxy |
+| G4 | Seerr ownership gate | Temporarily `chmod 000` or root-own `${CONFIG_DIR}/seerr`, run `./bin/flixbox up` | Non-zero exit + UID 1000 troubleshooting hint; restore perms after |
+| G5 | `docker.yaml` contract | `grep host: "${CONFIG_DIR}/homepage/docker.yaml"` | `host: docker-socket-proxy` (no `socket:` line) |
+
 ---
 
 ## Recording results
@@ -163,6 +174,7 @@ Phase C:  [ ] pass  [ ] fail  [ ] skipped (macOS)
 Phase D:  [ ] pass  [ ] fail  [ ] skipped (no VPN)
 Phase E:  [ ] pass  [ ] fail  notes:
 Phase F:  [ ] pass  [ ] fail  notes:
+Phase G:  [ ] pass  [ ] fail  notes:  # ADR 0022 footguns
 ```
 
 **v0.1 gate:** Phases A–C and B pass on Linux (`trusted`). Phase Bʹ (`shared`) recommended before advertising the shared Wi‑Fi setup in the README.

@@ -1,6 +1,6 @@
 # Install
 
-> **Implementation status:** Full MVP Compose stack + `bin/flixbox` CLI are available. Optional profiles: `plex`, `proxy`, `socket-proxy`, `recyclarr`.
+> **Implementation status:** Full MVP Compose stack + `bin/flixbox` CLI are available. Optional profiles: `plex`, `proxy`, `recyclarr`. `docker-socket-proxy` always runs with Homepage.
 
 ## Bootstrap
 

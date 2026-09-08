@@ -1,10 +1,9 @@
-# Homepage dashboard (+ optional docker-socket-proxy).
+# Homepage dashboard + always-on docker-socket-proxy (ADR 0022).
 
 services:
   docker-socket-proxy:
     image: tecnativa/docker-socket-proxy:v0.5.0
     container_name: flixbox-docker-socket-proxy
-    profiles: ["socket-proxy"]
     environment:
       CONTAINERS: 1
       INFO: 1
@@ -18,6 +17,12 @@ services:
       VOLUMES: 0
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:2375/_ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
     restart: unless-stopped
     stop_grace_period: 10s
     networks:
@@ -33,9 +38,11 @@ services:
       - ${CONFIG_DIR}/homepage:/app/config
       - ${CONFIG_DIR}/homepage/images:/app/public/images:ro
       - ${DATA_DIR}:/data:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - ${HOMEPAGE_PORT:-3000}:3000
+    depends_on:
+      docker-socket-proxy:
+        condition: service_healthy
     restart: unless-stopped
     stop_grace_period: 30s
     networks:

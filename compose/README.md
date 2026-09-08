@@ -9,7 +9,7 @@
 | `optimization.yml` | active | Unpackerr, Recyclarr, Decluttarr, Maintainerr |
 | `media-servers.yml` | active | Jellyfin (+ optional `plex` profile) |
 | `requests.yml` | active | Seerr |
-| `dashboard.yml` | active | Homepage (+ optional `socket-proxy`) |
+| `dashboard.yml` | active | Homepage + always-on `docker-socket-proxy` |
 | `proxy.yml` | active | Caddy (`proxy` profile) |
 
 Root: [`../compose.yaml`](../compose.yaml).

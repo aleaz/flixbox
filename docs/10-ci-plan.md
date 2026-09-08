@@ -40,7 +40,7 @@ The following was checked against the tree at commit `30a51fc` and local tooling
 
 **Always active** (`FLIXBOX_MODE=direct`):
 
-`bazarr`, `byparr`, `decluttarr`, `homepage`, `jellyfin`, `maintainerr`, `prowlarr`, `qbittorrent`, `radarr`, `seerr`, `sonarr`, `unpackerr`
+`bazarr`, `byparr`, `decluttarr`, `docker-socket-proxy`, `homepage`, `jellyfin`, `maintainerr`, `prowlarr`, `qbittorrent`, `radarr`, `seerr`, `sonarr`, `unpackerr`
 
 **VPN mode adds:** `gluetun` (qBittorrent remains; shares Gluetun netns)
 
@@ -50,8 +50,9 @@ The following was checked against the tree at commit `30a51fc` and local tooling
 | --- | --- |
 | `plex` | `plex` |
 | `proxy` | `caddy` |
-| `socket-proxy` | `docker-socket-proxy` |
 | `recyclarr` | `recyclarr` |
+
+`docker-socket-proxy` is always in the default service set with Homepage ([ADR 0022](adr/0022-operator-footgun-remediations.md)).
 
 ### 2.3 Third-party images
 
@@ -175,7 +176,8 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | ID | Rule | Validation |
 | --- | --- | --- |
 | C-10 | Radarr/Sonarr/Bazarr/qBit mount `${DATA_DIR}:/data` | grep volumes in servarr + downloaders |
-| C-11 | `torrents/incomplete` + ownership: DATA chown only when stack is down (`init`); `up`/`reload`/`configure` never reclaim `DATA_DIR` | `scripts/bootstrap-dirs.sh`, `seerr-perms.sh`, `bin/flixbox`, `configure-helpers.sh` |
+| C-11 | `torrents/incomplete` + ownership: DATA chown only when stack is down (`init`); `up`/`reload`/`configure` never reclaim `DATA_DIR`; `--remove-orphans` on `up`/`reload` | `scripts/bootstrap-dirs.sh`, `seerr-perms.sh`, `bin/flixbox`, `configure-helpers.sh` |
+| C-89 | Homepage Docker API via always-on socket-proxy; Seerr UID 1000 fail-closed (ADR 0022) | `compose/dashboard.yml`, `templates/homepage/docker.yaml`, `bin/flixbox`, ADR 0022 |
 | C-12 | Unpackerr uses `/data/torrents` | `optimization.yml` |
 
 ### 5.3 VPN dual-mode (ADR 0002)

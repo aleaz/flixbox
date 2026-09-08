@@ -94,7 +94,7 @@ After changing any `*_PORT` in `.env`:
 
 | Variable | Values | Effect |
 | --- | --- | --- |
-| `COMPOSE_PROFILES` | `plex`, `proxy`, `socket-proxy`, `recyclarr` (comma-separated) | Enables optional services. |
+| `COMPOSE_PROFILES` | `plex`, `proxy`, `recyclarr` (comma-separated) | Enables optional services. `docker-socket-proxy` is always on with Homepage. |
 
 Alternative without editing `.env`:
 
@@ -107,8 +107,9 @@ docker compose --profile recyclarr run --rm recyclarr sync
 | --- | --- |
 | `plex` | Plex media server |
 | `proxy` | Caddy reverse proxy |
-| `socket-proxy` | Read-only Docker socket proxy for Homepage |
 | `recyclarr` | TRaSH Guides sync (one-shot via `run`) |
+
+`docker-socket-proxy` always runs with Homepage (not a profile — [ADR 0022](../adr/0022-operator-footgun-remediations.md)).
 
 ## Credentials and API keys
 

@@ -119,7 +119,42 @@ grep -q 'flixbox_ensure_seerr_config_owner' scripts/lib/seerr-perms.sh || \
 [[ -f scripts/lib/seerr-perms.sh ]] || fail C-11 'missing scripts/lib/seerr-perms.sh'
 grep -q 'flixbox_chown_tree' scripts/lib/seerr-perms.sh || \
   fail C-11 'seerr-perms.sh must define flixbox_chown_tree'
+awk '/^cmd_up\(\)/,/^parse_profiles\(\)/' bin/flixbox | grep -q -- '--remove-orphans' || \
+  fail C-11 'cmd_up must use --remove-orphans (ADR 0022)'
+awk '/^cmd_reload\(\)/,/^cmd_homepage\(\)/' bin/flixbox | grep -q -- '--remove-orphans' || \
+  fail C-11 'cmd_reload must use --remove-orphans (ADR 0022)'
 pass C-11
+
+# --- C-89: Homepage Docker API via always-on socket-proxy (ADR 0022) ---
+grep -q 'profiles:.*"socket-proxy"' compose/dashboard.yml && \
+  fail C-89 'docker-socket-proxy must not use socket-proxy profile'
+grep -q '/var/run/docker.sock:/var/run/docker.sock' compose/dashboard.yml || \
+  fail C-89 'docker-socket-proxy must mount host docker.sock'
+if awk '/^  homepage:/,/^  [a-z]/' compose/dashboard.yml | grep -q 'docker.sock'; then
+  fail C-89 'homepage must not mount docker.sock'
+fi
+grep -q 'healthcheck:' compose/dashboard.yml || \
+  fail C-89 'docker-socket-proxy must define a healthcheck'
+grep -q 'condition: service_healthy' compose/dashboard.yml || \
+  fail C-89 'homepage must wait for healthy docker-socket-proxy'
+grep -q 'host: docker-socket-proxy' templates/homepage/docker.yaml || \
+  fail C-89 'docker.yaml must point at docker-socket-proxy'
+grep -qE 'socket:[[:space:]]*/var/run/docker\.sock' templates/homepage/docker.yaml && \
+  fail C-89 'docker.yaml must not use raw docker.sock'
+grep -q 'Seerr requires UID 1000' bin/flixbox || \
+  fail C-89 'CLI must fail closed when Seerr UID 1000 ownership fails'
+awk '/flixbox_apply_config_runtime_ownership/,/compose /' bin/flixbox | grep -q 'die' || \
+  fail C-89 'up/reload must die when Seerr ownership fails'
+grep -q 'flixbox_seerr_write_probe\|flixbox_path_uid' scripts/lib/seerr-perms.sh || \
+  fail C-89 'seerr-perms must use path uid / optional write probe'
+grep -q -- '--pull=never' scripts/lib/seerr-perms.sh || \
+  fail C-89 'Seerr write probe must use --pull=never (no alpine pull to verify)'
+grep -q 'docker.yaml → docker-socket-proxy' bin/flixbox || \
+  fail C-89 'copy_templates must log docker.yaml ADR 0022 rewrites'
+grep -q 'Phase G' docs/user/11-smoke-test.md || \
+  fail C-89 'smoke-test must include Phase G (ADR 0022)'
+[[ -f docs/adr/0022-operator-footgun-remediations.md ]] || fail C-89 'missing ADR 0022'
+pass C-89
 
 # --- C-12: Unpackerr torrent path ---
 grep -q '/data/torrents' compose/optimization.yml || \
@@ -326,7 +361,7 @@ pass C-30
 # --- C-31: core services in direct mode ---
 direct_services="$("${COMPOSE[@]}" config --services | sort)"
 required_direct=(
-  bazarr byparr decluttarr homepage jellyfin maintainerr
+  bazarr byparr decluttarr docker-socket-proxy homepage jellyfin maintainerr
   prowlarr qbittorrent radarr seerr sonarr unpackerr
 )
 for svc in "${required_direct[@]}"; do

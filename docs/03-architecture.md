@@ -162,7 +162,7 @@ See [ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md).
 
 - No credentials in git.
 - Non-root app containers via PUID/PGID where applicable; Seerr runs as UID 1000 with `init: true`.
-- Optional docker-socket-proxy for Homepage.
+- Always-on docker-socket-proxy for Homepage Docker widgets ([ADR 0022](adr/0022-operator-footgun-remediations.md)).
 - Caddy for TLS; SSO/Authelia is post-MVP.
 - CI: gitleaks (secret scan) + ShellCheck + contract validation + Trivy (CVE) — see `docs/10-ci-plan.md`.
 

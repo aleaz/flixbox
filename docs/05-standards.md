@@ -40,7 +40,7 @@ Runtime data and configs live on the host (e.g. `/srv/flixbox/{data,config}` on 
 - Always set `restart` policy and `stop_grace_period: 60s` on stateful services.
 - VPN mode: healthcheck gate Gluetun before qBittorrent; publish qBit ports on Gluetun.
 - Honor the `/data` mount contract; include `torrents/incomplete`.
-- Optional features (Plex, proxy, socket-proxy, recyclarr) use Compose **profiles**. VPN vs Direct uses `FLIXBOX_MODE` + exclusive include.
+- Optional features (Plex, proxy, recyclarr) use Compose **profiles**. VPN vs Direct uses `FLIXBOX_MODE` + exclusive include. `docker-socket-proxy` always runs with Homepage.
 - Seerr: `image: ghcr.io/seerr-team/seerr`, `init: true`.
 - Byparr is the default CF bypass; do not default to FlareSolverr.
 

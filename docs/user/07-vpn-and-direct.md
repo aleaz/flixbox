@@ -63,7 +63,7 @@ When `FLIXBOX_MODE=vpn`, Compose waits on health in this order:
 gluetun (healthy) → qbittorrent (WebUI healthy) → radarr / sonarr / decluttarr / unpackerr
 ```
 
-If Gluetun is unhealthy, qBit and those peers fail with dependency errors. That is intentional (fail closed for torrent path). Seerr, Jellyfin, Prowlarr, and similar apps do not depend on Gluetun and may still start. Fix Gluetun first (`./bin/flixbox logs gluetun`), then recreate; or roll back to Direct (`FLIXBOX_MODE=direct`, `VPN_ENABLED=false`, `./bin/flixbox init --non-interactive`, `./bin/flixbox down`, `./bin/flixbox up`, download client host `qbittorrent`).
+If Gluetun is unhealthy, qBit and those peers fail with dependency errors. That is intentional (fail closed for torrent path). Seerr, Jellyfin, Prowlarr, and similar apps do not depend on Gluetun and may still start. Fix Gluetun first (`./bin/flixbox logs gluetun`), then recreate; or roll back to Direct (`FLIXBOX_MODE=direct`, `VPN_ENABLED=false`, `./bin/flixbox init --non-interactive`, `./bin/flixbox up` — `up`/`reload` pass `--remove-orphans` so Gluetun is removed when leaving VPN mode). Download client host stays `qbittorrent`.
 
 ### What happens when the VPN drops
 
@@ -155,6 +155,15 @@ Full comment block and variable list: [`.env.example`](../../.env.example) **[VP
 1. Gluetun is not started.
 2. Download client host is **`qbittorrent`**.
 3. Still use the single `/data` hardlink layout.
+
+## Switching modes
+
+1. Set `FLIXBOX_MODE` (and keep `VPN_ENABLED` aligned) in `.env`.
+2. Run `./bin/flixbox up` or `./bin/flixbox reload`.
+
+Both commands use Compose `--remove-orphans`, so containers from the other downloader module (e.g. Gluetun after switching to Direct) are removed automatically ([ADR 0022](../adr/0022-operator-footgun-remediations.md)). A full `down` is optional.
+
+After a mode switch or qBit recreate, run `./bin/flixbox configure --sync-qbit-auth` if the WebUI auth window needs re-bootstrap.
 
 ## Verify
 

@@ -24,7 +24,7 @@
 | Jellyfin | Primary media server |
 | Homepage | Dashboard with live widgets |
 | Caddy | Reverse proxy / HTTPS ingress |
-| docker-socket-proxy | Optional read-limited Docker socket for dashboard |
+| docker-socket-proxy | Read-limited Docker API for Homepage (always on — [ADR 0022](adr/0022-operator-footgun-remediations.md)) |
 
 ### Tooling
 
@@ -66,7 +66,7 @@ See [08-roadmap.md](08-roadmap.md) and planning note [11-future-notifications-an
 
 MVP is done when all of the following are true:
 
-1. Modular Compose starts the MVP inventory with `FLIXBOX_MODE` selecting VPN vs Direct downloaders, plus optional profiles (Plex/proxy/socket-proxy/recyclarr) as designed.
+1. Modular Compose starts the MVP inventory with `FLIXBOX_MODE` selecting VPN vs Direct downloaders, plus optional profiles (`plex` / `proxy` / `recyclarr`) as designed. `docker-socket-proxy` always runs with Homepage ([ADR 0022](adr/0022-operator-footgun-remediations.md)).
 2. All download/media containers mount the same `${DATA_DIR}:/data` parent; hardlinks work on a single local filesystem (including `torrents/incomplete`).
 3. VPN mode: qBittorrent shares Gluetun netns; ports published on Gluetun; healthcheck gates start; killswitch drops egress if tunnel is down; port-forward hook documented/wired when provider supports it; `vpn-test` reports masked IP.
 4. Direct mode: qBittorrent on `flixbox_net` without Gluetun.

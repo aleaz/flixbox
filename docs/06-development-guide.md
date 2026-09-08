@@ -60,7 +60,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 1. `compose/media-servers.yml` → Jellyfin (+ optional Plex profile)
 2. Transcode volume → `/dev/shm`
 3. `compose/requests.yml` → Seerr (`init: true`)
-4. `compose/dashboard.yml` → Homepage (+ optional socket-proxy profile)
+4. `compose/dashboard.yml` → Homepage + always-on docker-socket-proxy
 5. `compose/proxy.yml` → Caddy
 
 **Exit criteria:** Jellyfin serves `/data/media`; Seerr points at Radarr/Sonarr/Jellyfin; Homepage loads.

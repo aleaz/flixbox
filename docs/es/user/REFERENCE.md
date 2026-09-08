@@ -9,7 +9,7 @@ Hoja de consulta para operadores. Valores por defecto tras `./bin/flixbox init`.
 | Comando | Para qué |
 | --- | --- |
 | `./bin/flixbox init [--non-interactive]` | Crear `.env`, carpetas, plantillas. **Linux:** paths escribibles en `.env` antes de `--non-interactive` — [Install § paths (EN)](../../user/04-install.md#storage-paths-and-permissions) |
-| `./bin/flixbox up [perfiles...]` | Levantar stack (`plex`, `proxy`, `socket-proxy`, `recyclarr`) |
+| `./bin/flixbox up [perfiles...]` | Levantar stack (`plex`, `proxy`, `recyclarr`; elimina huérfanos al cambiar de modo) |
 | `./bin/flixbox reload [perfiles...]` | Recrear contenedores tras cambios en `.env` o compose |
 | `./bin/flixbox configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]` | Cablear apps; `--sync-arr-ui` aplica Forms en `shared` |
 | `./bin/flixbox credentials show\|set …` | Ver / rotar secretos de operador (ADR 0020) |

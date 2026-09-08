@@ -49,9 +49,21 @@ pass "direct"
 FLIXBOX_MODE=vpn "${COMPOSE[@]}" config --quiet || fail "vpn mode config failed"
 pass "vpn"
 
-"${COMPOSE[@]}" --profile plex --profile proxy --profile socket-proxy --profile recyclarr \
+"${COMPOSE[@]}" --profile plex --profile proxy --profile recyclarr \
   config --quiet || fail "optional profiles config failed"
-pass "profiles (plex, proxy, socket-proxy, recyclarr)"
+pass "profiles (plex, proxy, recyclarr)"
+
+# ADR 0022: socket-proxy is always on with Homepage (no profile).
+# Capture services first — do not `grep -q` a live compose pipe (SIGPIPE + pipefail).
+_services="$("${COMPOSE[@]}" config --services)"
+echo "${_services}" | grep -qx docker-socket-proxy || \
+  fail "docker-socket-proxy must be in default services"
+_homepage_cfg="$("${COMPOSE[@]}" config | awk '/^  homepage:/,/^  [a-z]/')"
+if echo "${_homepage_cfg}" | grep -q 'docker.sock'; then
+  fail "homepage must not mount docker.sock"
+fi
+unset _services _homepage_cfg
+pass "docker-socket-proxy always on"
 
 # Access profile: shared derived bind + auth keys must render (ADR 0015).
 cp -f "${CI_ENV}" "${CI_ENV_SHARED}"

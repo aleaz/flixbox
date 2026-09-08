@@ -9,7 +9,7 @@ Cheat sheet for operators. Defaults assume a local install with `./bin/flixbox i
 | Command | Purpose |
 | --- | --- |
 | `./bin/flixbox init [--non-interactive]` | Create `.env`, dirs, templates; generate API keys/passwords. **Linux:** set writable `DATA_DIR`/`CONFIG_DIR` in `.env` before `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
-| `./bin/flixbox up [profiles...]` | Start stack (`plex`, `proxy`, `socket-proxy`, `recyclarr`) |
+| `./bin/flixbox up [profiles...]` | Start stack (`plex`, `proxy`, `recyclarr`; removes orphans on mode switch) |
 | `./bin/flixbox reload [--reset-homepage] [profiles...]` | Recreate containers after `.env` / compose changes. `--reset-homepage` also overwrites managed Homepage templates (with backup) |
 | `./bin/flixbox homepage refresh [--dry-run]` | Apply repo Homepage templates to live `${CONFIG_DIR}/homepage` (backup → overwrite managed files → sync → stamp → restart). Use after `git pull` when `up`/`reload` warn that templates are newer |
 | `./bin/flixbox configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]` | Idempotent wiring; heals drifted API keys. `--dry-run` previews only (no `.env`/API changes). `--sync-qbit-auth` forces qBit WebUI password from `.env` into qBit + *arr + Decluttarr. `--sync-arr-ui` applies `FLIXBOX_ARR_UI_*` Forms under `shared` (ADR 0020) |
@@ -64,7 +64,7 @@ Use **Compose service names** on `flixbox_net` — not `container_name` (`flixbo
 
 **When to use network aliases:** only when topology breaks DNS (today: qBit in Gluetun netns). Do not alias every service — service names are already stable.
 
-**Profiles:** `recyclarr`, `caddy`, `docker-socket-proxy`, `plex` exist only when their profile is enabled — no alias substitutes an offline service.
+**Profiles:** `recyclarr`, `caddy`, `plex` exist only when their profile is enabled — no alias substitutes an offline service. `docker-socket-proxy` always runs with Homepage.
 
 ## Internal URLs (*arr UI wiring)
 

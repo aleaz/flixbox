@@ -1,4 +1,5 @@
-# Docker integration for Homepage.
-# Uses read-only local docker socket mounted in compose/dashboard.yml.
+# Docker integration for Homepage (ADR 0022).
+# Reach Docker only via docker-socket-proxy — never mount the host socket into Homepage.
 local-docker:
-  socket: /var/run/docker.sock
+  host: docker-socket-proxy
+  port: 2375

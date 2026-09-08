@@ -71,7 +71,7 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 
 ### 3.2 Docker socket hijack
 
-- **Mitigation (enforce optional profile):** docker-socket-proxy with create/delete denied.
+- **Mitigation (enforce):** Homepage never mounts the host socket. Always-on `docker-socket-proxy` with create/delete/exec denied; Homepage talks to `docker-socket-proxy:2375` ([ADR 0022](adr/0022-operator-footgun-remediations.md)).
 
 ### 3.3 LAN plaintext / internet exposure
 
@@ -145,7 +145,7 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 | Decluttarr | Wrong qBit URL after mode switch | Always `qbittorrent:8080` (ADR 0014 Gluetun alias) |
 | Maintainerr | Accidental mass delete | Ship with rules disabled / dry examples; require explicit enable |
 | Maintainerr | Wrong media server | Default Jellyfin; one server at a time |
-| Seerr | Permission errors on config | UID 1000 ownership + `init: true` |
+| Seerr | Permission errors on config | UID 1000 ownership fail-closed on `init`/`up`/`reload` ([ADR 0022](adr/0022-operator-footgun-remediations.md)) |
 
 ---
 

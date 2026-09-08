@@ -88,7 +88,7 @@ MVP stack runs with `./bin/flixbox up`. After boot, you wire indexers and API ke
 <details>
 <summary><strong>Full stack (MVP)</strong></summary>
 
-Gluetun, qBittorrent, Prowlarr, Byparr, Radarr, Sonarr, Bazarr, Unpackerr, Recyclarr, Decluttarr, Maintainerr, Seerr, Jellyfin, Homepage, Caddy (optional), docker-socket-proxy (optional).
+Gluetun, qBittorrent, Prowlarr, Byparr, Radarr, Sonarr, Bazarr, Unpackerr, Recyclarr, Decluttarr, Maintainerr, Seerr, Jellyfin, Homepage, Caddy (optional), docker-socket-proxy (with Homepage).
 
 </details>
 

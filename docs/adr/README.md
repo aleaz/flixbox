@@ -36,6 +36,7 @@ Each ADR uses:
 | [0019](0019-qbit-webui-runtime-contract.md) | qBit WebUI runtime security contract | Accepted |
 | [0020](0020-operator-credentials-cli.md) | Operator credentials CLI (`show` / `set`) | Accepted |
 | [0021](0021-cli-ux-contract.md) | CLI UX contract (professional Bash surface) | Accepted |
+| [0022](0022-operator-footgun-remediations.md) | Operator footgun remediations | Accepted |
 
 ## Rules
 
