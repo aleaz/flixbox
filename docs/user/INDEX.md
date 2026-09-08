@@ -1,10 +1,12 @@
 # Flixbox user guide
 
-Friendly documentation for operators who want to run Flixbox at home.
+Run a home media pipeline: request a title, download it (optionally over VPN), hardlink it into your library, and stream on Jellyfin — with a single CLI and sane defaults.
 
-**Language:** English (canonical). Spanish: [`docs/es/user/INDEX.md`](../es/user/INDEX.md) · [Quick reference (ES)](../es/user/REFERENCE.md) — see [ADR 0011](../adr/0011-documentation-i18n.md).
+**Language:** English (canonical). Spanish: [`docs/es/user/INDEX.md`](../es/user/INDEX.md) · [Quick reference (ES)](../es/user/REFERENCE.md).
 
-**Status:** Working Draft. MVP Compose + `bin/flixbox` including API-assisted `configure` (ADR 0005); add Prowlarr indexers after `up`.
+**Start here:** [Overview](01-overview.md) → [How it works](02-how-it-works.md) → [Install](04-install.md) (~15 min to `up`) → [First-run](05-first-run.md) (indexers + wiring).
+
+Writers: tone and visuals follow the [documentation style guide](../00-doc-style.md).
 
 ## Contents
 
@@ -27,11 +29,13 @@ Friendly documentation for operators who want to run Flixbox at home.
 | [14 — Image pins](14-image-pins.md) | Pinned Compose image tags (ADR 0010) |
 | [15 — Credential rotation](15-credential-rotation.md) | Step-by-step recovery after password or API key changes |
 
-## Screenshots
+## Screenshots and demos
 
-UI screenshots will live under [`docs/images/`](../images/README.md) once the stack runs. Diagrams that are language-neutral go in `images/shared/`.
+Capture checklist (Homepage, CLI tape, diagrams): [`docs/images/README.md`](../images/README.md).  
+Language-neutral diagrams → `images/shared/`; UI screenshots → `images/en/` (and `es/` later).
 
 ## Other documentation
 
 - Engineering / contributors: [docs/INDEX.md](../INDEX.md)
+- Doc brand & page templates: [00-doc-style.md](../00-doc-style.md)
 - AI agents: [AGENTS.md](../../AGENTS.md)

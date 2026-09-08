@@ -2,7 +2,7 @@
 
 **Languages:** English is canonical. Spanish user docs are reserved under [`docs/es/`](es/README.md) ([ADR 0011](adr/0011-documentation-i18n.md)).
 
-**Status:** Working Draft (pre-implementation).
+**Status:** Working Draft.
 
 ## Operators (start here)
 
@@ -10,6 +10,7 @@
 | --- | --- |
 | [User guide](user/INDEX.md) | How to understand, install, and operate Flixbox |
 | [How it works](user/02-how-it-works.md) | Mental model: pipeline, `/data`, VPN/Direct |
+| [Documentation style guide](00-doc-style.md) | Brand, tone, page shape, and asset rules (README + user docs) |
 
 ## Engineering
 
@@ -34,7 +35,7 @@ Architecture Decision Records: [adr/](adr/)
 
 ## Images
 
-[docs/images/](images/README.md) — `shared/` · `en/` · `es/`
+[docs/images/](images/README.md) — `shared/` · `en/` · `es/` · brand-first capture checklist
 
 ## For AI agents
 
