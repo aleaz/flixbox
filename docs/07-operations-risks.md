@@ -141,7 +141,7 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 | Byparr | Captcha / CF loops | Retry limits; alternate indexer; optional FlareSolverr image |
 | Recyclarr | Upstream schema drift | Pin versions; explicit sync; dry-run |
 | Prowlarr | HTTP 429 | Respect rate limits / backoff |
-| Decluttarr | Over-aggressive removals | Conservative default strikes; protect tags; document |
+| Decluttarr | Over-aggressive removals | `REMOVE_SLOW` off by default; longer stalled grace (`TIMER×STRIKES`); `flixbox-keep`; VPN warn if slow re-enabled — [09-hygiene-defaults.md](09-hygiene-defaults.md) |
 | Decluttarr | Wrong qBit URL after mode switch | Always `qbittorrent:8080` (ADR 0014 Gluetun alias) |
 | Maintainerr | Accidental mass delete | Ship with rules disabled / dry examples; require explicit enable |
 | Maintainerr | Wrong media server | Default Jellyfin; one server at a time |

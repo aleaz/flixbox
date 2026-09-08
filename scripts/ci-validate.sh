@@ -1065,6 +1065,33 @@ if git rev-parse --verify origin/main >/dev/null 2>&1; then
 fi
 pass C-88
 
+# --- C-90: Decluttarr defaults (VPN-safe REMOVE_SLOW off; longer stalled grace) ---
+grep -q 'REMOVE_SLOW: ${DECLUTTARR_REMOVE_SLOW:-False}' compose/optimization.yml || \
+  fail C-90 'optimization.yml must default REMOVE_SLOW to False'
+grep -q 'TIMER: ${DECLUTTARR_REMOVE_TIMER:-15}' compose/optimization.yml || \
+  fail C-90 'optimization.yml must default TIMER to 15'
+grep -q 'max_strikes: ${DECLUTTARR_STRIKES:-12}' compose/optimization.yml || \
+  fail C-90 'optimization.yml must default max_strikes to 12'
+grep -qE '^DECLUTTARR_REMOVE_SLOW=False' .env.example || \
+  fail C-90 '.env.example must ship DECLUTTARR_REMOVE_SLOW=False'
+grep -qE '^DECLUTTARR_REMOVE_TIMER=15' .env.example || \
+  fail C-90 '.env.example must ship DECLUTTARR_REMOVE_TIMER=15'
+grep -qE '^DECLUTTARR_STRIKES=12' .env.example || \
+  fail C-90 '.env.example must ship DECLUTTARR_STRIKES=12'
+grep -qE '^DECLUTTARR_MIN_SPEED=' .env.example && \
+  fail C-90 '.env.example must not ship DECLUTTARR_MIN_SPEED (not wired in Compose)'
+grep -q 'warn_decluttarr_vpn_slow' bin/flixbox || \
+  fail C-90 'bin/flixbox missing warn_decluttarr_vpn_slow'
+grep -A80 '^cmd_up()' bin/flixbox | grep -q 'warn_decluttarr_vpn_slow' || \
+  fail C-90 'cmd_up must call warn_decluttarr_vpn_slow'
+grep -A80 '^cmd_reload()' bin/flixbox | grep -q 'warn_decluttarr_vpn_slow' || \
+  fail C-90 'cmd_reload must call warn_decluttarr_vpn_slow'
+grep -A40 '^cmd_status()' bin/flixbox | grep -q 'warn_decluttarr_vpn_slow' || \
+  fail C-90 'cmd_status must call warn_decluttarr_vpn_slow'
+grep -qE 'Remove slow \| \*\*off\*\*' docs/09-hygiene-defaults.md || \
+  fail C-90 'docs/09-hygiene-defaults.md must document REMOVE_SLOW off'
+pass C-90
+
 # --- Compose render (shared script — R4) ---
 "${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1
 pass compose-config

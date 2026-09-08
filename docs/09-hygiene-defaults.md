@@ -9,21 +9,25 @@ These are the Flixbox-recommended starting rules. Templates shipped with the pro
 
 ## 1. Decluttarr — download queue
 
-**Goal:** Clear dead downloads so *arr can grab another release. Conservative enough for home use; not racing-aggressive.
+**Goal:** Clear dead downloads so *arr can grab another release. Home-friendly defaults: keep stalled/failed/orphan hygiene, but do **not** use absolute KiB/s “slow” removal (VPN footgun).
 
 | Setting | Default | Rationale |
 | --- | --- | --- |
 | Remove stalled | **on** | No progress after strikes → remove + blocklist + re-search |
-| Remove slow | **on** | Below min speed for too long → same |
+| Remove slow | **off** | Absolute KiB/s floors false-positive on VPN / slow seeders (upstream Decluttarr default is off) |
 | Remove failed downloads | **on** | Failed in client or *arr |
 | Remove failed imports | **on** | Import errors that will not self-heal |
 | Remove missing files | **on** | Client points at gone paths |
 | Remove orphans | **on** | In client but not tracked by *arr |
 | Remove unmonitored | **off** | Avoid surprise deletes when user paused monitoring |
-| Max strikes / permitted attempts | **5** | ~few hours of grace depending on timer |
-| Check timer | **10 minutes** | Balance responsiveness vs API load |
-| Min download speed | **100 KiB/s** | Ignores tiny trickle that never finishes |
+| Max strikes / permitted attempts | **12** | With timer 15 → ~**3 hours** grace for stalled (`TIMER × STRIKES`) |
+| Check timer | **15 minutes** | Balance responsiveness vs API load |
+| Min download speed | *(n/a unless REMOVE_SLOW on)* | If you re-enable slow, prefer a low floor (e.g. 30 KiB/s) and longer grace — not 100 KiB/s under VPN |
 | Protected qBit tag | `flixbox-keep` | Torrents with this tag are never auto-removed |
+
+**Grace math:** Decluttarr removes after roughly `DECLUTTARR_REMOVE_TIMER × DECLUTTARR_STRIKES` minutes of consecutive strikes (not “a few hours” unless you set numbers that multiply to that).
+
+**VPN:** Prefer `DECLUTTARR_REMOVE_SLOW=False` (Flixbox default). `./bin/flixbox up|reload|status` warns when `FLIXBOX_MODE=vpn` and `REMOVE_SLOW` is enabled. Tag important torrents `flixbox-keep`.
 
 **qBittorrent URL**
 

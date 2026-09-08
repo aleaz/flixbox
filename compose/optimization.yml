@@ -49,16 +49,17 @@ services:
       TZ: ${TZ:-UTC}
       LOG_LEVEL: INFO
       # Decluttarr v2 (Nov 2025): list-based instance config; v1 RADARR_URL/RADARR_KEY is ignored.
-      TIMER: ${DECLUTTARR_REMOVE_TIMER:-10}
-      max_strikes: ${DECLUTTARR_STRIKES:-5}
+      TIMER: ${DECLUTTARR_REMOVE_TIMER:-15}
+      max_strikes: ${DECLUTTARR_STRIKES:-12}
       PROTECTED_TAG: flixbox-keep
       REMOVE_FAILED_DOWNLOADS: "True"
       REMOVE_FAILED_IMPORTS: "True"
       REMOVE_METADATA_MISSING: "True"
       REMOVE_MISSING_FILES: "True"
       REMOVE_ORPHANS: "True"
-      REMOVE_SLOW: |
-        min_speed: ${DECLUTTARR_MIN_SPEED:-100}
+      # Off by default: absolute KiB/s floors false-positive on VPN / slow seeders (upstream default is False).
+      # To enable: DECLUTTARR_REMOVE_SLOW=True in .env (uses Decluttarr default min_speed 100) or override with a dict in this file.
+      REMOVE_SLOW: ${DECLUTTARR_REMOVE_SLOW:-False}
       REMOVE_STALLED: "True"
       REMOVE_UNMONITORED: "False"
       QBITTORRENT_USERNAME: ${QBITTORRENT_USERNAME:-}

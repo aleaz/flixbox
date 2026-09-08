@@ -43,7 +43,7 @@
 | *arr DB corrupt after reboot | Short stop timeout | `stop_grace_period: 60s`; local SSD for config |
 | Config weirdness on NAS path | SQLite over NFS/SMB | Move `${CONFIG_DIR}` to local disk |
 | Maintainerr deleted too much | Rules too aggressive | Tighten thresholds; use Keep list; review Leaving Soon first |
-| Decluttarr removes wanted torrent | No protect tag | Add `flixbox-keep`; raise strikes |
+| Decluttarr removes wanted torrent | Slow VPN download hit absolute KiB/s floor, or truly stalled without protect tag | Keep `DECLUTTARR_REMOVE_SLOW=False` (default); add `flixbox-keep`; raise `DECLUTTARR_STRIKES` / timer — [Hygiene](08-hygiene.md) |
 | Permission denied on media | UID/GID mismatch | Align `PUID`/`PGID`; SGID on data dirs |
 | `./bin/flixbox configure --dry-run` fails with containers not running | Same core-stack assert as live configure | Start stack: `./bin/flixbox up` — dry-run previews wiring but does not skip the running-stack requirement |
 | `./bin/flixbox configure --dry-run` expected zero side effects | Entry/preflight/modules must respect `$DRY_RUN` | No `.env` writes, no recreate, no API mutations — only `[dry-run]` lines (ADR 0016) |

@@ -191,11 +191,11 @@ Most Flixbox apps talk over the Docker network (`flixbox_net`). Only **Unpackerr
 | Variable | Default | Notes |
 | --- | --- | --- |
 | `DECLUTTARR_QBIT_URL` | `http://qbittorrent:8080` | Always (ADR 0014). Set/normalized by `flixbox init`. |
-| `DECLUTTARR_REMOVE_TIMER` | `10` | Minutes between queue checks. |
-| `DECLUTTARR_STRIKES` | `5` | Strikes before stalled/slow removal. |
-| `DECLUTTARR_MIN_SPEED` | `100` | Minimum KiB/s before "slow" removal. |
+| `DECLUTTARR_REMOVE_TIMER` | `15` | Minutes between queue checks. |
+| `DECLUTTARR_STRIKES` | `12` | Strikes before stalled (and slow, if enabled) removal. Grace ≈ timer × strikes (~3h). |
+| `DECLUTTARR_REMOVE_SLOW` | `False` | Absolute KiB/s “slow” removal. Keep off under VPN; CLI warns if on in VPN mode. |
 
-Defaults match [09-hygiene-defaults.md](../09-hygiene-defaults.md). Protected tag `flixbox-keep` is set in Compose.
+To re-enable slow with a custom floor, set `DECLUTTARR_REMOVE_SLOW=True` (Decluttarr default min_speed) or override `REMOVE_SLOW` with a YAML dict in `compose/optimization.yml` (see [09-hygiene-defaults.md](../09-hygiene-defaults.md)). Protected tag `flixbox-keep` is set in Compose.
 
 ## App-specific
 

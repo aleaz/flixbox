@@ -93,6 +93,21 @@ warn_mode_vpn_mismatch() {
   return 1
 }
 
+# VPN + Decluttarr REMOVE_SLOW: absolute KiB/s floors remove slow-but-alive torrents.
+warn_decluttarr_vpn_slow() {
+  [[ "${FLIXBOX_MODE:-direct}" == "vpn" ]] || return 0
+  local slow="${DECLUTTARR_REMOVE_SLOW:-False}"
+  slow="$(printf '%s' "$slow" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+  case "$slow" in
+    true|1|yes|on) ;;
+    *) return 0 ;;
+  esac
+  warn "VPN mode: DECLUTTARR_REMOVE_SLOW is enabled — slow VPN downloads can be removed after TIMER×STRIKES."
+  warn "Flixbox default is REMOVE_SLOW=False. Prefer that, or tag important torrents flixbox-keep in qBit."
+  warn "Docs: docs/user/08-hygiene.md · docs/09-hygiene-defaults.md"
+  return 0
+}
+
 apply_platform_path_defaults() {
   apply_platform_env_defaults "${ROOT_DIR}/.env"
   if [[ "$(uname -s)" == Darwin ]]; then
@@ -351,6 +366,7 @@ cmd_up() {
     warn "trusted profile: admin UIs bind on all interfaces — use shared profile on untrusted LANs (docs/user/13-access-profiles.md)."
   fi
   warn_mode_vpn_mismatch || true
+  warn_decluttarr_vpn_slow || true
   # shellcheck disable=SC1091
   source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
   # Refresh qBit custom-services for current FLIXBOX_MODE (ADR 0019 / 0002) before compose.
@@ -451,6 +467,7 @@ cmd_reload() {
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
     die "Directories missing. Run ./bin/flixbox init first."
   warn_mode_vpn_mismatch || true
+  warn_decluttarr_vpn_slow || true
   # shellcheck disable=SC1091
   source "${ROOT_DIR}/scripts/lib/seerr-perms.sh"
   flixbox_prepare_config_for_host_write || true
@@ -520,6 +537,7 @@ cmd_status() {
   echo
   log "FLIXBOX_MODE=${FLIXBOX_MODE}  VPN_ENABLED=${VPN_ENABLED}"
   warn_mode_vpn_mismatch || true
+  warn_decluttarr_vpn_slow || true
   log "Access profile: $(flixbox_access_profile)  FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP:-(unset)}"
   log "DATA_DIR=${DATA_DIR}"
   log "CONFIG_DIR=${CONFIG_DIR}"

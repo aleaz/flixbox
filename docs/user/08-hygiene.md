@@ -8,9 +8,14 @@ Removes stuck or useless downloads and can ask Radarr/Sonarr to search again.
 
 Default idea:
 
-- Stalled / too slow / failed / orphan → remove (with a few strikes of grace)
+- Stalled / failed / orphan / missing files → remove after grace
+- **Slow (absolute KiB/s)** → **off** by default (VPN-friendly)
 - Tag **`flixbox-keep`** on a torrent → never auto-remove
 - Do **not** remove “unmonitored” items by default
+
+**Grace:** ~`REMOVE_TIMER × STRIKES` minutes (defaults **15 × 12 ≈ 3 hours** for stalled). Not “a few hours” unless your numbers multiply to that.
+
+**VPN tip:** leave `DECLUTTARR_REMOVE_SLOW=False`. If you turn slow removal on under VPN, `flixbox up|reload|status` warns — prefer `flixbox-keep` for important torrents instead.
 
 Use the download client host **`qbittorrent`** (port `8080`) in both modes ([ADR 0014](../adr/0014-stable-qbit-download-hostname.md)). Decluttarr auth uses qBit **username/password** in `.env`, not the qBit API key — [Credentials](06-configuration.md#credentials-and-api-keys). Until `QBITTORRENT_PASSWORD` is set, Decluttarr stays idle on purpose.
 

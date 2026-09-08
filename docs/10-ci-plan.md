@@ -242,6 +242,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-86 | Homepage port sync | `homepage-sync.py` non-destructive port sync; preserves widgets, custom hosts, and custom services |
 | C-87 | Operator credentials CLI | ADR 0020; `credentials show|set`; qBit rotate exit 0/3 persist; arr-ui apply-before-env; Arr key via env; `--sync-arr-ui`; Homepage shared drops admin widgets |
 | C-88 | Homepage template refresh | `.flixbox-template-rev`; `homepage-templates.sh`; `homepage refresh` / `reload --reset-homepage`; stale warn; stamp on first create only |
+| C-90 | Decluttarr VPN-safe defaults | `REMOVE_SLOW` default False; TIMER 15 / strikes 12; `warn_decluttarr_vpn_slow` on up/reload/status; docs match |
 
 ### 5.6 CLI smoke (phase 2 — in validate job via `scripts/ci-smoke-init.sh`)
 
