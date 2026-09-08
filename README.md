@@ -1,101 +1,136 @@
-# Flixbox
+<p align="center">
+  <img src="docs/images/shared/logo.png" alt="Flixbox" width="180">
+</p>
 
-**Your home media pipeline — request, download, organize, stream.**
+<h1 align="center">Flixbox</h1>
 
-Ask for a movie or show in Seerr. Flixbox finds a release, downloads it (optionally through VPN), hardlinks it into your library, and serves it on Jellyfin. One CLI, one `/data` tree, [TRaSH Guides](https://trash-guides.info/)–aligned defaults.
+<p align="center">
+  <strong>Ask for a movie. Watch it on Jellyfin.</strong><br>
+  One CLI, one library, optional VPN — without babysitting Compose.
+</p>
 
-Also available in [Spanish](README.es.md).
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <a href="https://github.com/aleaz/flixbox/actions/workflows/ci.yml"><img src="https://github.com/aleaz/flixbox/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="docs/user/04-install.md"><img src="https://img.shields.io/badge/install-~15%20min-10b981.svg" alt="Install ~15 min"></a>
+</p>
 
-## How it works
+<p align="center">
+  <a href="README.es.md">Español</a> ·
+  <a href="docs/user/INDEX.md">User guide</a> ·
+  <a href="docs/user/04-install.md">Install</a>
+</p>
 
-**The flow:** someone requests a title → it downloads → it appears in Jellyfin.
+---
 
-```text
-Request:  Seerr → Radarr / Sonarr → Prowlarr (+ Byparr)
-Download: qBittorrent  (Direct, or via Gluetun in VPN mode)
-Watch:    Jellyfin
-Maintain: Decluttarr (queues) · Maintainerr (library rules)
-```
+<p align="center">
+  <img src="docs/images/en/homepage-ops.png" alt="Flixbox Homepage Ops dashboard" width="920">
+</p>
 
-No Pi-hole or reverse proxy required to get started.
+<p align="center"><em>Your stack as an ops console — not a pile of YAML.</em></p>
 
 ## Why Flixbox?
 
-- **Start simple** — Direct mode in ~15 minutes; flip to VPN when you are ready for production torrents
-- **One CLI** — `bin/flixbox` for `init`, `up`, `configure`, `reload`, `status`, `vpn-test`
-- **Built-in hygiene** — Decluttarr and Maintainerr with conservative defaults (no surprise deletes)
-- **Modular Compose** — small YAML modules and optional profiles (`plex`, `proxy`, `recyclarr`), not a monolith
-- **Explicit contracts** — single `/data` hardlink tree, download host always `qbittorrent` (VPN and Direct), documented in [ADRs](docs/adr/)
+- **Request → watch** — ask in Seerr; Flixbox finds a release, downloads it, and lands it in Jellyfin
+- **Same disk, no double copy** — downloads and library share one `/data` tree (hardlinks)
+- **Direct today, VPN tomorrow** — flip modes without rewiring Radarr / Sonarr
+- **Four commands** — `init`, `up`, `configure`, `status` via `./bin/flixbox`
+- **Hygiene without surprises** — Decluttarr and Maintainerr with conservative defaults
+- **Honest timing** — ~15 minutes to a running stack; add Prowlarr indexers after (not zero-touch)
 
-## Choose your setup
+## See it in action
 
-| Setup | When | Start here |
-| --- | --- | --- |
-| **Core (Direct)** | First try, LAN only | [Install](docs/user/04-install.md) |
-| **Shared Wi‑Fi** | Roommates on same LAN | `FLIXBOX_ACCESS_PROFILE=shared` then `init`/`up` — [Access profiles](docs/user/13-access-profiles.md) |
-| **+ VPN** | Production torrents | [VPN and Direct](docs/user/07-vpn-and-direct.md) |
-| **+ HTTPS** | Reverse proxy | Caddy profile in [Configuration](docs/user/06-configuration.md) |
-| **+ Plex** | Alongside or instead of Jellyfin | `./bin/flixbox up plex` |
+<p align="center">
+  <img src="docs/images/shared/cli-quickstart.gif" alt="flixbox init, up, and status cold start" width="920">
+</p>
+
+Cold start on the CLI: copy `.env`, `init`, `up`, `status`.
+
+## How it works
+
+**Someone requests a title → it downloads → it appears in Jellyfin.**
+
+1. **Ask** — Seerr → Radarr / Sonarr (+ Prowlarr)
+2. **Download** — qBittorrent (Direct, or through Gluetun in VPN mode)
+3. **Watch** — hardlink into the library → Jellyfin
+
+No Pi-hole or reverse proxy required to get started. Deep dive: [How it works](docs/user/02-how-it-works.md).
 
 ## Quick start
 
-**Requirements:** Docker Compose v2, ~4 GB RAM, Linux x86_64/ARM64 (macOS best-effort). See [Requirements](docs/user/03-requirements.md).
+**Need:** Docker Compose v2, ~4 GB RAM, Linux x86_64/ARM64 (macOS best-effort). Full list: [Requirements](docs/user/03-requirements.md).
+
+**1. Clone and set paths**
 
 ```bash
 git clone https://github.com/aleaz/flixbox.git
 cd flixbox
 cp .env.example .env
-# Edit .env: DATA_DIR, CONFIG_DIR (writable paths), FLIXBOX_MODE, TZ
-# Optional: FLIXBOX_ACCESS_PROFILE=shared if roommates share Wi‑Fi (default: trusted)
+# Edit DATA_DIR, CONFIG_DIR (writable), FLIXBOX_MODE, TZ
+# Optional: FLIXBOX_ACCESS_PROFILE=shared for roommates on the same Wi‑Fi
+```
+
+**2. Bring the stack up**
+
+```bash
 ./bin/flixbox init --non-interactive
 ./bin/flixbox up
 ./bin/flixbox status
+```
+
+**Expected:** Homepage at http://localhost:3000 · Seerr `:5055` · Jellyfin `:8096` · qBittorrent `:8080`
+
+**Logins:** `init` generates passwords into `.env`. Reveal without opening the file:
+
+```bash
+./bin/flixbox credentials show qbit    # qBittorrent WebUI
+./bin/flixbox credentials show admin   # Jellyfin admin (when set)
+```
+
+Full map: [Credentials and API keys](docs/user/06-configuration.md#credentials-and-api-keys).
+
+**3. Wire the apps**
+
+```bash
 ./bin/flixbox configure
 ```
 
-Linux: default paths use `/srv/flixbox/…` — create and `chown` them first, or set paths like `/data/flixbox/data` in `.env`. See [Install — storage paths](docs/user/04-install.md#storage-paths-and-permissions).
+Then add Prowlarr indexers (~10–15 min): [First-run guide](docs/user/05-first-run.md).
 
-**Then (~10–15 min):** add Prowlarr indexers — [First-run guide](docs/user/05-first-run.md).
+**Tip:** On Linux, create and `chown` your data paths first (defaults use `/srv/flixbox/…`), or point `.env` at paths you already own — [Install — storage paths](docs/user/04-install.md#storage-paths-and-permissions).
 
-| Service | Default URL |
-| --- | --- |
-| Homepage | http://localhost:3000 |
-| Seerr | http://localhost:5055 |
-| Jellyfin | http://localhost:8096 |
-| qBittorrent | http://localhost:8080 |
+## Choose your path
 
-Full port list: [Quick reference](docs/user/REFERENCE.md).
+| Path | When | Start here |
+| --- | --- | --- |
+| **First try (Direct)** | LAN only, learn the flow | [Install](docs/user/04-install.md) |
+| **Shared Wi‑Fi** | Roommates on the same LAN | `FLIXBOX_ACCESS_PROFILE=shared` — [Access profiles](docs/user/13-access-profiles.md) |
+| **Privacy (VPN)** | Production torrents | [VPN and Direct](docs/user/07-vpn-and-direct.md) |
+| **HTTPS** | Reverse proxy | Caddy profile in [Configuration](docs/user/06-configuration.md) |
+| **+ Plex** | Alongside or instead of Jellyfin | `./bin/flixbox up plex` |
 
 ## Documentation
 
 | Doc | Purpose |
 | --- | --- |
-| [User guide](docs/user/INDEX.md) | Operator docs hub |
-| [Install](docs/user/04-install.md) | Clone → `init` → `up` (~15 min) |
-| [First-run](docs/user/05-first-run.md) | `configure` + remaining UI wiring |
+| [User guide](docs/user/INDEX.md) | Operator hub |
+| [Install](docs/user/04-install.md) | Clone → `init` → `up` |
+| [First-run](docs/user/05-first-run.md) | `configure` + indexers |
 | [Quick reference](docs/user/REFERENCE.md) | URLs, ports, CLI cheat sheet |
-| [How it works](docs/user/02-how-it-works.md) | Pipeline, `/data`, VPN vs Direct |
 | [Troubleshooting](docs/user/10-troubleshooting.md) | Common failures |
 
-**Contributors:** [Docs map](docs/INDEX.md) · [ADRs](docs/adr/) · [AGENTS.md](AGENTS.md)
+**Contributors:** [Docs map](docs/INDEX.md) · [ADRs](docs/adr/) · [AGENTS.md](AGENTS.md) · [Doc style](docs/00-doc-style.md)
 
 **Español:** [README.es.md](README.es.md) · [Guía (ES)](docs/es/user/INDEX.md)
 
-## Status
-
-MVP stack runs with `./bin/flixbox up`. After boot, you wire indexers and API keys in the UI (~30–45 min with `configure`). Not zero-touch — and we do not claim it is. See [first-run](docs/user/05-first-run.md).
-
 <details>
-<summary><strong>Full stack (MVP)</strong></summary>
+<summary><strong>What’s included</strong></summary>
 
 Gluetun, qBittorrent, Prowlarr, Byparr, Radarr, Sonarr, Bazarr, Unpackerr, Recyclarr, Decluttarr, Maintainerr, Seerr, Jellyfin, Homepage, Caddy (optional), docker-socket-proxy (with Homepage).
 
+Defaults follow [TRaSH Guides](https://trash-guides.info/) where they apply. Platforms: Linux first-class (x86_64 / ARM64); Windows (Docker Desktop + WSL2) and macOS best-effort.
+
 </details>
-
-## Platforms
-
-- **First-class:** Linux (x86_64 / ARM64)
-- **Best-effort:** Windows (Docker Desktop + WSL2 ext4), macOS
 
 ## License
 

@@ -26,7 +26,7 @@ Use stable kebab-case names referenced from markdown:
 | Pipeline 3-step | `shared/pipeline-ask-download-watch.png` |
 | `/data` hardlink | `shared/data-hardlink.png` |
 | VPN vs Direct | `shared/vpn-vs-direct-qbit.png` |
-| CLI quickstart / day-2 tape | `shared/cli-quickstart.gif` (or `.cast` + rendered GIF) |
+| CLI cold-start tape | `shared/cli-quickstart.gif` (+ `.tape` source) |
 | Homepage Ops | `en/homepage-ops.png` |
 | Seerr request | `en/seerr-request.png` |
 | Jellyfin library | `en/jellyfin-library.png` |
@@ -55,17 +55,21 @@ Complete in order. Check off in the PR that adds README/user-facing visuals.
 - [x] **Homepage screenshot (tall crop):** `en/homepage-ops-v.png` — optional alternate for narrow embeds
 - [x] **CLI tape (~30s):** `shared/cli-quickstart.gif` (source: `shared/cli-quickstart.tape`)
 
-#### Suggested VHS / tape script (day-0 + day-2)
+#### VHS / tape script (cold start, Direct)
 
-Recorded against the **live lab stack** with dry-runs only (no `down`, no config wipe):
+Record from the **repo root** with host **`:8080` free** (default `QBITTORRENT_PORT`) and writable paths from `.env.example` (Linux: `/srv/flixbox/…`).
 
-1. `./bin/flixbox status`
-2. `./bin/flixbox configure --dry-run`
-3. `./bin/flixbox homepage refresh --dry-run`
+Visible in the GIF:
 
-Re-render: `vhs docs/images/shared/cli-quickstart.tape`
+1. `rm -f .env` && `cp .env.example .env`
+2. `./bin/flixbox init --non-interactive`
+3. `./bin/flixbox up`
+4. `./bin/flixbox status`
 
-A full wipe + `init`/`up` demo is optional later if you want a cold-start story; not required for the README hero.
+Re-render: `vhs docs/images/shared/cli-quickstart.tape`  
+(`PlaybackSpeed 3.0` compresses long `up` waits for GitHub.)
+
+VPN demo is a separate optional take (not in this tape).
 
 ### P1 — how-it-works / install
 
@@ -81,4 +85,5 @@ A full wipe + `init`/`up` demo is optional later if you want a cold-start story;
 ### After capture
 
 1. Link assets from README and the matching `docs/user/` pages.  
+   - Done for P0: root `README.md` / `README.es.md` use `shared/logo.png`, `en/homepage-ops.png`, and `shared/cli-quickstart.gif`.
 2. If Homepage UI changes materially, refresh `en/homepage-ops.png` in the same release as template bumps when possible.
