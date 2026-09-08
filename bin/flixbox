@@ -411,11 +411,11 @@ parse_profiles() {
 }
 
 warn_legacy_socket_proxy_profile() {
-  local profiles="${COMPOSE_PROFILES:-}"
+  local compose_profiles="${COMPOSE_PROFILES:-}"
   local normalized=""
-  [[ -n "$profiles" ]] || return 0
+  [[ -n "$compose_profiles" ]] || return 0
   # Strip whitespace so "plex, socket-proxy" still matches.
-  normalized="$(printf '%s' "$profiles" | tr -d '[:space:]')"
+  normalized="$(printf '%s' "$compose_profiles" | tr -d '[:space:]')"
   if [[ ",${normalized}," == *",socket-proxy,"* ]]; then
     warn "COMPOSE_PROFILES includes socket-proxy — remove it; proxy is always on with Homepage (ADR 0022)."
   fi

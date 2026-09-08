@@ -1,7 +1,7 @@
 # Root Compose project.
 #
 # FLIXBOX_MODE=direct|vpn selects the downloader module.
-# Optional profiles: plex, proxy, socket-proxy, recyclarr
+# Optional profiles: plex, proxy, recyclarr
 #
 #   cp .env.example .env && ./bin/flixbox init
 #   docker compose up -d

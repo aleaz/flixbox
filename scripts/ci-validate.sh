@@ -128,6 +128,9 @@ pass C-11
 # --- C-89: Homepage Docker API via always-on socket-proxy (ADR 0022) ---
 grep -q 'profiles:.*"socket-proxy"' compose/dashboard.yml && \
   fail C-89 'docker-socket-proxy must not use socket-proxy profile'
+if grep -qi 'socket-proxy' compose.yaml; then
+  fail C-89 'compose.yaml must not reference obsolete socket-proxy profile'
+fi
 grep -q '/var/run/docker.sock:/var/run/docker.sock' compose/dashboard.yml || \
   fail C-89 'docker-socket-proxy must mount host docker.sock'
 if awk '/^  homepage:/,/^  [a-z]/' compose/dashboard.yml | grep -q 'docker.sock'; then
@@ -1065,5 +1068,14 @@ pass C-88
 # --- Compose render (shared script — R4) ---
 "${ROOT_DIR}/scripts/ci-compose-render.sh" || exit 1
 pass compose-config
+
+# --- Local ShellCheck parity (if installed) ---
+if command -v shellcheck >/dev/null 2>&1; then
+  shellcheck -S warning -e SC1091 "${ROOT_DIR}/bin/flixbox" "${ROOT_DIR}"/scripts/*.sh "${ROOT_DIR}"/scripts/lib/*.sh "${ROOT_DIR}"/scripts/configure/*.sh \
+    "${ROOT_DIR}"/scripts/ci-validate.sh "${ROOT_DIR}"/scripts/ci-smoke-init.sh "${ROOT_DIR}"/scripts/ci-compose-render.sh \
+    "${ROOT_DIR}"/scripts/ci-trivy.sh "${ROOT_DIR}"/scripts/ci-smoke-configure.sh "${ROOT_DIR}"/scripts/ci-smoke-vpn.sh \
+    "${ROOT_DIR}"/scripts/ci-pin-digests.sh || fail shellcheck 'shellcheck reported warnings or errors'
+  pass shellcheck
+fi
 
 printf 'All contract checks passed.\n'

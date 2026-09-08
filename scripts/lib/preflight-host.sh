@@ -118,6 +118,11 @@ PY
     port_entries+=("${v}:${p}:${s}:${h}")
   }
 
+  _flixbox_is_valid_port() {
+    local p="${1:-}"
+    [[ "$p" =~ ^[0-9]+$ ]] && (( p >= 1 && p <= 65535 ))
+  }
+
   _flixbox_add_port QBITTORRENT_PORT "${QBITTORRENT_PORT:-8080}" "qBittorrent WebUI" "${bind_ip}"
   _flixbox_add_port QBITTORRENT_BT_PORT "${QBITTORRENT_BT_PORT:-6881}" "qBittorrent BitTorrent" "0.0.0.0"
   _flixbox_add_port PROWLARR_PORT "${PROWLARR_PORT:-9696}" "Prowlarr" "${bind_ip}"
@@ -144,7 +149,7 @@ PY
   local entry env_var port service probe_host
   for entry in "${port_entries[@]}"; do
     IFS=':' read -r env_var port service probe_host <<< "$entry"
-    if ! [[ "$port" =~ ^[0-9]+$ ]] || (( port < 1 || port > 65535 )); then
+    if ! _flixbox_is_valid_port "$port"; then
       warn "Invalid port value for ${env_var}: '${port}' (must be an integer between 1 and 65535)."
       failed=1
     fi
@@ -157,7 +162,7 @@ PY
 
   for (( i=0; i<count; i++ )); do
     IFS=':' read -r var_i port_i svc_i host_i <<< "${port_entries[i]}"
-    [[ "$port_i" =~ ^[0-9]+$ ]] && (( port_i >= 1 && port_i <= 65535 )) || continue
+    _flixbox_is_valid_port "$port_i" || continue
 
     local already_reported=0 p
     for p in "${conflicted_ports[@]}"; do
@@ -198,7 +203,7 @@ PY
   # Phase 3: Probe availability of valid, non-conflicted ports against the host
   for entry in "${port_entries[@]}"; do
     IFS=':' read -r env_var port service probe_host <<< "$entry"
-    [[ "$port" =~ ^[0-9]+$ ]] && (( port >= 1 && port <= 65535 )) || continue
+    _flixbox_is_valid_port "$port" || continue
 
     local is_conflicted=0 p
     for p in "${conflicted_ports[@]}"; do
