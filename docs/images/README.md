@@ -50,20 +50,22 @@ Complete in order. Check off in the PR that adds README/user-facing visuals.
 
 ### P0 — required for README hero
 
-- [ ] **Logo for docs:** copy `templates/homepage/images/logo.png` → `shared/logo.png` (do not leave README pointing only at `templates/`).
-- [ ] **Homepage screenshot:** Ops tab, browser zoom 100%, crop chrome noise; no WAN exposure narrative; blur any hostnames you do not want public → `en/homepage-ops.png`.
-- [ ] **CLI tape (~25–40s):** record with [charmbracelet/vhs](https://github.com/charmbracelet/vhs) or asciinema → GIF under `shared/cli-quickstart.gif`.
+- [x] **Logo for docs:** `shared/logo.png` (from Homepage templates)
+- [x] **Homepage screenshot (wide):** `en/homepage-ops.png`
+- [x] **Homepage screenshot (tall crop):** `en/homepage-ops-v.png` — optional alternate for narrow embeds
+- [x] **CLI tape (~30s):** `shared/cli-quickstart.gif` (source: `shared/cli-quickstart.tape`)
 
 #### Suggested VHS / tape script (day-0 + day-2)
 
-Narrate or title-card lightly; prefer real commands against a disposable or sanitized env:
+Recorded against the **live lab stack** with dry-runs only (no `down`, no config wipe):
 
-1. `./bin/flixbox status` — show healthy core services  
-2. `./bin/flixbox configure --dry-run` **or** a short successful `configure` on a lab stack  
-3. Trigger or show Homepage stale-template **warn** path, then `./bin/flixbox homepage refresh --dry-run` (or full refresh on lab)  
-4. End frame: open Homepage URL (`http://localhost:3000` or your lab port)
+1. `./bin/flixbox status`
+2. `./bin/flixbox configure --dry-run`
+3. `./bin/flixbox homepage refresh --dry-run`
 
-**Tape rules:** no passwords in clear text; no `.env` dump; use lab `DATA_DIR`/`CONFIG_DIR`; font large enough for GitHub embed (~80–100 cols).
+Re-render: `vhs docs/images/shared/cli-quickstart.tape`
+
+A full wipe + `init`/`up` demo is optional later if you want a cold-start story; not required for the README hero.
 
 ### P1 — how-it-works / install
 
