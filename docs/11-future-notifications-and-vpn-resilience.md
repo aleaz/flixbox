@@ -1,7 +1,7 @@
 # Future: notifications and VPN resilience
 
 **Status:** Planning only — **no Compose implementation yet.**  
-**ADRs:** [0012](adr/0012-notifications-apprise-hub.md) (**Accepted**), [0013](adr/0013-vpn-resilience-no-direct-fallback.md) (Proposed).  
+**ADRs:** [0012](adr/0012-notifications-apprise-hub.md) (**Accepted**), [0013](adr/0013-vpn-resilience-no-direct-fallback.md) (**Accepted**; optional `vpn-heal` profile still post-v0.1).  
 **Roadmap:** [08-roadmap.md](08-roadmap.md).
 
 This note captures industry patterns (2025–2026) and Flixbox fit so we do not re-debate from scratch when implementing.
