@@ -1,6 +1,6 @@
 # Architecture
 
-**Status:** Working Draft  
+**Status:** Implemented (MVP Compose + CLI)  
 **Audience:** Contributors and AI agents implementing Flixbox  
 **Related:** [01-scope.md](01-scope.md), [adr/](adr/)
 
@@ -17,40 +17,40 @@ Flixbox is a modular Docker Compose suite that automates media request, download
 
 Immutable decisions are recorded as ADRs.
 
-## 2. System context (C4)
+## 2. System context
+
+Operator-facing shape: `flowchart TB` ([diagram style §7](00-doc-style.md#7-diagram-style-line)). Avoid Mermaid `C4*` on GitHub — default C4 fills render pastel blue, not Flixbox tokens.
 
 ```mermaid
-C4Context
-    title Flixbox System Context (MVP)
+flowchart TB
+  User([Home user / admin])
 
-    Person(user, "Home User / Admin", "Requests and consumes media")
+  subgraph suite [Flixbox suite]
+    Seerr[Seerr]
+    Servarr[Prowlarr / Radarr / Sonarr / Bazarr / Byparr]
+    Ingest[qBittorrent via Gluetun or Direct]
+    Optimize[Unpackerr / Recyclarr / Decluttarr / Maintainerr]
+    Jellyfin[Jellyfin]
+    Homepage[Homepage]
+    Caddy[Caddy]
+  end
 
-    System_Boundary(b0, "Flixbox Suite") {
-        System(seerr, "Seerr", "Discovery and requests")
-        System(servarr, "Servarr Core", "Prowlarr, Radarr, Sonarr, Bazarr, Byparr")
-        System(downloaders, "Ingestion", "qBittorrent via Gluetun or Direct")
-        System(optimize, "Optimization", "Unpackerr, Recyclarr, Decluttarr, Maintainerr")
-        System(mediaserver, "Jellyfin", "Streaming (Plex optional profile)")
-        System(dashboard, "Homepage", "Live dashboard")
-        System(proxy, "Caddy", "HTTPS ingress")
-    }
+  Indexers[Indexers / swarms]
+  VPN[VPN providers]
+  Meta[Metadata APIs]
 
-    System_Ext(trackers, "Indexers / Swarms", "Torrent indexers and peers")
-    System_Ext(vpn, "VPN Providers", "WireGuard / OpenVPN")
-    System_Ext(metadata, "Metadata APIs", "TMDB, TVDB, OpenSubtitles")
-
-    Rel(user, proxy, "HTTPS / LAN")
-    Rel(proxy, seerr, "Routes")
-    Rel(proxy, mediaserver, "Streams")
-    Rel(proxy, dashboard, "Status")
-    Rel(seerr, servarr, "REST dispatch")
-    Rel(servarr, metadata, "Metadata")
-    Rel(servarr, trackers, "Search via Prowlarr")
-    Rel(servarr, downloaders, "Download jobs")
-    Rel(downloaders, vpn, "P2P when VPN mode")
-    Rel(downloaders, trackers, "P2P when Direct mode")
-    Rel(optimize, servarr, "Queue and library maintenance")
-    Rel(optimize, mediaserver, "Watch-state rules (Maintainerr)")
+  User --> Caddy
+  Caddy --> Seerr
+  Caddy --> Jellyfin
+  Caddy --> Homepage
+  Seerr --> Servarr
+  Servarr --> Meta
+  Servarr --> Indexers
+  Servarr --> Ingest
+  Ingest -. VPN mode .-> VPN
+  Ingest -. Direct mode .-> Indexers
+  Optimize --> Servarr
+  Optimize --> Jellyfin
 ```
 
 ## 3. Layered topology
@@ -151,12 +151,14 @@ See [ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md).
 
 ## 8. CLI (MVP)
 
-`bin/flixbox` (Bash): `init`, `up`, `down`, `reload`, `restart`, `configure`, `status`, `logs`, `vpn-test`.
+`bin/flixbox` (Bash): `init`, `up`, `down`, `reload`, `restart`, `configure`, `credentials`, `homepage`, `status`, `logs`, `vpn-test`.
 
 - **`init`** — create `.env`, dirs, templates; generate API keys and passwords.
 - **`up [profiles…]`** — start stack; sync access profile.
 - **`reload [profiles…]`** — force-recreate all containers to pick up `.env` / Compose changes.
-- **`configure [--dry-run] [--sync-qbit-auth]`** — idempotent API wiring (ADR 0005, ADR 0016).
+- **`configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]`** — idempotent API wiring (ADR 0005, ADR 0016). `--sync-arr-ui` applies Forms from `FLIXBOX_ARR_UI_*` under `shared` (ADR 0020).
+- **`credentials show|set`** — day-2 secret print/rotate (ADR 0020).
+- **`homepage refresh`** — re-apply Homepage templates from the repo.
 
 ## 9. Security baseline
 

@@ -143,7 +143,7 @@ configure_qbittorrent() {
   # API key may appear in qBittorrent.conf or WebUI preferences after auth/password setup.
   QBIT_API_KEY=$(qbit_api_key_from_config "${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}")
   if [[ -n "$QBIT_API_KEY" ]]; then
-    info "qBittorrent API key: ${QBIT_API_KEY:0:8}..."
+    info "qBittorrent API key discovered"
   fi
 
   rm -f "$QBIT_COOKIE"

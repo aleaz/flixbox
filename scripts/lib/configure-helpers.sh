@@ -99,9 +99,27 @@ api_get()  { _api_request GET  "$@"; }
 api_post() { _api_request POST "$@"; }
 api_put()  { _api_request PUT  "$@"; }
 
+# Cap WAIT_TIMEOUT to remaining CONFIGURE_PREFLIGHT_DEADLINE (ADR 0016).
+configure_wait_window() {
+  local timeout="${WAIT_TIMEOUT:-180}"
+  local global_deadline="${CONFIGURE_PREFLIGHT_DEADLINE:-}"
+  if [[ -n "$global_deadline" ]]; then
+    local rem=$((global_deadline - SECONDS))
+    if (( rem < 1 )); then
+      printf '%s' 1
+      return 0
+    fi
+    if (( timeout > rem )); then
+      timeout=$rem
+    fi
+  fi
+  printf '%s' "$timeout"
+}
+
 wait_for_service() {
   local name="$1" url="$2"
-  local timeout="${WAIT_TIMEOUT:-180}"
+  local timeout
+  timeout="$(configure_wait_window)"
   local start=$SECONDS
   local deadline=$((SECONDS + timeout))
   local last_heartbeat=$SECONDS
@@ -128,7 +146,8 @@ wait_for_service() {
 # Wait until an authenticated *arr/Prowlarr API responds (DB + config ready).
 wait_for_arr_api() {
   local name="$1" port="$2" api_key="$3" api_version="${4:-v3}"
-  local timeout="${WAIT_TIMEOUT:-180}"
+  local timeout
+  timeout="$(configure_wait_window)"
   local start=$SECONDS deadline=$((SECONDS + timeout)) last_heartbeat=$SECONDS code=""
   local base="http://127.0.0.1:${port}"
   local status_path="/api/${api_version}/system/status"
@@ -155,7 +174,8 @@ wait_for_arr_api() {
 
 wait_for_bazarr_api() {
   local port="$1" api_key="$2"
-  local timeout="${WAIT_TIMEOUT:-180}"
+  local timeout
+  timeout="$(configure_wait_window)"
   local start=$SECONDS deadline=$((SECONDS + timeout)) last_heartbeat=$SECONDS code=""
   local base="http://127.0.0.1:${port}"
   while (( SECONDS < deadline )); do
@@ -314,7 +334,8 @@ qbit_set_webui_password() {
 wait_for_qbittorrent() {
   local container="${QBIT_DOCKER_CONTAINER:-flixbox-qbittorrent}"
   local api_url="${QBIT_INTERNAL_API_URL:-http://127.0.0.1:8080}"
-  local timeout="${WAIT_TIMEOUT:-180}"
+  local timeout
+  timeout="$(configure_wait_window)"
   local start=$SECONDS deadline=$((SECONDS + timeout)) last_heartbeat=$SECONDS code=""
   while (( SECONDS < deadline )); do
     code=$(docker exec "$container" curl -s -o /dev/null -w '%{http_code}' --max-time 3 \

@@ -31,8 +31,9 @@ Writers: tone and visuals follow the [documentation style guide](../00-doc-style
 
 ## Screenshots and demos
 
-Capture checklist (Homepage, CLI tape, diagrams): [`docs/images/README.md`](../images/README.md).  
-Language-neutral diagrams → `images/shared/`; UI screenshots → `images/en/` (and `es/` later).
+Capture checklist (Homepage, CLI tape): [`docs/images/README.md`](../images/README.md).  
+Concept diagrams: Mermaid in [How it works](02-how-it-works.md) / [Architecture](../03-architecture.md) ([style §7](../00-doc-style.md#7-diagram-style-line)).  
+UI screenshots → `images/en/` (and `es/` later).
 
 ## Other documentation
 

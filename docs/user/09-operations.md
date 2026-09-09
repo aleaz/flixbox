@@ -32,7 +32,7 @@ Until that exists: pull images and recreate containers carefully; prefer pinned 
 
 ## Backups
 
-Config lives under `${CONFIG_DIR}`. Prefer SQLite-safe backups (planned `scripts/backup.sh` / `flixbox backup`). Always stop or use live-safe tools before copying DB files blindly.
+Config lives under `${CONFIG_DIR}`. Prefer SQLite-safe backups (`scripts/backup.sh`; not yet wrapped as `flixbox backup`). Always stop or use live-safe tools before copying DB files blindly.
 
 ## Hardlink health check
 

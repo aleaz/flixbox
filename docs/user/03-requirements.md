@@ -27,7 +27,7 @@ Store `${DATA_DIR}` on a filesystem that supports hardlinks (**not exFAT**). On 
 | OS + `${CONFIG_DIR}` | SSD/NVMe |
 | `${DATA_DIR}` (media) | Large disk or single-filesystem pool |
 | Transcoding | Optional GPU (Intel QSV / Nvidia / AMD); otherwise CPU |
-| RAM | 8 GB minimum comfortable; more if 4K transcode / Byparr |
+| RAM | **4 GB** floor (tight); **8 GB** comfortable; more if 4K transcode / Byparr |
 
 ## Network
 

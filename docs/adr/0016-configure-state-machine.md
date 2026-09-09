@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-01
+- **Updated:** 2026-09-09 — Cap preflight waits to global deadline; clear soft-wait after PREFLIGHT_PASSED; Bazarr post-restart warn-only
 
 ## Context
 
@@ -31,11 +32,12 @@ INIT → ASSERT → PREFLIGHT_RETRY* → PREFLIGHT_PASSED → WIRING → DONE | 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `CONFIGURE_PREFLIGHT_TIMEOUT` | `900` | Total preflight retry budget (seconds) |
-| `WAIT_TIMEOUT` | `180` | Per-service wait window within one pass |
-| `CONFIGURE_SOFT_WAIT` | `1` during retry, `0` on final pass | Soft vs hard wait failures |
-| `CONFIGURE_PREFLIGHT_PASSED` | bash dynamic scope | Skip wiring waits after preflight |
+| `WAIT_TIMEOUT` | `180` | Per-phase wait window within one pass (qBit, HTTP warm-up, auth APIs) |
+| `CONFIGURE_PREFLIGHT_DEADLINE` | set for preflight only | Caps each wait to remaining budget (prevents soft passes overshooting) |
+| `CONFIGURE_SOFT_WAIT` | `1` during retry, `0` on final pass / after `PREFLIGHT_PASSED` | Soft vs hard wait failures |
+| `CONFIGURE_PREFLIGHT_PASSED` | bash dynamic scope | Skip wiring waits after preflight; clears soft-wait |
 
-HTTP warm-up and authenticated API checks run **in parallel** within a preflight pass (worst case ≈ one `WAIT_TIMEOUT` window, not N×sequential).
+Within a pass, HTTP warm-up and authenticated API checks each run **in parallel** (≈ one `WAIT_TIMEOUT` per phase, not N×services). Phases are **sequential** (qBit → HTTP → key discover → auth APIs), so a soft pass can consume multiple windows — but every wait is capped by `CONFIGURE_PREFLIGHT_DEADLINE`, so wall clock stays within `CONFIGURE_PREFLIGHT_TIMEOUT` (+ small sleep/overhead). Typical cold start: 1–3 minutes; worst case approaches the full budget.
 
 ### `--dry-run`
 
@@ -58,6 +60,7 @@ Configure modules use `scripts/lib/json-query.py` with parameters in `JSON_QUERY
 - **Preflight fatal:** missing tools/stack, `.env` not writable, global timeout, VPN hard-fail → `exit 1` (or `return 1` from retry loop).
 - **Wiring best-effort (PARTIAL):** `fail()` increments `FAILED` and **returns 0** so `set -euo pipefail` does not abort mid-run; `configure-apps.sh` exits 1 only when `FAILED>0` after the full wiring pass and summary.
 - **Wait helpers:** after `fail()` on hard timeout they still `return 1` to signal preflight retry / module early-exit (e.g. skip rest of one service when API never came up).
+- **Bazarr post-restart:** re-wait uses soft semantics (`CONFIGURE_SOFT_WAIT=1`) so a slow restart warns without inflating `FAILED`.
 - **Optional services:** Seerr container absent → skip; Byparr down → skip CF proxy.
 
 ### qBit download client auth

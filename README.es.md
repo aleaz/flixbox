@@ -33,7 +33,7 @@
 | **2** | **Descargar** | qBittorrent — Direct, o vía Gluetun en modo VPN |
 | **3** | **Ver** | Hardlink a `/data/media` → Jellyfin |
 
-No hace falta Pi-hole ni reverse proxy para arrancar. Detalle: [How it works (EN)](docs/user/02-how-it-works.md).
+No hace falta Pi-hole ni reverse proxy para arrancar. Diagrama completo: [How it works (EN)](docs/user/02-how-it-works.md).
 
 ---
 
@@ -62,7 +62,7 @@ Cold start en el CLI: `cp .env.example .env`, `init`, `up`, `status`, luego `con
 
 ## Inicio rápido
 
-**Necesitás:** Docker Compose v2, ~4 GB RAM, Linux x86_64/ARM64 (macOS best-effort). Lista completa: [Requirements (EN)](docs/user/03-requirements.md).
+**Necesitás:** Docker Compose v2, **4 GB RAM mínimo / 8 GB cómodo**, Linux x86_64/ARM64 (macOS best-effort). Lista completa: [Requirements (EN)](docs/user/03-requirements.md).
 
 **1. Clonar y setear paths**
 
@@ -100,6 +100,8 @@ Mapa completo: [Credentials and API keys (EN)](docs/user/06-configuration.md#cre
 ```
 
 Después, indexers en Prowlarr (~10–15 min): [First-run (EN)](docs/user/05-first-run.md).
+
+**Listo cuando:** `status` healthy · `configure` con **0 failed** · ≥1 indexer · pedido Seerr en *arr · reproduce en Jellyfin — detalle en [First-run](docs/user/05-first-run.md#youre-done-when).
 
 **Tip:** En Linux, creá y hacé `chown` de los paths (por defecto `/srv/flixbox/…`), o apuntá `.env` a paths que ya sean tuyos — [Install — storage paths (EN)](docs/user/04-install.md#storage-paths-and-permissions).
 

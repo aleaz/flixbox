@@ -82,7 +82,8 @@ configure_bazarr() {
   if $needs_restart; then
     info "Restarting Bazarr to apply settings..."
     docker restart flixbox-bazarr >/dev/null 2>&1 || true
-    if ! wait_for_bazarr_api "$BAZARR_PORT" "$BAZARR_API_KEY"; then
+    # Soft wait: do not increment FAILED — restart lag is warn-only (ADR 0016).
+    if ! CONFIGURE_SOFT_WAIT=1 wait_for_bazarr_api "$BAZARR_PORT" "$BAZARR_API_KEY"; then
       warn "Bazarr: API not ready after restart — re-run ./bin/flixbox configure if wiring fails"
     fi
   fi

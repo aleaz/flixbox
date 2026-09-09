@@ -1,6 +1,14 @@
 # Install
 
-> **Implementation status:** Full MVP Compose stack + `bin/flixbox` CLI are available. Optional profiles: `plex`, `proxy`, `recyclarr`. `docker-socket-proxy` always runs with Homepage.
+## At a glance
+
+Bootstrap Flixbox with four commands: clone → `init` → `up` → `configure`. Paths live in **`.env`** (not shell `export`).
+
+- **Outcome:** Core containers healthy; apps wired by `configure`
+- **Before you start:** Docker Compose v2, writable `DATA_DIR` / `CONFIG_DIR`, [4 GB RAM floor / 8 GB comfortable](03-requirements.md)
+- **Time:** ~15 minutes to first healthy `status`
+
+> **Implementation status:** Full Compose stack + `bin/flixbox` CLI are **Implemented**. Optional profiles: `plex`, `proxy`, `recyclarr`. `docker-socket-proxy` always runs with Homepage.
 
 ## Bootstrap
 
@@ -122,6 +130,18 @@ docker compose --profile recyclarr run --rm recyclarr sync
 | Bazarr | 6767 |
 | Maintainerr | 6246 |
 | Caddy | 80/443 (profile `proxy`) |
+
+## Verify
+
+**Expected:** `./bin/flixbox status` shows core services up; Homepage opens at `http://localhost:3000`.
+
+## If it fails
+
+| Symptom | Start here |
+| --- | --- |
+| Paths not writable / init incomplete | [Storage paths](#storage-paths-and-permissions) · [Troubleshooting](10-troubleshooting.md) |
+| Host port already in use | [First-run — port conflicts](05-first-run.md#host-port-conflicts) |
+| Docker permission denied | [Troubleshooting — Docker](10-troubleshooting.md#docker-daemon-access) |
 
 ## Next
 

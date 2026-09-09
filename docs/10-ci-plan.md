@@ -93,10 +93,10 @@ flowchart TB
     PR[pull_request]
   end
 
-  subgraph jobs [Jobs - parallel]
+  subgraph jobs [Jobs parallel]
     SEC[secrets - gitleaks]
-    VAL[validate - compose + shell + contracts]
-    SECU[security - trivy - phase 2]
+    VAL[validate - compose shell contracts]
+    SECU[security - trivy]
   end
 
   PUSH --> SEC

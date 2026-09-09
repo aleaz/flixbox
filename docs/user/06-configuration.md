@@ -8,10 +8,10 @@ The template file groups variables by when you need them: **required before firs
 
 1. **Before first `up`:** `DATA_DIR`, `CONFIG_DIR`, `FLIXBOX_MODE`, `TZ`, `PUID`/`PGID` if not 1000, and optionally `FLIXBOX_ACCESS_PROFILE` (`trusted` default, or `shared` on shared Wi‑Fi — [§13](13-access-profiles.md)).
 2. **Start stack:** `./bin/flixbox up` (syncs derived bind/auth keys if the profile drifted)
-3. **Wire apps:** `./bin/flixbox configure` (or manual steps in [First-run](05-first-run.md))
-4. **After configure:** copy remaining credentials per [Credentials and API keys](#credentials-and-api-keys) → `./bin/flixbox reload` when Compose consumers need new `.env` values
-5. **VPN mode only:** Gluetun credentials → `./bin/flixbox vpn-test`
-6. **Remaining UI:** indexers, Jellyfin, Seerr — [First-run setup](05-first-run.md)
+3. **Wire apps:** `./bin/flixbox configure` — see [First-run §0](05-first-run.md#0-script-assisted-wiring-recommended) for what it configures
+4. **After configure:** only if you changed secrets by hand — [Credentials and API keys](#credentials-and-api-keys) → `./bin/flixbox reload` when Compose consumers need new `.env` values
+5. **VPN mode only:** Gluetun credentials in `.env` before `up`/`reload` → `./bin/flixbox vpn-test`
+6. **Still manual:** Prowlarr indexers; optional Maintainerr rules / Recyclarr sync; `shared` Forms via `credentials set arr-ui` — [First-run](05-first-run.md)
 
 Quick lookup: [REFERENCE](REFERENCE.md).
 
@@ -169,13 +169,13 @@ Most Flixbox apps talk over the Docker network (`flixbox_net`). Only **Unpackerr
 
 | App | Connects to | Credential | Where to configure |
 | --- | --- | --- | --- |
-| **Prowlarr** | Radarr, Sonarr | Each *arr **API key** | Prowlarr → Settings → Apps — [First-run §1](05-first-run.md#1-prowlarr--byparr) |
-| **Prowlarr** | Indexers (trackers) | Per-indexer login/API | Prowlarr → Indexers (external accounts; not in `.env`) |
-| **Prowlarr** | Byparr | *(none)* | Proxy host `byparr`, port `8191` — internal HTTP only |
-| **Radarr / Sonarr** | qBittorrent | qBit **API key** | *arr → Download Clients — [First-run §3b](05-first-run.md#3b-download-client-qbittorrent) |
-| **Seerr** | Jellyfin, Radarr, Sonarr | Each service **API key** | Seerr setup wizard / Settings — [First-run §6](05-first-run.md#6-seerr) |
-| **Bazarr** | Radarr, Sonarr | *arr **API keys** | Bazarr UI — [First-run §4](05-first-run.md#4-bazarr) |
-| **Maintainerr** | Jellyfin, Radarr, Sonarr | Each service **API key** | Maintainerr UI — [First-run §8](05-first-run.md#8-decluttarr--maintainerr) |
+| **Prowlarr** | Radarr, Sonarr | Each *arr **API key** | **`configure`** (UI fallback: Settings → Apps) — [First-run §1](05-first-run.md#1-prowlarr--byparr) |
+| **Prowlarr** | Indexers (trackers) | Per-indexer login/API | **Manual** — Prowlarr → Indexers (not in `.env`) |
+| **Prowlarr** | Byparr | *(none)* | **`configure`** when Byparr is running — host `byparr:8191` |
+| **Radarr / Sonarr** | qBittorrent | qBit **API key** | **`configure`** (UI fallback: Download Clients) — [First-run §3](05-first-run.md#3-radarr--sonarr--hygiene) |
+| **Seerr** | Jellyfin, Radarr, Sonarr | Each service **API key** | **`configure`** (UI fallback if automation fails) — [First-run §4](05-first-run.md#4-bazarr--jellyfin--seerr) |
+| **Bazarr** | Radarr, Sonarr | *arr **API keys** | **`configure`** (UI fallback) — [First-run §4](05-first-run.md#4-bazarr--jellyfin--seerr) |
+| **Maintainerr** | Jellyfin, Radarr, Sonarr | Each service **API key** | **Manual** in Maintainerr UI — [First-run §5](05-first-run.md#5-recyclarr--maintainerr--homepage) |
 | **Recyclarr** | Radarr, Sonarr | *arr **API keys** | `${CONFIG_DIR}/recyclarr/recyclarr.yml` |
 | **Unpackerr** | Radarr, Sonarr | *arr **API keys** | `.env` (`RADARR_API_KEY`, `SONARR_API_KEY`) |
 | **Decluttarr** | Radarr, Sonarr, qBit | *arr API keys + qBit **user/pass** | `.env` — table above |

@@ -16,12 +16,12 @@ Use these when designing diagrams, README hero frames, slide stills, or thumbnai
 | UI type | **Montserrat** (500–700) | Labels, captions, diagram text |
 | Background | `#0b0d13` | Diagram / mock canvas |
 | Card | `rgba(22, 26, 35, 0.80)` ≈ `#161a23` | Panels in composites |
-| Border | `rgba(255, 255, 255, 0.12)` | Soft separators |
+| Border | `rgba(255, 255, 255, 0.12)` ≈ stroke `#2a303c` | Soft separators |
 | Text primary | `#f0f6fc` | Titles |
 | Text secondary | `#8b949e` | Body / captions |
 | Text muted | `#6e7681` | Hints |
-| Healthy | `#10b981` | Status OK |
-| Warning | `#f59e0b` | Caution |
+| Healthy | `#10b981` | Status OK / main happy path |
+| Warning | `#f59e0b` | Caution / VPN boundary |
 | Danger | `#f43f5e` | Fail / ban / leak |
 
 **Do not** invent a second palette (no purple SaaS gradients, no cream/serif “editorial” look) for Flixbox marketing assets. Align with the Ops dashboard the operator already sees.
@@ -34,7 +34,7 @@ Use these when designing diagrams, README hero frames, slide stills, or thumbnai
 
 1. **Benefit before inventory** — say what the operator gains; list services second.
 2. **Honest time** — give ranges (`~15 min` up, indexers after). Never imply zero-touch.
-3. **Show, then tell** — screenshot / diagram / CLI tape before long command walls when possible.
+3. **Show, then tell** — screenshot / diagram / CLI tape before long command walls when possible. Diagram medium: see [§7 Diagram style line](#7-diagram-style-line).
 4. **One audience per layer** — README + `docs/user/` = operators; `docs/adr/` + engineering map = contributors.
 
 ### Prefer / avoid
@@ -87,7 +87,7 @@ Target section order for the root `README.md` (implement when assets exist):
 2. Badges (license, CI)  
 3. Hero visual (Homepage screenshot and/or CLI tape)  
 4. Why Flixbox (benefit bullets)  
-5. How it works (3-step diagram, link to deep dive)  
+5. How it works (short table or Mermaid link — not a large raster hero)  
 6. Quick start (three steps max)  
 7. Choose your path (Direct / shared / VPN / HTTPS)  
 8. Docs hub links  
@@ -96,18 +96,75 @@ Target section order for the root `README.md` (implement when assets exist):
 
 Full service inventory and ADR indexes stay out of the hero.
 
-## 7. Visual assets
+## 7. Diagram style line
+
+One visual language for **all** diagrams in the repo (operator guide, architecture, CI, plans). Pick the **medium** first, then apply shared **structure** rules.
+
+### 7.1 Medium (when to use what)
+
+| Medium | Use for | Do not use for |
+| --- | --- | --- |
+| **Mermaid** (default) | Pipelines, hardlink layout, VPN vs Direct, sequences, CI graphs, system context | Pixel-perfect brand marketing |
+| **Screenshot / GIF** | Real UIs and CLI demos (Homepage Ops, `cli-quickstart.gif`) — these *are* the dashboard look | Invented “mock” product chrome |
+| **PNG + SVG** | Rare: only if Mermaid cannot express a layout after a real try | Conceptual diagrams that fight GitHub light/dark (dark canvases look pasted-on) |
+| **ASCII tree** | Tiny path snippets when Mermaid is overkill | A second full diagram next to Mermaid |
+
+**Rule:** never ship **Mermaid + ASCII + PNG** for the same idea. One primary diagram; optional short caption.
+
+**Do not** invent dark “dashboard-like” PNG diagrams for concepts — they clash with GitHub’s theme and are not the real Homepage. Prefer Mermaid (same family as other docs diagrams) or a real screenshot.
+
+### 7.2 Shared structure (every diagram)
+
+1. **One job** — one question answered (e.g. “how does a title move?”, not “whole stack + CI + VPN”).
+2. **Top → bottom reading** — prefer `flowchart TB` for pipelines and sequences. Use **`LR` for side-by-side layouts** (e.g. torrents ↔ media hardlink, Direct vs VPN columns).
+3. **Product names** — `Seerr`, `qBittorrent`, `Jellyfin`, `Prowlarr` (not `jf`, `qbit` as visible labels). Node **ids** may be short (`qbit`, `arr`).
+4. **Main path = solid** edges. **Optional / mode / hygiene / bypass = dotted** (`-. label .->`) with a **2–4 word** label.
+5. **Paths and hosts** in quotes or monospace-friendly labels: `"/data/torrents"`, `"qbittorrent:8080"`.
+6. **No emoji**, no marketing badges, no ADR numbers inside nodes (link ADR in prose under the diagram).
+7. **Actor** = stadium/circle (`You([You])`); **services** = rectangles; **data** = rectangle with path string.
+8. **Caption under the figure** in prose when the diagram alone is ambiguous (one sentence max).
+
+### 7.3 Mermaid conventions
+
+```mermaid
+flowchart TB
+  You([You]) --> Seerr
+  Seerr --> Arr[Radarr / Sonarr]
+  Arr --> qBit[qBittorrent]
+  qBit --> Media["/data/media"]
+```
+
+| Convention | Do | Avoid |
+| --- | --- | --- |
+| Direction | `flowchart TB` for pipelines; `LR` for side-by-side layouts | Mixing directions without a layout reason |
+| Labels | Short edge labels on dotted links | Long sentences on arrows |
+| Subgraphs | Only when they name a real boundary (`Flixbox suite`, `Triggers`) | Decorative nesting |
+| Sequence | `sequenceDiagram` for day-2 protocols (credentials rotate) | Using sequence for the request→watch pipeline |
+| C4 | Do **not** use `C4Context` / `C4Container` in shipped docs | Pastel default fills on GitHub (celeste/azul) break brand tokens |
+| Theme | Rely on GitHub light/dark; **do not** depend on `%%{init}%%` brand colors (GitHub may ignore/retheme) | Fighting GitHub with huge `themeVariables` blocks |
+
+Plans and engineering notes follow the same rules when adding or revising diagrams.
+
+### 7.4 Screenshots and rare exports
+
+**Screenshots / GIFs** (Homepage, CLI tape) are the dashboard look — capture the real UI; do not redraw it.
+
+**Rare conceptual PNG/SVG** (only if Mermaid fails after a real try): match [§1 Brand tokens](#1-brand-tokens), keep `.svg` beside `.png`, max ~960px. Prefer not to ship these in operator docs.
+
+Checklist and paths: [images/README.md](images/README.md).
+
+## 8. Visual assets
 
 Naming, folders, and i18n rules: [images/README.md](images/README.md).  
 Capture priorities and CLI tape script: same file, **Brand-first capture checklist**.
 
-## 8. Relationship to other docs
+## 9. Relationship to other docs
 
 | Doc | Owns |
 | --- | --- |
-| This file | Operator-facing tone, page shape, brand tokens for assets |
+| This file | Operator-facing tone, page shape, brand tokens, **diagram style line** |
 | [05-standards.md](05-standards.md) | Engineering writing, git commit rules, Compose/shell standards |
 | [user/INDEX.md](user/INDEX.md) | Operator reading order |
 | [AGENTS.md](../AGENTS.md) | AI/agent hard constraints |
 
-When brand tokens in Homepage CSS change, update **§1** here and re-export affected diagrams/screenshots.
+When brand tokens in Homepage CSS change, update **§1** here and re-export affected PNG/SVG diagrams/screenshots.

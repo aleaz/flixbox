@@ -1,8 +1,12 @@
 # First-run setup
 
+## At a glance
+
 Do this **once** after `./bin/flixbox init` and `./bin/flixbox up`.
 
-**Estimated time:** ~10–15 minutes with `./bin/flixbox configure` (mostly adding indexers); longer if you wire everything manually.
+- **Outcome:** Apps wired; ≥1 indexer; request path works  
+- **Time:** ~10–15 minutes with `./bin/flixbox configure` (mostly adding indexers); longer if you wire everything manually  
+- **Still manual:** Prowlarr indexers; Maintainerr rules; optional Recyclarr / Caddy  
 
 ## Progress
 
@@ -25,7 +29,7 @@ Cheat sheet: [Quick reference](REFERENCE.md).
 ./bin/flixbox configure --sync-qbit-auth   # after changing qBit password — see [Credentials](06-configuration.md#accidental--intentional-key-changes)
 ```
 
-On first run right after `up`, the script **waits and retries** (default **15 minutes** total, heartbeats every 10s) before wiring. HTTP and API checks run **in parallel** per pass (typically 1–3 min after `up`, not 15). You should see `Waiting for first-start initialization…` before `Discovering API keys…`. Override: `CONFIGURE_PREFLIGHT_TIMEOUT=1200 ./bin/flixbox configure`.
+On first run right after `up`, the script **waits and retries** (default **15 minutes** total, heartbeats every 10s) before wiring. Each pass has sequential phases (qBit → HTTP warm-up → key discover → auth APIs); HTTP/API checks within a phase run **in parallel**. Waits are capped by the remaining budget so soft retries cannot run past the deadline. Typical: **1–3 minutes** after `up`; worst case approaches the full **15 minutes**. You should see `Waiting for first-start initialization…` before `Discovering API keys…`. Override: `CONFIGURE_PREFLIGHT_TIMEOUT=1200 ./bin/flixbox configure`.
 
 Preview without API or `.env` changes:
 
@@ -73,6 +77,36 @@ See also [Troubleshooting — port preflight](10-troubleshooting.md).
 
 ---
 
+## You’re done when
+
+<a id="youre-done-when"></a>
+
+Distinguish **stack up** (containers healthy) from **pipeline works** (request → watch):
+
+| Checkpoint | How to verify |
+| --- | --- |
+| Stack healthy | `./bin/flixbox status` — core services up |
+| Apps wired | `./bin/flixbox configure` ends with **0 failed** (idempotent) |
+| Indexers | ≥1 indexer in Prowlarr, synced to Radarr/Sonarr |
+| Request path | Seerr request appears in Radarr or Sonarr |
+| Import + play | File under `/data/media/…`, plays in Jellyfin |
+
+Optional full walkthrough: [Smoke test — Phase F](11-smoke-test.md#phase-f--end-to-end-request-flow-manual) (manual happy path; not the v0.1 CI gate).
+
+## Verify
+
+**Expected:** `configure` ends with **0 failed**; Prowlarr shows apps + ≥1 indexer; a Seerr request appears in Radarr or Sonarr.
+
+## If it fails
+
+| Symptom | Start here |
+| --- | --- |
+| Preflight / first-start timeout | [Troubleshooting — configure](10-troubleshooting.md) · raise `CONFIGURE_PREFLIGHT_TIMEOUT` |
+| qBit `Unauthorized` / remapped port | [§2b.1](#2b1-webui-stuck-on-plain-unauthorized-qbittorrent-5x) |
+| Decluttarr idle / hygiene keys | [§3 hygiene](#3-radarr--sonarr--hygiene) · [Troubleshooting](10-troubleshooting.md) |
+
+---
+
 ## 1. Prowlarr + Byparr
 
 If you ran `configure`, the Byparr proxy and Radarr/Sonarr apps should already exist. Verify under **Settings → Indexers → Indexer Proxies** and **Settings → Apps**.
@@ -99,11 +133,16 @@ Manual Byparr fallback (if configure skipped it): proxy type **FlareSolverr**, h
 
 ## 2. qBittorrent
 
+<a id="2c-download-paths-automatic"></a>
+<a id="2e-custom-host-ports-and-stale-config"></a>
+
 WebUI: `http://127.0.0.1:${QBITTORRENT_PORT}` (default `8080`).
 
 Login: `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` from `.env` (set by init; configure applies the password if qBit still has a temporary one).
 
-Paths are set by cont-init (`/data/torrents/`, incomplete under `torrents/incomplete`). VPN mode: a custom service re-binds BitTorrent to `tun0` so torrents do not stall at metaDL (ADR 0002).
+**Download paths (automatic):** cont-init sets saves under `/data/torrents/` with incomplete under `torrents/incomplete`. Override every start with `FLIXBOX_QBIT_FORCE_PATHS=true` if a bad path keeps returning. VPN mode: a custom service re-binds BitTorrent to `tun0` so torrents do not stall at metaDL (ADR 0002).
+
+**Custom host ports / stale config:** if you remapped `QBITTORRENT_PORT` and the WebUI stays broken after experiments, stop the stack, remove `${CONFIG_DIR}/qbittorrent/qBittorrent/`, then `./bin/flixbox up` and `configure --sync-qbit-auth` if auth drifted.
 
 If the WebUI shows plain `Unauthorized` with a remapped host port, see [§2b.1](#2b1-webui-stuck-on-plain-unauthorized-qbittorrent-5x) below.
 
@@ -130,13 +169,21 @@ If `VPN_PORT_FORWARDING=on`: enable **Bypass authentication for clients on local
 
 ## 3. Radarr / Sonarr / hygiene
 
+<a id="3-radarr--sonarr"></a>
+<a id="3b-download-client-qbittorrent"></a>
+<a id="3c-hygiene-credentials-decluttarr--unpackerr"></a>
+
 `configure` adds root folders and the qBittorrent download client (`host: qbittorrent`, port `8080`). On later runs it **re-tests** that client and updates username/password/API key when Test fails **or** the stored qBit API key drifted (e.g. accidental regenerate in the WebUI). To **force** a full push from `.env` into qBit + *arr + Decluttarr after a manual password change, use `./bin/flixbox configure --sync-qbit-auth` — [Credentials — key changes](06-configuration.md#accidental--intentional-key-changes).
 
-Decluttarr/Unpackerr pick up `RADARR_API_KEY` / `SONARR_API_KEY` / `QBITTORRENT_*` from `.env`. Configure recreates them when it writes those keys or when you pass `--sync-qbit-auth`; otherwise `./bin/flixbox reload`.
+**Hygiene credentials:** Decluttarr/Unpackerr pick up `RADARR_API_KEY` / `SONARR_API_KEY` / `QBITTORRENT_*` from `.env`. Configure recreates them when it writes those keys or when you pass `--sync-qbit-auth`; otherwise `./bin/flixbox reload`.
 
 ---
 
 ## 4. Bazarr / Jellyfin / Seerr
+
+<a id="4-bazarr--jellyfin--seerr"></a>
+<a id="4-bazarr"></a>
+<a id="6-seerr"></a>
 
 Configure connects Bazarr to Sonarr/Radarr, completes Jellyfin libraries when `FLIXBOX_ADMIN_*` is set, and wires Seerr.
 
@@ -151,6 +198,8 @@ If Jellyfin or Seerr automation fails (version quirks), finish the UI wizard onc
 
 ## 5. Recyclarr / Maintainerr / Homepage
 
+<a id="8-decluttarr--maintainerr"></a>
+
 - Recyclarr: placeholders patched by configure →  
   `docker compose --profile recyclarr run --rm recyclarr sync`
 - Maintainerr (`:6246`): connect Jellyfin + *arr; enable rules from [Hygiene](08-hygiene.md) deliberately.
@@ -158,4 +207,4 @@ If Jellyfin or Seerr automation fails (version quirks), finish the UI wizard onc
 
 ## Next
 
-[Configuration](06-configuration.md) · [VPN and Direct](07-vpn-and-direct.md)
+[Configuration](06-configuration.md) · [VPN and Direct](07-vpn-and-direct.md) · [You’re done when](#youre-done-when)

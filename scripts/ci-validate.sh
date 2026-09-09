@@ -505,6 +505,10 @@ grep -q 'CONFIGURE_PREFLIGHT_TIMEOUT' scripts/configure/preflight.sh || \
   fail C-67 'preflight must support CONFIGURE_PREFLIGHT_TIMEOUT retry budget'
 grep -q 'CONFIGURE_SOFT_WAIT' scripts/lib/configure-state.sh || \
   fail C-67 'configure-state must support CONFIGURE_SOFT_WAIT for retries'
+grep -q 'CONFIGURE_PREFLIGHT_DEADLINE' scripts/configure/preflight.sh || \
+  fail C-67 'preflight must export CONFIGURE_PREFLIGHT_DEADLINE to cap waits'
+grep -q 'configure_wait_window' scripts/lib/configure-helpers.sh || \
+  fail C-67 'wait helpers must clamp via configure_wait_window'
 pass C-67
 
 # --- C-68: configure readiness state machine (structural contract) ---
@@ -520,6 +524,8 @@ grep -q 'configure_entry_prepare' scripts/configure-apps.sh || \
   fail C-68 'configure-apps must call configure_entry_prepare (access profile on direct invoke)'
 grep -q 'configure_mark_preflight_passed' scripts/configure/preflight.sh || \
   fail C-68 'preflight must mark PREFLIGHT_PASSED before wiring'
+grep -A6 '^configure_mark_preflight_passed()' scripts/lib/configure-state.sh | grep -q 'CONFIGURE_SOFT_WAIT=0' || \
+  fail C-68 'mark PREFLIGHT_PASSED must clear CONFIGURE_SOFT_WAIT for wiring'
 grep -q 'configure_ensure_qbittorrent_ready' scripts/configure/qbittorrent.sh || \
   fail C-68 'qBit module must use configure_ensure_* (skip duplicate waits)'
 grep -q 'configure_ensure_arr_api' scripts/configure/arr-common.sh || \
@@ -547,6 +553,11 @@ sed -n '/^fail() {/,/^}/p' scripts/lib/configure-helpers.sh | grep -q 'return 0'
   fail C-69 'configure fail() must return 0 under set -e (PARTIAL wiring; ADR 0016)'
 grep -q 'wait_for_bazarr_api' scripts/configure/bazarr.sh || \
   fail C-69 'Bazarr must re-wait for API after restart'
+grep -B2 -A2 'wait_for_bazarr_api' scripts/configure/bazarr.sh | grep -q 'CONFIGURE_SOFT_WAIT=1' || \
+  fail C-69 'Bazarr post-restart wait must be soft (warn-only, no FAILED inflate)'
+if grep -E 'API key: \$\{[A-Z_]*:0:8\}' scripts/configure/preflight.sh scripts/configure/qbittorrent.sh 2>/dev/null; then
+  fail C-69 'configure must not log API key prefixes (ADR 0020)'
+fi
 [[ -f docs/adr/0016-configure-state-machine.md ]] || \
   fail C-69 'missing ADR 0016 configure state machine'
 pass C-69

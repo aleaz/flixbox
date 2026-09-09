@@ -124,11 +124,7 @@ configure_discover_api_keys() {
     return 1
   fi
 
-  info "Sonarr API key: ${SONARR_API_KEY:0:8}..."
-  info "Radarr API key: ${RADARR_API_KEY:0:8}..."
-  info "Prowlarr API key: ${PROWLARR_API_KEY:0:8}..."
-  info "Bazarr API key: ${BAZARR_API_KEY:0:8}..."
-
+  info "Sonarr / Radarr / Prowlarr / Bazarr API keys discovered"
   env_set_if_empty RADARR_API_KEY "$RADARR_API_KEY"
   env_set_if_empty SONARR_API_KEY "$SONARR_API_KEY"
   env_set_if_empty PROWLARR_API_KEY "$PROWLARR_API_KEY"
@@ -145,7 +141,7 @@ configure_discover_api_keys() {
   export QBIT_API_KEY
   QBIT_API_KEY=$(qbit_api_key_from_config flixbox-qbittorrent)
   if [[ -n "$QBIT_API_KEY" ]]; then
-    info "qBittorrent API key: ${QBIT_API_KEY:0:8}..."
+    info "qBittorrent API key discovered"
   fi
   export SONARR_API_KEY RADARR_API_KEY PROWLARR_API_KEY BAZARR_API_KEY
   return 0
@@ -194,6 +190,8 @@ configure_preflight() {
   local start=$SECONDS
   local deadline=$((SECONDS + timeout))
   local window="${WAIT_TIMEOUT:-180}"
+  # Cap each wait phase to remaining budget so multi-phase soft passes cannot overshoot.
+  export CONFIGURE_PREFLIGHT_DEADLINE="$deadline"
 
   while (( SECONDS < deadline )); do
     export FAILED=0
@@ -209,6 +207,7 @@ configure_preflight() {
     sleep 10
   done
 
+  unset CONFIGURE_PREFLIGHT_DEADLINE
   echo "" >&2
   echo "ERROR: configure timed out after ${timeout}s waiting for first-start." >&2
   echo "  Check: ./bin/flixbox status && ./bin/flixbox logs radarr sonarr prowlarr bazarr jellyfin" >&2

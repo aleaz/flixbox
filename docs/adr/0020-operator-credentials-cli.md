@@ -58,7 +58,7 @@ flixbox credentials set  <target> [--generate | --prompt]
 
 - One target per invocation (no “dump all” default).
 - Secret values on **stdout**; warnings/hints on **stderr**.
-- Never print secrets from `flixbox status` or from ordinary `configure` logs.
+- Never print secrets from `flixbox status` or from ordinary `configure` logs (including API key prefixes — confirm discovery without key material).
 - Operator docs MUST warn about shell history, CI logs, and screenshots (ADR 0018).
 
 ### Failure contract

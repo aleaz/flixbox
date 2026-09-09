@@ -12,10 +12,14 @@
 
 configure_state_init() {
   CONFIGURE_PREFLIGHT_PASSED=false
+  export CONFIGURE_SOFT_WAIT=0
 }
 
 configure_mark_preflight_passed() {
   CONFIGURE_PREFLIGHT_PASSED=true
+  # Wiring must hard-fail waits; soft mode is only for preflight retries (ADR 0016).
+  export CONFIGURE_SOFT_WAIT=0
+  unset CONFIGURE_PREFLIGHT_DEADLINE
 }
 
 configure_wiring_waits_satisfied() {
@@ -151,22 +155,6 @@ configure_ensure_arr_api() {
 configure_ensure_bazarr_api() {
   configure_wiring_waits_satisfied && return 0
   wait_for_bazarr_api "$@"
-}
-
-# Args: quadruplets name port api_key api_version …
-configure_ensure_arr_apis_parallel() {
-  configure_wiring_waits_satisfied && return 0
-  [[ $# -ge 4 ]] || return 0
-  local -a pids=() failed=0 pid
-  while [[ $# -ge 4 ]]; do
-    ( wait_for_arr_api "$1" "$2" "$3" "$4" ) &
-    pids+=($!)
-    shift 4
-  done
-  for pid in "${pids[@]}"; do
-    wait "$pid" || failed=1
-  done
-  return $failed
 }
 
 # Preflight: Sonarr + Radarr + Prowlarr + Bazarr authenticated APIs in parallel.

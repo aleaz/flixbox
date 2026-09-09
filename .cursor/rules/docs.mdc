@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Docs rules
 
-- Keep status honest: Working Draft until MVP exists.
+- Keep status honest: **Implemented** for shipped MVP surfaces; **Working Draft** only for unfinished engineering notes; ADRs stay **Accepted**.
 - Use relative links only (no `file://` absolute home paths).
 - Scope changes must update `docs/01-scope.md` and usually an ADR.
 - Prefer current names: Seerr, Byparr, Decluttarr, Maintainerr.

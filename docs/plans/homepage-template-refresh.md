@@ -42,7 +42,7 @@ Operators who pull + reload reasonably expect “updated Homepage” and see the
 6. **One behavioral change ⇒ docs + CI** (`docs/05-standards.md`).
 
 ```mermaid
-flowchart TD
+flowchart TB
   pull[git pull updates templates]
   up[up / reload / doctor]
   cmp{template-rev vs applied-rev}

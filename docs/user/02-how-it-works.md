@@ -4,23 +4,27 @@ This page is the mental model. If you understand it, the rest of the UI setup ma
 
 ## Pipeline
 
-```text
-You → Seerr → Radarr/Sonarr → Prowlarr (+ Byparr)
-                ↓
-         qBittorrent ── VPN mode: via Gluetun
-                │         Direct mode: plain Docker network
-                ↓
-     /data/torrents/...  ──hardlink──►  /data/media/...
-                ↓
-            Jellyfin (+ Bazarr subtitles)
-
-Decluttarr cleans stuck downloads.
-Maintainerr cleans forgotten library items (rules).
+```mermaid
+flowchart TB
+  You([You]) --> Seerr
+  Seerr --> Arr[Radarr / Sonarr]
+  Arr <--> Prowlarr
+  Prowlarr -. CF bypass .-> Byparr
+  Arr --> qBit[qBittorrent]
+  qBit -. VPN mode .-> Gluetun
+  qBit --> Torrents["/data/torrents"]
+  Torrents -->|hardlink| Media["/data/media"]
+  Media --> Jellyfin
+  Bazarr --> Media
+  Decluttarr -. queue hygiene .-> qBit
+  Maintainerr -. library rules .-> Jellyfin
 ```
+
+Diagram style: [Documentation style guide — §7](../00-doc-style.md#7-diagram-style-line).
 
 1. **Request** something in Seerr (or add it in Radarr/Sonarr).
 2. **Search** goes through Prowlarr. Cloudflare-protected indexers (for example 1337x) need the **Byparr** proxy in Prowlarr — see [First-run setup](05-first-run.md#1-prowlarr--byparr).
-3. **Download** lands in `/data/torrents/...` via qBittorrent.
+3. **Download** lands in `/data/torrents/...` via qBittorrent (Direct, or through Gluetun in VPN mode).
 4. **Import** creates a **hardlink** into `/data/media/...` (same file, second name — almost no extra disk).
 5. **Stream** from Jellyfin; Bazarr can fetch subtitles.
 6. **Hygiene** tools keep queues and libraries from rotting.
@@ -44,24 +48,57 @@ For how every app connects (Prowlarr, Seerr, Bazarr, Maintainerr, etc.), see [Cr
 
 All download and library apps must see the **same parent folder** inside the container (`/data`). If torrents and media are separate Docker mounts, hardlinks fail and *arr falls back to a full **copy** (slow, doubles disk while seeding).
 
-```text
-Host ${DATA_DIR}/          →  Container /data/
-├── torrents/
-│   ├── incomplete/
-│   ├── movies/
-│   └── tv/
-└── media/
-    ├── movies/
-    └── tv/
+```mermaid
+flowchart LR
+  Host["Host DATA_DIR/"] --- Cont["Container /data/"]
+
+  subgraph torrents [torrents/]
+    direction TB
+    Inc[incomplete/]
+    TMov[movies/]
+    TTv[tv/]
+  end
+
+  subgraph media [media/]
+    direction TB
+    MMov[movies/]
+    MTv[tv/]
+  end
+
+  Cont --> torrents
+  Cont --> media
+  torrents -->|hardlink| media
 ```
 
-Config databases live separately under `${CONFIG_DIR}` on a **local SSD/NVMe** (not NFS/SMB).
-
-> Screenshot placeholder: `docs/images/shared/data-layout.png`
+Keep torrents + media on **one filesystem**. Config databases live separately under `${CONFIG_DIR}` on a **local SSD/NVMe** (not NFS/SMB).
 
 ## VPN mode vs Direct mode
 
 Pick with **`FLIXBOX_MODE`** (`direct` or `vpn`). That is the only Compose switch. Keep **`VPN_ENABLED`** aligned (`false` / `true`) as a label — Compose does not read it. Modes are exclusive (no Direct + Gluetun for qBit). Details: [VPN and Direct](07-vpn-and-direct.md).
+
+```mermaid
+flowchart LR
+  subgraph direct [Direct]
+    direction TB
+    DApps[*arr / Seerr / Jellyfin / Homepage]
+    DqBit[qBittorrent on flixbox_net]
+    DApps --- DqBit
+  end
+
+  subgraph vpn [VPN]
+    direction TB
+    VApps[*arr / Seerr / Jellyfin / Homepage]
+    subgraph glue [Gluetun netns]
+      VqBit[qBittorrent]
+    end
+    VApps --- glue
+  end
+
+  direct --> Host["qbittorrent:8080"]
+  vpn --> Host
+```
+
+Both modes keep the download client at **`qbittorrent:8080`**. Only qBit enters Gluetun’s netns in VPN mode — *arr and Jellyfin stay on the normal Docker network.
 
 | Mode | When to use | What is protected |
 | --- | --- | --- |

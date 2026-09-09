@@ -25,7 +25,8 @@ When the stack is functional and EN user docs are stable enough:
 | User guide | `docs/es/user/` — **same filenames** as `docs/user/` (`01-overview.md`, …) |
 | User guide index | `docs/es/user/INDEX.md` |
 | UI screenshots | `docs/images/es/` (same basenames as `docs/images/en/`) |
-| Shared diagrams | `docs/images/shared/` (one set, linked from both languages) |
+| Shared UI assets | `docs/images/shared/` (logo, CLI GIF — language-neutral) |
+| Concept diagrams | Mermaid in EN/ES markdown ([00-doc-style §7](../00-doc-style.md#7-diagram-style-line)) |
 
 Do **not** move English to `docs/user/en/` later. Keeping `docs/user/` as EN avoids churn.
 
@@ -59,7 +60,8 @@ Do **not** move English to `docs/user/en/` later. Keeping `docs/user/` as EN avo
 | User guide index | `docs/es/user/INDEX.md` | Tracks EN revision when useful |
 | Quick reference | `docs/es/user/REFERENCE.md` | **Currently the only translated user page besides INDEX** |
 | UI screenshots | `docs/images/es/` | Same basenames as `docs/images/en/` |
-| Shared diagrams | `docs/images/shared/` | Language-neutral; linked from both |
+| Shared UI assets | `docs/images/shared/` | Logo, CLI GIF — language-neutral |
+| Concept diagrams | Mermaid in markdown | Not raster under `shared/` |
 
 **Out of scope (English only until a future ADR)**
 

@@ -1,6 +1,6 @@
 # Scope
 
-**Status:** Working Draft — frozen for MVP implementation  
+**Status:** Implemented — MVP inventory frozen (expand only with explicit scope change)  
 **Related ADRs:** [0004](adr/0004-jellyfin-first.md), [0005](adr/0005-cli-bash-first.md), [0006](adr/0006-mvp-service-inventory.md), [0007](adr/0007-platform-support-tiers.md), [0008](adr/0008-maintenance-decluttarr-maintainerr.md), [0014](adr/0014-stable-qbit-download-hostname.md), [0015](adr/0015-access-profiles.md)
 
 ## In scope (MVP)

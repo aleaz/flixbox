@@ -2,7 +2,7 @@
 
 **Languages:** English is canonical. Spanish user docs are reserved under [`docs/es/`](es/README.md) ([ADR 0011](adr/0011-documentation-i18n.md)).
 
-**Status:** Working Draft.
+**Status:** Implemented (operator guide + MVP stack); engineering notes may still say Working Draft where unfinished.
 
 ## Operators (start here)
 
