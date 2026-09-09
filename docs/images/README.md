@@ -50,10 +50,18 @@ Complete in order. Check off in the PR that adds README/user-facing visuals.
 
 ### P0 — required for README hero
 
-- [x] **Logo for docs:** `shared/logo.png` (from Homepage templates)
+- [x] **Logo for docs:** `shared/logo.png` (from Homepage templates) — README embeds at ~110px
 - [x] **Homepage screenshot (wide):** `en/homepage-ops.png`
 - [x] **Homepage screenshot (tall crop):** `en/homepage-ops-v.png` — optional alternate for narrow embeds
-- [x] **CLI tape (~30s):** `shared/cli-quickstart.gif` (source: `shared/cli-quickstart.tape`)
+- [x] **CLI tape (~35–50s feel):** `shared/cli-quickstart.gif` (source: `shared/cli-quickstart.tape`)
+
+#### README narrative order (comms)
+
+1. Compact logo + name + tagline + badges  
+2. **How it works** (Ask → Download → Watch) — concept before UI chrome  
+3. Homepage screenshot (proof of destination)  
+4. CLI GIF (proof of path)  
+5. Why Flixbox → Quick start  
 
 #### VHS / tape script (cold start, Direct)
 
@@ -67,7 +75,11 @@ Visible in the GIF:
 4. `./bin/flixbox status`
 
 Re-render: `vhs docs/images/shared/cli-quickstart.tape`  
-(`PlaybackSpeed 3.0` compresses long `up` waits for GitHub.)
+Use `PlaybackSpeed` **~1.4** (not 3.0) so success lines stay readable; hold longer after Init/Stack started/status. Prefer cutting dead `up` wait over speeding the whole demo.
+
+If you only need to slow an existing render without re-running the stack:  
+`ffmpeg -i cli-quickstart.gif -filter_complex "setpts=FACTOR*PTS,split[a][b];[a]palettegen[p];[b][p]paletteuse" out.gif`  
+(e.g. factor `2.14` maps a 3.0× tape to ~1.4× feel).
 
 VPN demo is a separate optional take (not in this tape).
 

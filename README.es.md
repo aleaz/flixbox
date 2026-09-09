@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/shared/logo.png" alt="Flixbox" width="180">
+  <img src="docs/images/shared/logo.png" alt="Flixbox" width="110">
 </p>
 
 <h1 align="center">Flixbox</h1>
@@ -23,11 +23,33 @@
 
 ---
 
+## Cómo funciona
+
+**Alguien pide un título → se descarga → aparece en Jellyfin.**
+
+| | Etapa | Qué corre |
+| --- | --- | --- |
+| **1** | **Pedir** | Seerr → Radarr / Sonarr (+ Prowlarr) |
+| **2** | **Descargar** | qBittorrent — Direct, o vía Gluetun en modo VPN |
+| **3** | **Ver** | Hardlink a `/data/media` → Jellyfin |
+
+No hace falta Pi-hole ni reverse proxy para arrancar. Detalle: [How it works (EN)](docs/user/02-how-it-works.md).
+
+---
+
 <p align="center">
   <img src="docs/images/en/homepage-ops.png" alt="Dashboard Homepage Ops de Flixbox" width="920">
 </p>
 
-<p align="center"><em>Tu stack como consola de operaciones — no un montón de YAML.</em></p>
+<p align="center"><em>Tu stack como consola de operaciones — el pipeline de arriba, en una pantalla.</em></p>
+
+## De cero a corriendo
+
+<p align="center">
+  <img src="docs/images/shared/cli-quickstart.gif" alt="flixbox init, up y status desde cero" width="920">
+</p>
+
+Cold start en el CLI: copiar `.env`, `init`, `up`, `status`.
 
 ## ¿Por qué Flixbox?
 
@@ -37,24 +59,6 @@
 - **Cuatro comandos** — `init`, `up`, `configure`, `status` con `./bin/flixbox`
 - **Higiene sin sorpresas** — Decluttarr y Maintainerr con defaults conservadores
 - **Tiempo honesto** — ~15 minutos hasta el stack arriba; indexers de Prowlarr después (no es zero-touch)
-
-## En acción
-
-<p align="center">
-  <img src="docs/images/shared/cli-quickstart.gif" alt="flixbox init, up y status desde cero" width="920">
-</p>
-
-Cold start en el CLI: copiar `.env`, `init`, `up`, `status`.
-
-## Cómo funciona
-
-**Alguien pide un título → se descarga → aparece en Jellyfin.**
-
-1. **Pedir** — Seerr → Radarr / Sonarr (+ Prowlarr)
-2. **Descargar** — qBittorrent (Direct, o vía Gluetun en modo VPN)
-3. **Ver** — hardlink a la biblioteca → Jellyfin
-
-No hace falta Pi-hole ni reverse proxy para arrancar. Detalle: [How it works (EN)](docs/user/02-how-it-works.md).
 
 ## Inicio rápido
 

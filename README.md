@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/shared/logo.png" alt="Flixbox" width="180">
+  <img src="docs/images/shared/logo.png" alt="Flixbox" width="110">
 </p>
 
 <h1 align="center">Flixbox</h1>
@@ -23,11 +23,33 @@
 
 ---
 
+## How it works
+
+**Someone requests a title → it downloads → it appears in Jellyfin.**
+
+| | Stage | What runs |
+| --- | --- | --- |
+| **1** | **Ask** | Seerr → Radarr / Sonarr (+ Prowlarr) |
+| **2** | **Download** | qBittorrent — Direct, or through Gluetun in VPN mode |
+| **3** | **Watch** | Hardlink into `/data/media` → Jellyfin |
+
+No Pi-hole or reverse proxy required to get started. Deep dive: [How it works](docs/user/02-how-it-works.md).
+
+---
+
 <p align="center">
   <img src="docs/images/en/homepage-ops.png" alt="Flixbox Homepage Ops dashboard" width="920">
 </p>
 
-<p align="center"><em>Your stack as an ops console — not a pile of YAML.</em></p>
+<p align="center"><em>Your stack as an ops console — the pipeline above, on one screen.</em></p>
+
+## From zero to running
+
+<p align="center">
+  <img src="docs/images/shared/cli-quickstart.gif" alt="flixbox init, up, and status cold start" width="920">
+</p>
+
+Cold start on the CLI: copy `.env`, `init`, `up`, `status`.
 
 ## Why Flixbox?
 
@@ -37,24 +59,6 @@
 - **Four commands** — `init`, `up`, `configure`, `status` via `./bin/flixbox`
 - **Hygiene without surprises** — Decluttarr and Maintainerr with conservative defaults
 - **Honest timing** — ~15 minutes to a running stack; add Prowlarr indexers after (not zero-touch)
-
-## See it in action
-
-<p align="center">
-  <img src="docs/images/shared/cli-quickstart.gif" alt="flixbox init, up, and status cold start" width="920">
-</p>
-
-Cold start on the CLI: copy `.env`, `init`, `up`, `status`.
-
-## How it works
-
-**Someone requests a title → it downloads → it appears in Jellyfin.**
-
-1. **Ask** — Seerr → Radarr / Sonarr (+ Prowlarr)
-2. **Download** — qBittorrent (Direct, or through Gluetun in VPN mode)
-3. **Watch** — hardlink into the library → Jellyfin
-
-No Pi-hole or reverse proxy required to get started. Deep dive: [How it works](docs/user/02-how-it-works.md).
 
 ## Quick start
 
