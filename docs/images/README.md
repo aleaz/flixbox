@@ -69,7 +69,7 @@ Record from the **repo root** with host **`:8080` free** (default `QBITTORRENT_P
 
 Visible in the GIF:
 
-1. `rm -f .env` && `cp .env.example .env`
+1. `cp .env.example .env`
 2. `./bin/flixbox init --non-interactive`
 3. `./bin/flixbox up`
 4. `./bin/flixbox status`
@@ -77,9 +77,9 @@ Visible in the GIF:
 Re-render: `vhs docs/images/shared/cli-quickstart.tape`  
 Use `PlaybackSpeed` **~1.4** (not 3.0) so success lines stay readable; hold longer after Init/Stack started/status. Prefer cutting dead `up` wait over speeding the whole demo.
 
-If you only need to slow an existing render without re-running the stack:  
+If you only need to slow an existing **clean** render without re-running the stack:  
 `ffmpeg -i cli-quickstart.gif -filter_complex "setpts=FACTOR*PTS,split[a][b];[a]palettegen[p];[b][p]paletteuse" out.gif`  
-(e.g. factor `2.14` maps a 3.0× tape to ~1.4× feel).
+(e.g. factor `2.14` maps a 3.0× tape to ~1.4× feel). Do **not** ffmpeg-slow a GIF that still contains lab helpers — re-record instead.
 
 VPN demo is a separate optional take (not in this tape).
 
