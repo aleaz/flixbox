@@ -49,7 +49,7 @@ No hace falta Pi-hole ni reverse proxy para arrancar. Detalle: [How it works (EN
   <img src="docs/images/shared/cli-quickstart.gif" alt="flixbox init, up y status desde cero" width="920">
 </p>
 
-Cold start en el CLI: `cp .env.example .env`, `init`, `up`, `status` — después `configure`.
+Cold start en el CLI: `cp .env.example .env`, `init`, `up`, `status`, luego `configure` cablea las apps.
 
 ## ¿Por qué Flixbox?
 

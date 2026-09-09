@@ -73,6 +73,9 @@ Visible in the GIF:
 2. `./bin/flixbox init --non-interactive`
 3. `./bin/flixbox up`
 4. `./bin/flixbox status`
+5. `./bin/flixbox configure` (automatic app wiring; indexers stay manual)
+
+Lab-only: if a leftover `.env` must be removed before `cp`, do it under `Hide` and **`clear` before `Show`** so `rm` never appears in scrollback.
 
 Re-render: `vhs docs/images/shared/cli-quickstart.tape`  
 Use `PlaybackSpeed` **~1.4** (not 3.0) so success lines stay readable; hold longer after Init/Stack started/status. Prefer cutting dead `up` wait over speeding the whole demo.
