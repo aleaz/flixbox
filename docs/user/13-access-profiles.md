@@ -65,6 +65,19 @@ With `FLIXBOX_ACCESS_PROFILE=shared`, `init` generates **`FLIXBOX_ARR_UI_USER`**
 | qBittorrent WebUI | `127.0.0.1` only (BitTorrent listen port stays published) |
 | Jellyfin, Seerr, Homepage | Still on LAN (household consumers) |
 
+### Homepage links from phones / TVs
+
+Templates default to `href: http://localhost:…`, which only works on the Docker host.
+
+1. Set **`FLIXBOX_PUBLIC_HOST`** to this machine’s LAN IP or DNS (no `http://`, no port), e.g. `192.168.1.50`.
+2. Run `./bin/flixbox reload` (or `up` / `configure`). Flixbox then:
+   - Appends `192.168.1.50:3000` to **`HOMEPAGE_ALLOWED_HOSTS`** if missing (Homepage Host validation)
+   - Sets empty **`JELLYFIN_PUBLISHED_URL`** to `http://192.168.1.50:8096` (stream advertisement)
+   - Pins Homepage Jellyfin/Seerr hrefs to that host (re-applies if you change the IP/DNS)
+3. You may still edit `HOMEPAGE_ALLOWED_HOSTS` / `JELLYFIN_PUBLISHED_URL` by hand (e.g. Caddy HTTPS URL) — non-empty Published URL is left alone.
+
+Under **`shared`**, admin cards (Radarr/Sonarr/qBit/…) keep Docker status; **href is `http://127.0.0.1:<port>`** so a browser **on the Docker host** can click through and use Forms. From a phone on Wi‑Fi those links hit the phone’s own loopback (fail) — admin ports are not published on the LAN. Apply Forms with `credentials set arr-ui`.
+
 ### qBittorrent (all profiles)
 
 | From | WebUI password |
@@ -88,7 +101,7 @@ Flixbox MVP assumes **one trusted operator** on the Docker host:
 | --- | --- | --- |
 | Docker socket / `docker inspect` | Env secrets (API keys, passwords) visible | Limit host access; treat `config/` backups like `.env` |
 | `trusted` profile + `0.0.0.0` bind | *arr admin UIs open on LAN without login | Use `shared` on guest Wi‑Fi; `./bin/flixbox up` warns on `trusted` + all interfaces |
-| Homepage | No authentication | Internal dashboard only — do not expose to WAN. Under **`shared`**, Flixbox **removes** *arr/qBit/Bazarr/Maintainerr/Byparr admin widget blocks from Homepage (LAN-reachable) and does not inject their secrets; Jellyfin/Seerr widgets may still sync. Sync runs on `init`/`up`/`reload`/`configure`. |
+| Homepage | No authentication | Internal dashboard only — do not expose to WAN. Under **`shared`**, Flixbox **removes** *arr/qBit/Bazarr/Maintainerr/Byparr admin widget blocks, points those cards at `http://127.0.0.1:<port>` (host Forms only), and does not inject their secrets; Jellyfin/Seerr widgets may still sync. Sync runs on `init`/`up`/`reload`/`configure`. |
 | Jellyfin / Seerr | Household apps on LAN | Per-user accounts; do not share `FLIXBOX_ADMIN_PASSWORD` |
 
 See [ADR 0018](../adr/0018-runtime-secrets-and-lan-trust.md).

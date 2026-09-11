@@ -69,6 +69,7 @@ Flixbox targets home LAN Docker installs. ADR 0005 defaulted *arr to `Authentica
 - Related: [ADR 0020](0020-operator-credentials-cli.md) — operator credentials CLI.
 - IPv6 global clients on LAN may still see *arr login prompts even in `trusted` (Servarr limitation).
 - In **`shared`**, open admin UIs on the host (`http://127.0.0.1:…`) or via SSH tunnel — not from a phone on Wi‑Fi unless you tunnel.
+- **LAN Homepage / Jellyfin URLs:** set `FLIXBOX_PUBLIC_HOST` (LAN IP or DNS). On `up` / `reload` / `configure`, Flixbox appends `host:${HOMEPAGE_PORT}` to `HOMEPAGE_ALLOWED_HOSTS` when missing, sets empty `JELLYFIN_PUBLISHED_URL` to `http://host:${JELLYFIN_PORT}`, and `homepage-sync` pins Jellyfin/Seerr (and under `trusted`, admin) card hrefs to that host. Under `shared`, admin card hrefs use `http://127.0.0.1:<port>` (operator click-through + Forms on the host; not LAN-reachable).
 
 ## Related
 

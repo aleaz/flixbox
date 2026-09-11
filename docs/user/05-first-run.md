@@ -194,6 +194,8 @@ If Jellyfin or Seerr automation fails (version quirks), finish the UI wizard onc
 | Movies | `/data/media/movies` |
 | TV | `/data/media/tv` |
 
+**Playback tip:** `./bin/flixbox configure` clears a lone Jellyfin bind of `::` (IPv6 any) so stream URLs are not stuck on `::1`. Leave **Dashboard → Networking → Bind to local network address** empty if you edit it by hand. That setting is not a firewall; Compose already publishes Jellyfin on `:8096` for household use. See [Troubleshooting](10-troubleshooting.md).
+
 ---
 
 ## 5. Recyclarr / Maintainerr / Homepage

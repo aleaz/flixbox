@@ -201,8 +201,9 @@ To re-enable slow with a custom floor, set `DECLUTTARR_REMOVE_SLOW=True` (Declut
 
 | Variable | Default | Notes |
 | --- | --- | --- |
-| `HOMEPAGE_ALLOWED_HOSTS` | `localhost:3000,127.0.0.1:3000` | Add `host:port` when accessing Homepage by LAN IP or DNS. |
-| `JELLYFIN_PUBLISHED_URL` | (empty) | Public URL for Jellyfin when behind Caddy/reverse proxy (e.g. `http://jellyfin.local` or `https://jellyfin.example.com`). |
+| `FLIXBOX_PUBLIC_HOST` | (empty) | LAN IP or DNS (no scheme/port). On `up`/`reload`/`configure`: pins Homepage Jellyfin/Seerr hrefs; appends `host:HOMEPAGE_PORT` to `HOMEPAGE_ALLOWED_HOSTS`; fills empty `JELLYFIN_PUBLISHED_URL`. See [Access profiles — Homepage](13-access-profiles.md#homepage-links-from-phones--tvs). |
+| `HOMEPAGE_ALLOWED_HOSTS` | `localhost:3000,127.0.0.1:3000` | Homepage Host allowlist. Auto-extends from `FLIXBOX_PUBLIC_HOST` when set. You can still add extra hosts (Caddy DNS, etc.). |
+| `JELLYFIN_PUBLISHED_URL` | (empty) | Jellyfin Published Server URL for streams. Auto-set from `FLIXBOX_PUBLIC_HOST` when empty; set manually for Caddy HTTPS — [Troubleshooting — Jellyfin media source](10-troubleshooting.md). |
 | `JELLYFIN_DOMAIN` | `jellyfin.local` | Custom domain/host for Caddy reverse proxy (profile `proxy`). |
 | `SEERR_DOMAIN` | `requests.local` | Custom domain/host for Seerr in Caddy (profile `proxy`). |
 | `HOMEPAGE_DOMAIN` | `home.local` | Custom domain/host for Homepage in Caddy (profile `proxy`). |

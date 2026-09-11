@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-Sincroniza quirúrgicamente los puertos de acceso externo, credenciales de widgets
-y el estado de protección de red (VPN vs Directo) en Homepage (services.yaml)
-con las variables de entorno actuales de Flixbox (.env).
+Sincroniza quirúrgicamente los puertos de acceso externo, credenciales de widgets,
+hrefs LAN (`FLIXBOX_PUBLIC_HOST`) y el estado de protección de red (VPN vs Directo)
+en Homepage (services.yaml) con las variables de entorno actuales de Flixbox (.env).
 
 Preserva el 100% de la estructura, comentarios, widgets y servicios personalizados.
+
+Under shared: strip admin widgets; point admin hrefs at access-profiles docs (host-only).
 """
 
 import os
@@ -86,6 +88,87 @@ VPN_CARD = """    - VPN Tunnel:
           version: 2
 """
 
+# Under shared, admin UIs bind 127.0.0.1 — LAN clients cannot reach them.
+# Point cards at http://127.0.0.1:<port> so operators on the Docker host get a
+# working click + Forms login; phones on Wi‑Fi hit their own loopback (fails).
+SHARED_ADMIN_DESCRIPTION = "Host-only in shared (127.0.0.1 + Forms / SSH)"
+
+# Household consumers stay LAN-published in every profile (ADR 0015).
+CONSUMER_HREF_SERVICES = {"Jellyfin", "Seerr"}
+
+
+def _normalize_public_host(raw: str | None) -> str:
+    """Return host only (no scheme/path/port), or empty."""
+    host = (raw or "").strip()
+    if not host:
+        return ""
+    host = re.sub(r"^https?://", "", host, flags=re.IGNORECASE)
+    host = host.split("/")[0].strip()
+    if ":" in host and not host.startswith("["):
+        # drop :port (keep IPv6 in brackets untouched)
+        host = host.rsplit(":", 1)[0]
+    return host.strip()
+
+
+def _rewrite_href_line(
+    line: str,
+    *,
+    service: str | None,
+    shared_profile: bool,
+    public_host: str,
+    admin_services: set[str],
+) -> str:
+    """Adjust Homepage service href for LAN clients / shared admin policy."""
+    href_match = re.match(
+        r"^(\s*href:\s*)(https?://)([^/\s:]+)(:\d+)?(\S*)(\s*)$",
+        line.rstrip("\r\n"),
+    )
+    if not href_match or not service:
+        return line
+
+    prefix, scheme, host, port, rest, _ = href_match.groups()
+    nl = "\r\n" if line.endswith("\r\n") else ("\n" if line.endswith("\n") else "")
+
+    if shared_profile and service in admin_services:
+        env_var = CORE_PORT_ENV_MAP.get(service)
+        port = ""
+        if env_var:
+            port = (os.environ.get(env_var) or "").strip()
+        port = port or DEFAULT_PORTS.get(service, "")
+        if port:
+            return f"{prefix}http://127.0.0.1:{port}{nl}"
+        return f"{prefix}#{nl}"
+
+    # When PUBLIC_HOST is set, always pin managed services to it (idempotent on
+    # host changes). Preserve unrelated custom apps / docs URLs (path in rest).
+    rewrite = False
+    if public_host and not (rest or "").startswith("/"):
+        if service in CONSUMER_HREF_SERVICES:
+            rewrite = host != public_host
+        elif not shared_profile and service in CORE_PORT_ENV_MAP:
+            rewrite = host != public_host
+
+    if rewrite:
+        port = port or ""
+        return f"{prefix}{scheme}{public_host}{port}{rest}{nl}"
+    return line
+
+
+def _rewrite_description_line(
+    line: str,
+    *,
+    service: str | None,
+    shared_profile: bool,
+    admin_services: set[str],
+) -> str:
+    if not (shared_profile and service in admin_services):
+        return line
+    m = re.match(r"^(\s*description:\s*).*$", line.rstrip("\r\n"))
+    if not m:
+        return line
+    nl = "\r\n" if line.endswith("\r\n") else ("\n" if line.endswith("\n") else "")
+    return f"{m.group(1)}{SHARED_ADMIN_DESCRIPTION}{nl}"
+
 
 def sync_vpn_mode_card(content: str) -> str:
     mode = os.environ.get("FLIXBOX_MODE", "direct").strip().lower()
@@ -166,6 +249,7 @@ def sync_homepage_services(filepath: Path) -> bool:
     bazarr_key = None if shared_profile else os.environ.get("BAZARR_API_KEY")
     jellyfin_key = os.environ.get("JELLYFIN_API_KEY")
     seerr_key = os.environ.get("SEERR_API_KEY")
+    public_host = _normalize_public_host(os.environ.get("FLIXBOX_PUBLIC_HOST"))
 
     admin_widget_services = {
         "qBittorrent",
@@ -186,7 +270,8 @@ def sync_homepage_services(filepath: Path) -> bool:
 
 
     svc_regex = re.compile(r"^(\s*-\s+)([A-Za-z0-9_-]+):")
-    href_regex = re.compile(r"^(\s*href:\s*https?://[^:/]+)(?::\d+)?(.*)$")
+    # Port sync for bare host[:port] hrefs only — skip docs URLs that include a path.
+    href_regex = re.compile(r"^(\s*href:\s*https?://[^/:]+)(:\d+)?(/[^:\s]*)?(\s*)$")
     item_regex = re.compile(r"^\s*-\s+")
     widget_regex = re.compile(r"^(\s*)widget:\s*$")
     key_regex = re.compile(r"^(\s*key:\s*).*$")
@@ -197,8 +282,19 @@ def sync_homepage_services(filepath: Path) -> bool:
     step1_lines = []
     current_service = None
     skipping_widget = False
+    widget_indent = 0
 
     for line in lines:
+        # Indent-based skip: nested list items inside widgets (e.g. highlight
+        # "- level: warn") match svc_regex and must NOT end the skip early.
+        if skipping_widget:
+            if not line.strip():
+                continue
+            indent = len(line) - len(line.lstrip(" "))
+            if indent > widget_indent:
+                continue
+            skipping_widget = False
+
         m_svc = svc_regex.match(line)
         if m_svc:
             current_service = m_svc.group(2)
@@ -217,18 +313,14 @@ def sync_homepage_services(filepath: Path) -> bool:
             and widget_regex.match(line)
         ):
             skipping_widget = True
+            widget_indent = len(line) - len(line.lstrip(" "))
             continue
 
         if current_service in optional_keys and widget_regex.match(line):
             if not optional_keys[current_service]:
                 skipping_widget = True
+                widget_indent = len(line) - len(line.lstrip(" "))
                 continue
-
-        if skipping_widget:
-            if line.startswith("        ") or line.startswith("          "):
-                continue
-            else:
-                skipping_widget = False
 
         step1_lines.append(line)
 
@@ -276,14 +368,32 @@ def sync_homepage_services(filepath: Path) -> bool:
             current_service = None
             in_widget = False
 
-        # Actualización de puerto href
+        # LAN / shared href policy (before port sync)
+        if current_service and re.match(r"^\s*href:\s*", line):
+            line = _rewrite_href_line(
+                line,
+                service=current_service,
+                shared_profile=shared_profile,
+                public_host=public_host,
+                admin_services=admin_widget_services,
+            )
+
+        if current_service and re.match(r"^\s*description:\s*", line):
+            line = _rewrite_description_line(
+                line,
+                service=current_service,
+                shared_profile=shared_profile,
+                admin_services=admin_widget_services,
+            )
+
+        # Port sync for host[:port] hrefs only (skip docs links with a path)
         if current_service and current_service in CORE_PORT_ENV_MAP:
-            m_href = href_regex.match(line)
-            if m_href:
+            m_href = href_regex.match(line.rstrip("\r\n"))
+            if m_href and not (m_href.group(3) or "").startswith("/"):
                 env_var = CORE_PORT_ENV_MAP[current_service]
                 target_port = os.environ.get(env_var) or DEFAULT_PORTS.get(current_service)
-                new_line = f"{m_href.group(1)}:{target_port}{m_href.group(2)}"
-                if not line.endswith("\n") and line.endswith("\r\n"):
+                new_line = f"{m_href.group(1)}:{target_port}"
+                if line.endswith("\r\n"):
                     new_line += "\r\n"
                 elif line.endswith("\n"):
                     new_line += "\n"

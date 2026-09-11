@@ -232,7 +232,8 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-76 | Compose HTTP healthchecks | Prowlarr/Radarr/Sonarr/Bazarr/Jellyfin; ADR 0017 |
 | C-77 | Bazarr start order | `depends_on` Sonarr/Radarr `service_healthy` |
 | C-78 | Runtime secrets doc | ADR 0018; threat model in access profiles + configuration |
-| C-79 | json_query migration | no `json_extract` in `scripts/configure/`; named handlers in `json-query.py` |
+| C-79 | json_query migration + Jellyfin `::` bind remediation | no `json_extract` in `scripts/configure/`; named handlers in `json-query.py`; `jellyfin.sh` calls `jellyfin_remediate_network_bind` + `jellyfin-network-bind.py` present |
+| C-79b | jellyfin-network-bind unit | clears lone `::` only; leaves explicit IPv4 binds |
 | C-81 | json_extract removed | no `json_extract` in configure-helpers |
 | C-82 | CLI output fallbacks | `cli-output.sh` sourced by configure-entry for up/reload |
 | C-83 | Port preflight UX | per-service port hints; Jellyfin/Seerr probe on 0.0.0.0 |

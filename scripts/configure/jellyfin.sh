@@ -1,4 +1,59 @@
 #!/usr/bin/env bash
+# Clear network.xml LocalNetworkAddresses when it is only "::" (IPv6 any).
+# That bind makes stream URLs use ::1 — playback fails on localhost and LAN.
+# Empty bind is auto-detect; Compose still publishes :8096 (not a firewall change).
+jellyfin_remediate_network_bind() {
+  local net_xml="${CONFIG_DIR}/jellyfin/network.xml"
+  local helper="${ROOT_DIR}/scripts/lib/jellyfin-network-bind.py"
+  local status
+
+  if [[ ! -f "$helper" ]]; then
+    warn "Jellyfin: missing jellyfin-network-bind.py — skip network bind check"
+    return 0
+  fi
+
+  if $DRY_RUN; then
+    status="$(python3 "$helper" "$net_xml" 2>/dev/null || echo missing)"
+    case "$status" in
+      clear) dry "Clear Jellyfin LocalNetworkAddresses (:: → empty) and restart" ;;
+      skip) dry "Jellyfin network bind already OK" ;;
+      missing) dry "Jellyfin network.xml not present yet (skip bind check)" ;;
+      *) dry "Jellyfin network bind check (${status})" ;;
+    esac
+    return 0
+  fi
+
+  status="$(python3 "$helper" "$net_xml" 2>/dev/null || echo missing)"
+  case "$status" in
+    skip)
+      skip "Jellyfin: network bind (LocalNetworkAddresses)"
+      return 0
+      ;;
+    missing)
+      skip "Jellyfin: network.xml not ready yet"
+      return 0
+      ;;
+    clear) ;;
+    *)
+      warn "Jellyfin: network bind check returned '${status}' — leave network.xml unchanged"
+      return 0
+      ;;
+  esac
+
+  if ! python3 "$helper" --apply "$net_xml"; then
+    warn "Jellyfin: could not clear LocalNetworkAddresses :: — fix Dashboard → Networking"
+    return 0
+  fi
+  ok "Jellyfin: cleared LocalNetworkAddresses :: (stream URL footgun)"
+
+  info "Restarting Jellyfin to apply network bind..."
+  docker restart flixbox-jellyfin >/dev/null 2>&1 || true
+  local base="http://127.0.0.1:${JELLYFIN_PORT}"
+  if ! CONFIGURE_SOFT_WAIT=1 configure_ensure_http "Jellyfin" "${base}/System/Info/Public"; then
+    warn "Jellyfin: API not ready after network bind restart — re-run ./bin/flixbox configure if needed"
+  fi
+}
+
 configure_jellyfin() {
   log "Configuring Jellyfin..."
 
@@ -9,8 +64,12 @@ configure_jellyfin() {
 
   if $DRY_RUN; then
     dry "Complete Jellyfin startup if needed; add movie/TV libraries; create API key"
+    jellyfin_remediate_network_bind
     return
   fi
+
+  # Run before auth-gated steps — no admin password required.
+  jellyfin_remediate_network_bind
 
   local base="http://127.0.0.1:${JELLYFIN_PORT}"
   if ! configure_ensure_http "Jellyfin" "${base}/System/Info/Public"; then

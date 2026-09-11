@@ -82,3 +82,73 @@ flixbox_access_profile_admin_services() {
     printf '%s\n' qbittorrent prowlarr byparr radarr sonarr bazarr maintainerr
   fi
 }
+
+# Strip scheme/path/port → host only. Keeps IPv6 (multiple colons) intact.
+flixbox_normalize_public_host() {
+  local host="${1:-}"
+  host="${host#"${host%%[![:space:]]*}"}"
+  host="${host%"${host##*[![:space:]]}"}"
+  [[ -n "$host" ]] || return 0
+  host="${host#http://}"
+  host="${host#https://}"
+  host="${host%%/*}"
+  # Drop trailing :port for hostname/IPv4 only (IPv6 has multiple colons).
+  if [[ "$host" != *:*:* && "$host" == *:* ]]; then
+    host="${host%:*}"
+  fi
+  printf '%s' "$host"
+}
+
+# When FLIXBOX_PUBLIC_HOST is set: ensure HOMEPAGE_ALLOWED_HOSTS includes host:port,
+# and set JELLYFIN_PUBLISHED_URL if empty. Idempotent. Sets:
+#   FLIXBOX_HOMEPAGE_ENV_CHANGED=1 / FLIXBOX_JELLYFIN_URL_ENV_CHANGED=1 when .env written.
+flixbox_sync_public_host_env() {
+  local env_file="${1:-}"
+  local host port entry current jf_port jf_url new_allow
+  FLIXBOX_HOMEPAGE_ENV_CHANGED=0
+  FLIXBOX_JELLYFIN_URL_ENV_CHANGED=0
+  export FLIXBOX_HOMEPAGE_ENV_CHANGED FLIXBOX_JELLYFIN_URL_ENV_CHANGED
+  [[ -n "$env_file" && -f "$env_file" ]] || return 0
+
+  host="$(flixbox_normalize_public_host "$(flixbox_env_file_get "$env_file" FLIXBOX_PUBLIC_HOST)")"
+  if [[ -z "$host" ]]; then
+    host="$(flixbox_normalize_public_host "${FLIXBOX_PUBLIC_HOST:-}")"
+  fi
+  [[ -n "$host" ]] || return 0
+
+  # Persist normalized host if .env had scheme/port noise
+  if [[ "$(flixbox_env_file_get "$env_file" FLIXBOX_PUBLIC_HOST)" != "$host" ]]; then
+    flixbox_env_file_set "$env_file" FLIXBOX_PUBLIC_HOST "$host"
+  fi
+  export FLIXBOX_PUBLIC_HOST="$host"
+
+  port="$(flixbox_env_file_get "$env_file" HOMEPAGE_PORT)"
+  port="${port:-${HOMEPAGE_PORT:-3000}}"
+  entry="${host}:${port}"
+  current="$(flixbox_env_file_get "$env_file" HOMEPAGE_ALLOWED_HOSTS)"
+  if [[ -z "$current" ]]; then
+    current="localhost:3000,127.0.0.1:3000"
+  fi
+  # Match entry as a comma-separated token (ignore spaces)
+  if ! printf '%s' ",${current}," | tr -d '[:space:]' | grep -Fq ",${entry},"; then
+    new_allow="${current},${entry}"
+    flixbox_env_file_set "$env_file" HOMEPAGE_ALLOWED_HOSTS "$new_allow"
+    export HOMEPAGE_ALLOWED_HOSTS="$new_allow"
+    FLIXBOX_HOMEPAGE_ENV_CHANGED=1
+    export FLIXBOX_HOMEPAGE_ENV_CHANGED
+  else
+    export HOMEPAGE_ALLOWED_HOSTS="$current"
+  fi
+
+  jf_url="$(flixbox_env_file_get "$env_file" JELLYFIN_PUBLISHED_URL)"
+  if [[ -z "$jf_url" ]]; then
+    jf_port="$(flixbox_env_file_get "$env_file" JELLYFIN_PORT)"
+    jf_port="${jf_port:-${JELLYFIN_PORT:-8096}}"
+    flixbox_env_file_set_if_empty "$env_file" JELLYFIN_PUBLISHED_URL "http://${host}:${jf_port}"
+    if [[ -n "$(flixbox_env_file_get "$env_file" JELLYFIN_PUBLISHED_URL)" ]]; then
+      export JELLYFIN_PUBLISHED_URL="http://${host}:${jf_port}"
+      FLIXBOX_JELLYFIN_URL_ENV_CHANGED=1
+      export FLIXBOX_JELLYFIN_URL_ENV_CHANGED
+    fi
+  fi
+}

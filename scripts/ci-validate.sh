@@ -730,7 +730,46 @@ grep -q 'seerr-initialized' scripts/lib/json-query.py || \
   fail C-79 'json-query must include seerr-initialized handler'
 grep -q 'local key_json new_key=""' scripts/configure/jellyfin.sh || \
   fail C-79 'jellyfin must initialize new_key under set -u before empty-body API key fallback'
+grep -q 'jellyfin_remediate_network_bind' scripts/configure/jellyfin.sh || \
+  fail C-79 'jellyfin configure must remediate LocalNetworkAddresses :: bind'
+[[ -f scripts/lib/jellyfin-network-bind.py ]] || \
+  fail C-79 'missing scripts/lib/jellyfin-network-bind.py'
 pass C-79
+
+# --- C-79b: jellyfin-network-bind.py clears only lone :: ---
+_jf_bind_tmp="$(mktemp -d)"
+cat >"${_jf_bind_tmp}/network.xml" <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<NetworkConfiguration>
+  <LocalNetworkAddresses>
+    <string>::</string>
+  </LocalNetworkAddresses>
+</NetworkConfiguration>
+EOF
+_jf_status="$(python3 scripts/lib/jellyfin-network-bind.py "${_jf_bind_tmp}/network.xml")"
+[[ "${_jf_status}" == "clear" ]] || { rm -rf "${_jf_bind_tmp}"; fail C-79b "expected clear, got ${_jf_status}"; }
+python3 scripts/lib/jellyfin-network-bind.py --apply "${_jf_bind_tmp}/network.xml" >/dev/null
+_jf_status="$(python3 scripts/lib/jellyfin-network-bind.py "${_jf_bind_tmp}/network.xml")"
+[[ "${_jf_status}" == "skip" ]] || { rm -rf "${_jf_bind_tmp}"; fail C-79b "expected skip after apply, got ${_jf_status}"; }
+if grep -q '<string>::</string>' "${_jf_bind_tmp}/network.xml"; then
+  rm -rf "${_jf_bind_tmp}"
+  fail C-79b ':: string must be removed after --apply'
+fi
+cat >"${_jf_bind_tmp}/keep.xml" <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<NetworkConfiguration>
+  <LocalNetworkAddresses>
+    <string>192.168.1.10</string>
+  </LocalNetworkAddresses>
+</NetworkConfiguration>
+EOF
+python3 scripts/lib/jellyfin-network-bind.py --apply "${_jf_bind_tmp}/keep.xml" >/dev/null
+grep -q '<string>192.168.1.10</string>' "${_jf_bind_tmp}/keep.xml" || {
+  rm -rf "${_jf_bind_tmp}"
+  fail C-79b 'must not clear non-:: LocalNetworkAddresses'
+}
+rm -rf "${_jf_bind_tmp}"
+pass C-79b
 
 # --- C-81: remove deprecated json_extract from configure helpers ---
 if grep -q '^json_extract()' scripts/lib/configure-helpers.sh 2>/dev/null; then
@@ -843,8 +882,54 @@ grep -q 'fields: \["itemsHandled", "reclaimable"\]' templates/homepage/services.
 if grep -qE '^\s+ping:\s*http' templates/homepage/services.yaml; then
   fail C-86 'HTTP health checks must use siteMonitor, not ping:'
 fi
-grep -q 'container: flixbox-gluetun' scripts/lib/homepage-sync.py || \
-  fail C-86 'VPN Tunnel card must bind flixbox-gluetun for Docker status'
+grep -q 'FLIXBOX_PUBLIC_HOST' .env.example || \
+  fail C-86 '.env.example must document FLIXBOX_PUBLIC_HOST'
+grep -q 'HOMEPAGE_ALLOWED_HOSTS=localhost:3000,127.0.0.1:3000,192.168.1.50:3000' .env.example || \
+  fail C-86 '.env.example must show commented LAN HOMEPAGE_ALLOWED_HOSTS example'
+grep -q 'FLIXBOX_PUBLIC_HOST' docs/user/13-access-profiles.md || \
+  fail C-86 'access-profiles must document FLIXBOX_PUBLIC_HOST for Homepage LAN links'
+grep -q 'FLIXBOX_PUBLIC_HOST' scripts/lib/homepage-sync.py || \
+  fail C-86 'homepage-sync must honor FLIXBOX_PUBLIC_HOST'
+grep -q 'SHARED_ADMIN_DESCRIPTION' scripts/lib/homepage-sync.py || \
+  fail C-86 'homepage-sync must rewrite shared admin descriptions'
+grep -q '127.0.0.1' scripts/lib/homepage-sync.py || \
+  fail C-86 'homepage-sync must point shared admin hrefs at 127.0.0.1'
+grep -q 'flixbox_sync_public_host_env' scripts/lib/access-profile.sh || \
+  fail C-86 'access-profile must sync HOMEPAGE_ALLOWED_HOSTS from FLIXBOX_PUBLIC_HOST'
+grep -q 'flixbox_sync_public_host_env' scripts/lib/configure-entry.sh || \
+  fail C-86 'configure-entry must call flixbox_sync_public_host_env'
+grep -q 'FLIXBOX_PUBLIC_HOST' bin/flixbox || \
+  fail C-86 'bin/flixbox must warn when FLIXBOX_PUBLIC_HOST is unset'
+grep -q 'FLIXBOX_PUBLIC_HOST' docs/adr/0015-access-profiles.md || \
+  fail C-86 'ADR 0015 must document FLIXBOX_PUBLIC_HOST LAN URL sync'
+# Unit: public-host env sync appends allowlist + fills empty Jellyfin URL
+_ph_tmp="$(mktemp -d)"
+cat >"${_ph_tmp}/.env" <<'EOF'
+FLIXBOX_PUBLIC_HOST=http://192.168.1.50:9999
+HOMEPAGE_PORT=3000
+HOMEPAGE_ALLOWED_HOSTS=localhost:3000,127.0.0.1:3000
+JELLYFIN_PORT=8096
+JELLYFIN_PUBLISHED_URL=
+EOF
+# shellcheck disable=SC1091
+ROOT_DIR="$(pwd)" source scripts/lib/access-profile.sh
+flixbox_sync_public_host_env "${_ph_tmp}/.env"
+_ph_host="$(flixbox_env_file_get "${_ph_tmp}/.env" FLIXBOX_PUBLIC_HOST)"
+_ph_allow="$(flixbox_env_file_get "${_ph_tmp}/.env" HOMEPAGE_ALLOWED_HOSTS)"
+_ph_jf="$(flixbox_env_file_get "${_ph_tmp}/.env" JELLYFIN_PUBLISHED_URL)"
+[[ "${_ph_host}" == "192.168.1.50" ]] || { rm -rf "${_ph_tmp}"; fail C-86 "normalize PUBLIC_HOST got ${_ph_host}"; }
+[[ "${_ph_allow}" == *'192.168.1.50:3000'* ]] || { rm -rf "${_ph_tmp}"; fail C-86 "allowlist missing public host: ${_ph_allow}"; }
+[[ "${_ph_jf}" == "http://192.168.1.50:8096" ]] || { rm -rf "${_ph_tmp}"; fail C-86 "Published URL got ${_ph_jf}"; }
+# Idempotent second pass
+flixbox_sync_public_host_env "${_ph_tmp}/.env"
+[[ "${FLIXBOX_HOMEPAGE_ENV_CHANGED}" == "0" ]] || { rm -rf "${_ph_tmp}"; fail C-86 'second sync must not re-flag allowlist change'; }
+# Do not overwrite custom Published URL
+flixbox_env_file_set "${_ph_tmp}/.env" JELLYFIN_PUBLISHED_URL 'https://jellyfin.example.com'
+flixbox_sync_public_host_env "${_ph_tmp}/.env"
+_ph_jf="$(flixbox_env_file_get "${_ph_tmp}/.env" JELLYFIN_PUBLISHED_URL)"
+[[ "${_ph_jf}" == "https://jellyfin.example.com" ]] || { rm -rf "${_ph_tmp}"; fail C-86 'must preserve custom JELLYFIN_PUBLISHED_URL'; }
+rm -rf "${_ph_tmp}"
+
 grep -q 'bookmarks.yaml' bin/flixbox || \
   fail C-86 'copy_templates must install bookmarks.yaml'
 python3 - <<'PY' || fail C-86 'homepage-sync unit test failed'
@@ -860,6 +945,7 @@ sample = """---
 - Downloads:
     - qBittorrent:
         href: http://localhost:8080
+        description: Downloads
         widget:
           type: qbittorrent
           url: http://qbittorrent:8080
@@ -867,10 +953,33 @@ sample = """---
           password: password
     - Radarr:
         href: http://localhost:7878
+        description: Movies
+        siteMonitor: http://radarr:7878
         widget:
           type: radarr
           url: http://radarr:7878
           key: ""
+          fields: ["wanted", "queued"]
+          highlight:
+            wanted:
+              numeric:
+                - level: warn
+                  when: gte
+                  value: 10
+                - level: danger
+                  when: gte
+                  value: 25
+    - Byparr:
+        href: http://localhost:8191
+        description: Cloudflare bypass
+        siteMonitor: http://byparr:8191/health
+        widget:
+          type: customapi
+          url: http://byparr:8191/health
+          mappings:
+            - field: msg
+              label: Status
+              format: text
     - Custom App:
         href: http://localhost:8080
 """
@@ -884,6 +993,10 @@ try:
     env = {
         **os.environ,
         "FLIXBOX_ACCESS_PROFILE": "trusted",
+        "FLIXBOX_PUBLIC_HOST": "",
+        "JELLYFIN_API_KEY": "",
+        "SEERR_API_KEY": "",
+        "BAZARR_API_KEY": "",
         "QBITTORRENT_PORT": "9898",
         "QBITTORRENT_USERNAME": "testuser",
         "QBITTORRENT_PASSWORD": "testpassword",
@@ -910,6 +1023,7 @@ try:
     env_shared = {
         **env,
         "FLIXBOX_ACCESS_PROFILE": "shared",
+        "FLIXBOX_PUBLIC_HOST": "192.168.1.50",
         "QBITTORRENT_PASSWORD": "should-not-appear",
         "RADARR_API_KEY": "should-not-appear-radarr",
     }
@@ -924,11 +1038,53 @@ try:
     shared_content = Path(path).read_text()
     assert "should-not-appear" not in shared_content, "shared profile injected admin secrets"
     assert "password: password" not in shared_content, "shared profile left sample qBit password"
-    assert "href: http://localhost:9898" in shared_content, "shared profile must still sync ports"
-    # Admin widget blocks removed (qBit / Radarr); service hrefs remain
+    assert "href: http://192.168.1.50:8097" in shared_content, "shared must rewrite Jellyfin href to PUBLIC_HOST"
+    assert "href: http://192.168.1.50:5056" in shared_content, "shared + PUBLIC_HOST pins Seerr to PUBLIC_HOST"
+    assert "href: http://127.0.0.1:9898" in shared_content, "shared admin qBit href must be 127.0.0.1 + port"
+    assert "href: http://127.0.0.1:7878" in shared_content, "shared admin Radarr href must be 127.0.0.1"
+    assert "Host-only in shared" in shared_content, "shared admin descriptions must say host-only"
+    assert "href: http://localhost:9898" not in shared_content, "shared must not leave localhost admin hrefs"
+    assert "href: http://192.168.1.50:7878" not in shared_content, "shared must not publish admin hrefs on LAN IP"
     assert "type: qbittorrent" not in shared_content, "shared must remove qBit admin widget"
     assert "type: radarr" not in shared_content, "shared must remove Radarr admin widget"
+    assert "type: customapi" not in shared_content, "shared must remove Byparr admin widget"
+    assert "- level: warn" not in shared_content, "shared must not leave orphaned highlight YAML"
+    assert "- field: msg" not in shared_content, "shared must not leave orphaned mappings YAML"
+    assert "siteMonitor: http://radarr:7878" in shared_content, "shared must keep Radarr siteMonitor"
     assert "qBittorrent:" in shared_content and "Radarr:" in shared_content
+    import yaml
+    yaml.safe_load(shared_content)  # must remain valid YAML after admin widget purge
+
+    # trusted + PUBLIC_HOST: rewrite consumer and admin localhost hrefs
+    Path(path).write_text(sample)
+    env_pub = {**env, "FLIXBOX_PUBLIC_HOST": "flixbox.lan"}
+    res_p = subprocess.run(
+        ["python3", "scripts/lib/homepage-sync.py", path],
+        env=env_pub,
+        capture_output=True,
+        text=True,
+    )
+    if res_p.returncode != 0:
+        raise AssertionError(f"homepage-sync PUBLIC_HOST exited {res_p.returncode}")
+    pub_content = Path(path).read_text()
+    assert "href: http://flixbox.lan:8097" in pub_content, "trusted PUBLIC_HOST must rewrite Jellyfin"
+    assert "href: http://flixbox.lan:9898" in pub_content, "trusted PUBLIC_HOST must rewrite qBit"
+    assert "href: http://flixbox.lan:5056" in pub_content, "trusted PUBLIC_HOST pins Seerr host"
+
+    # PUBLIC_HOST change must update already-rewritten consumer hrefs (no stale IP)
+    Path(path).write_text(pub_content)
+    env_pub2 = {**env, "FLIXBOX_PUBLIC_HOST": "192.168.9.9"}
+    res_p2 = subprocess.run(
+        ["python3", "scripts/lib/homepage-sync.py", path],
+        env=env_pub2,
+        capture_output=True,
+        text=True,
+    )
+    if res_p2.returncode != 0:
+        raise AssertionError(f"homepage-sync PUBLIC_HOST rotate exited {res_p2.returncode}")
+    pub2 = Path(path).read_text()
+    assert "href: http://192.168.9.9:8097" in pub2, "PUBLIC_HOST rotate must update Jellyfin"
+    assert "flixbox.lan" not in pub2, "old PUBLIC_HOST must not linger in managed hrefs"
 
     # widgets.yaml: rewrite mode + profile chips separately; keep brand + slogan
     with tempfile.TemporaryDirectory() as td:

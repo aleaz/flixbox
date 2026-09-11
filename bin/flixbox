@@ -365,6 +365,9 @@ cmd_up() {
   if [[ "$(flixbox_access_profile)" == "trusted" && "${FLIXBOX_ADMIN_BIND_IP:-0.0.0.0}" == "0.0.0.0" ]]; then
     warn "trusted profile: admin UIs bind on all interfaces — use shared profile on untrusted LANs (docs/user/13-access-profiles.md)."
   fi
+  if [[ -z "${FLIXBOX_PUBLIC_HOST:-}" ]]; then
+    warn "Set FLIXBOX_PUBLIC_HOST (LAN IP/DNS) so Homepage Jellyfin/Seerr links work from phones/TVs — HOMEPAGE_ALLOWED_HOSTS and empty JELLYFIN_PUBLISHED_URL sync automatically (docs/user/13-access-profiles.md)."
+  fi
   warn_mode_vpn_mismatch || true
   warn_decluttarr_vpn_slow || true
   # shellcheck disable=SC1091
@@ -466,6 +469,9 @@ cmd_reload() {
   parse_profiles profiles "${args[@]+"${args[@]}"}"
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
     die "Directories missing. Run ./bin/flixbox init first."
+  if [[ -z "${FLIXBOX_PUBLIC_HOST:-}" ]]; then
+    warn "Set FLIXBOX_PUBLIC_HOST (LAN IP/DNS) so Homepage Jellyfin/Seerr links work from phones/TVs — HOMEPAGE_ALLOWED_HOSTS and empty JELLYFIN_PUBLISHED_URL sync automatically (docs/user/13-access-profiles.md)."
+  fi
   warn_mode_vpn_mismatch || true
   warn_decluttarr_vpn_slow || true
   # shellcheck disable=SC1091

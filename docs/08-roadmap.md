@@ -13,28 +13,28 @@ Versions below are planning labels, not semver promises until the first public t
 - [x] Bash CLI minimum commands (`bin/flixbox`)
 - [x] Hygiene/Recyclarr/Homepage/Caddy templates
 - [ ] Key screenshots in `docs/images/en/`
-- [x] Spanish user guide (`README.es.md` + `docs/es/user/`) — partial (REFERENCE + INDEX); full mirror before v0.1 tag
+- [x] Spanish user guide (`README.es.md` + `docs/es/user/`) — partial (REFERENCE + INDEX); full mirror before public v0.1 tag
 - [x] CI phase 1 (gitleaks + validate) — [10-ci-plan.md](10-ci-plan.md)
 - [x] CI phase 2 (Trivy warn-only + compose render) — [10-ci-plan.md](10-ci-plan.md)
 - [x] `bin/flixbox configure` + `reload` — API wiring (roots, clients, Byparr, Bazarr, Jellyfin/Seerr, secret loop)
 - [x] Image tag pins before public v0.1 tag — [14-image-pins.md](user/14-image-pins.md)
+- [x] Operator verification (Linux): Direct smoke + hardlink + VPN/Direct + `shared` access profile + Seerr→Jellyfin path — [11-smoke-test.md](user/11-smoke-test.md); checklist in [06-development-guide.md](06-development-guide.md)
 
 ## Next — Public v0.1 polish
 
-Follow [06-development-guide.md](06-development-guide.md) phase 7 and remaining DoD items.
+MVP Definition of Done is met. Before announcing a public `v0.1.0` tag:
 
-Deliverables:
+- [ ] Key screenshots in `docs/images/en/`
+- [ ] Complete Spanish user guide mirror (`docs/es/user/`)
+- Finalize [releases/v0.1.0-notes.md](releases/v0.1.0-notes.md) with the release commit SHA after push
 
-- Screenshots + complete Spanish user guide mirror
-- `bin/flixbox configure` — idempotent API wiring (ADR 0005); indexers remain manual
-- Image tags pinned before tagging v0.1 — [14-image-pins.md](user/14-image-pins.md); draft notes [releases/v0.1.0-notes.md](releases/v0.1.0-notes.md)
-- Hardlink + VPN/Direct + access-profile verification — [11-smoke-test.md](user/11-smoke-test.md)
-- VPN `tun0` bind sidecar verified on a live Gluetun install
+Already done for that gate: pinned images, CI phase 1–2, idempotent `configure`, VPN `tun0` bind path exercised on a live Gluetun install.
 
 ## After MVP — v0.2
 
 - CLI UX contract — [ADR 0021](adr/0021-cli-ux-contract.md) (**Accepted**, full UX/QA/security contract): Phase A `version`/help/exits/`doctor`/`status --json`; Phase B `backup`/`restore`/`update`/`recyclarr`/completions; Phase C taxonomy hardening
 - CLI: `sync-profiles`, `backup`, `restore`, `update` (names locked by ADR 0021 Phase B)
+- [x] **`configure`:** clear Jellyfin `LocalNetworkAddresses` when it is only `::` (stream URLs break on localhost and LAN; not a listen/firewall setting) — [Troubleshooting](user/10-troubleshooting.md)
 - Stronger init validation (hardlink probe, config-on-NFS guard, exFAT guard) — fold into `doctor` where practical
 - [x] CI phase 2: Trivy (warn-only) + shared compose render — [10-ci-plan.md](10-ci-plan.md)
 - Optional digest pins (`@sha256:`) for stricter supply chain
@@ -52,6 +52,7 @@ Deliverables:
 
 - PowerShell CLI `bin/flixbox.ps1` (WSL2 path warnings)
 - Optional Authelia/Authentik profile in front of Caddy
+- Optional access profile: **Forms + LAN publish** (password on Wi‑Fi without localhost-only bind) — not in ADR 0015 matrix today (`trusted` = LAN open/no Forms; `shared` = Forms + `127.0.0.1`)
 - Optional Whisper subtitle profile (resource-gated)
 - Optional Profilarr profile (mutually exclusive with Recyclarr)
 - Optional Autobrr / cross-seed profiles (private trackers)

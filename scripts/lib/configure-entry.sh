@@ -52,6 +52,7 @@ configure_entry_sync_homepage() {
   if ! out="$(FLIXBOX_ACCESS_PROFILE="$(flixbox_access_profile)" \
     FLIXBOX_MODE="${FLIXBOX_MODE:-direct}" \
     VPN_ENABLED="${VPN_ENABLED:-false}" \
+    FLIXBOX_PUBLIC_HOST="${FLIXBOX_PUBLIC_HOST:-}" \
     python3 "${ROOT_DIR}/scripts/lib/homepage-sync.py" "$services_yaml" 2>&1)"; then
     warn "Homepage sync failed — run: ./bin/flixbox reload"
     return 1
@@ -63,11 +64,29 @@ configure_entry_sync_homepage() {
   fi
 }
 
+configure_entry_recreate_lan_host_services() {
+  local need_hp="${FLIXBOX_HOMEPAGE_ENV_CHANGED:-0}"
+  local need_jf="${FLIXBOX_JELLYFIN_URL_ENV_CHANGED:-0}"
+  [[ "$need_hp" == 1 || "$need_jf" == 1 ]] || return 0
+  command -v docker >/dev/null 2>&1 || return 0
+  if [[ "$need_hp" == 1 ]] && docker inspect flixbox-homepage >/dev/null 2>&1; then
+    info "Recreating Homepage (HOMEPAGE_ALLOWED_HOSTS updated from FLIXBOX_PUBLIC_HOST)"
+    docker compose --project-directory "${ROOT_DIR}" up -d --force-recreate --no-deps homepage >/dev/null 2>&1 || \
+      warn "Could not recreate Homepage — run: ./bin/flixbox reload"
+  fi
+  if [[ "$need_jf" == 1 ]] && docker inspect flixbox-jellyfin >/dev/null 2>&1; then
+    info "Recreating Jellyfin (JELLYFIN_PUBLISHED_URL set from FLIXBOX_PUBLIC_HOST)"
+    docker compose --project-directory "${ROOT_DIR}" up -d --force-recreate --no-deps jellyfin >/dev/null 2>&1 || \
+      warn "Could not recreate Jellyfin — run: ./bin/flixbox reload"
+  fi
+}
+
 # Idempotent: validate profile, sync derived .env keys, optional shared UI placeholders, recreate on drift.
 configure_entry_prepare() {
   if ${DRY_RUN:-false}; then
     dry "Validate access profile and sync derived .env keys"
     dry "Ensure shared FLIXBOX_ARR_UI_* placeholders when profile is shared"
+    dry "Sync HOMEPAGE_ALLOWED_HOSTS / JELLYFIN_PUBLISHED_URL from FLIXBOX_PUBLIC_HOST when set"
     dry "Recreate admin-bound services when profile derived keys drift"
     configure_entry_sync_homepage
     return 0
@@ -92,10 +111,19 @@ configure_entry_prepare() {
     _configure_entry_ensure_shared_ui_credentials
     flixbox_load_env
   fi
+  flixbox_sync_public_host_env "${ROOT_DIR}/.env"
+  if [[ "${FLIXBOX_HOMEPAGE_ENV_CHANGED:-0}" == 1 ]]; then
+    info "HOMEPAGE_ALLOWED_HOSTS ← added ${FLIXBOX_PUBLIC_HOST}:${HOMEPAGE_PORT:-3000} (from FLIXBOX_PUBLIC_HOST)"
+  fi
+  if [[ "${FLIXBOX_JELLYFIN_URL_ENV_CHANGED:-0}" == 1 ]]; then
+    info "JELLYFIN_PUBLISHED_URL ← ${JELLYFIN_PUBLISHED_URL} (from FLIXBOX_PUBLIC_HOST; was empty)"
+  fi
+  flixbox_load_env
   if $synced; then
     if ! configure_entry_recreate_admin_services; then
       warn "Access profile keys synced but admin service recreate failed — run: ./bin/flixbox reload"
     fi
   fi
   configure_entry_sync_homepage || true
+  configure_entry_recreate_lan_host_services || true
 }

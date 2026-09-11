@@ -28,7 +28,7 @@ docker compose --profile recyclarr run --rm recyclarr sync
 
 ## Web UI (host)
 
-Replace `localhost` with your LAN IP when browsing from another device.
+Replace `localhost` with your LAN IP when browsing from another device. For Homepage cards, prefer `FLIXBOX_PUBLIC_HOST` + `HOMEPAGE_ALLOWED_HOSTS` — [Access profiles — Homepage links](13-access-profiles.md#homepage-links-from-phones--tvs). Under **`shared`**, admin UIs (*arr, qBit, …) are host-only (`127.0.0.1`).
 
 | Service | URL | Notes |
 | --- | --- | --- |

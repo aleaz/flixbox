@@ -97,6 +97,8 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 5. Pin image tags (leave `:latest` only for pre-release experimentation)
 6. Tag/release only when Definition of Done in scope doc is met
 
+**Status:** Done for DoD / operator verification on Linux. Remaining before a public `v0.1.0` tag: screenshots + full Spanish user-guide mirror (see [08-roadmap.md](08-roadmap.md)).
+
 ## Manual wiring still expected (document, don’t fake)
 
 Even after `init` + `configure`, users typically must:
@@ -111,10 +113,14 @@ Deterministic wiring (root folders, download clients, Byparr, Bazarr, Jellyfin l
 
 Operator smoke test: [docs/user/11-smoke-test.md](user/11-smoke-test.md) and `./scripts/smoke-test.sh`.
 
+Verified on a Linux host (Direct smoke script + live stack; download path exercised in VPN; access profile `shared` exercised):
+
 - [x] `docker compose` config validates (direct + vpn includes)
-- [ ] Hardlink inodes match for a test import
-- [ ] VPN mode: public IP differs from host; qBit UI via Gluetun published port
+- [x] Hardlink inodes match for a test import
+- [x] VPN mode: public IP differs from host; qBit UI via Gluetun published port
 - [x] Direct mode: qBittorrent reachable by service name (compose config)
 - [x] Decluttarr qBit URL always `http://qbittorrent:8080` via `DECLUTTARR_QBIT_URL` / `flixbox init` (ADR 0014)
-- [ ] Maintainerr connects to Jellyfin (operator UI)
+- [x] Maintainerr connects to Jellyfin (operator UI)
 - [x] `git status` shows no `.env` or secrets (`.env` gitignored)
+- [x] `configure` idempotent on re-run; Seerr → *arr → qBit → Bazarr → Jellyfin playback
+- [x] Access profile `shared`: admin bind localhost + Forms (`credentials set arr-ui`); consumers on LAN
