@@ -38,6 +38,16 @@ Do **not** move English to `docs/user/en/` later. Keeping `docs/user/` as EN avo
 4. If EN and ES diverge, **EN wins** until ES is updated.
 5. Optional later: GitHub Pages / MkDocs with a language switcher reading these folders — no need to adopt a translation platform (Crowdin, etc.) for v0.1.
 
+### Spanish register
+
+Spanish user docs and `README.es.md` use **neutral Spanish** (pan-Hispanic):
+
+- Standard **tú** conjugations (`ejecuta`, `reemplaza`, `entras`, `usas`).
+- **No** Rioplatense **voseo** (`ejecutá`, `reemplazá`, `entrás`, `usá`, `vos sos`).
+- Prefer widely understood vocabulary over strongly local slang.
+
+See also [`docs/es/README.md`](../es/README.md).
+
 ### Cross-links
 
 - Root `README.md` links to `README.es.md` when it exists (“También en español”).

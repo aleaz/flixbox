@@ -144,4 +144,6 @@ Defaults follow [TRaSH Guides](https://trash-guides.info/) where they apply. Pla
 
 ## Disclaimer
 
-You are responsible for complying with applicable laws and terms of service for any content, indexers, or VPN providers you use with this software.
+> The authors **do not condone** copyright infringement. **Flixbox does not develop** qBittorrent, Radarr, Sonarr, Jellyfin, or the other apps in the stack — it only **assembles and wires** existing third-party tools. **Use at your own risk:** you alone choose content, indexers, and VPN settings and bear legal and operational responsibility. Flixbox is **not affiliated with** those upstream projects. Provided **AS IS** under the [MIT License](LICENSE).
+
+Full notice (EN/ES): [Legal disclaimer](docs/user/16-legal-disclaimer.md) · [Aviso legal](docs/es/user/16-legal-disclaimer.md)

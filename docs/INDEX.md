@@ -9,6 +9,7 @@
 | Doc | Purpose |
 | --- | --- |
 | [User guide](user/INDEX.md) | How to understand, install, and operate Flixbox |
+| [Legal disclaimer](user/16-legal-disclaimer.md) | Lawful use and operator liability ([ES](es/user/16-legal-disclaimer.md)) |
 | [How it works](user/02-how-it-works.md) | Mental model: pipeline, `/data`, VPN/Direct |
 | [Documentation style guide](00-doc-style.md) | Brand, tone, page shape, and asset rules (README + user docs) |
 
