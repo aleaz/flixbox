@@ -22,7 +22,7 @@ Flixbox helps with **privacy through VPN isolation**; it does not make you anony
 
 ### Disclaimer
 
-You are responsible for complying with applicable laws and terms of service for content, indexers, trackers, and VPN providers. See [Overview — Disclaimer](01-overview.md#disclaimer).
+You are responsible for complying with applicable laws and terms of service for content, indexers, trackers, and VPN providers. Privacy controls here are **technical** only — they do not authorize infringement. Full notice: [Legal disclaimer](16-legal-disclaimer.md) · [Aviso legal (ES)](../es/user/16-legal-disclaimer.md). See also [Overview — Disclaimer](01-overview.md#disclaimer).
 
 ---
 

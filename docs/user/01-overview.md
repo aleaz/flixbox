@@ -69,7 +69,7 @@ Full checklist: [First-run](05-first-run.md#youre-done-when) · happy-path smoke
 
 ## Disclaimer
 
-You are responsible for complying with applicable laws and terms of service for any content, indexers, or VPN providers you use with this software.
+> Authors **do not condone** copyright infringement. Flixbox **only assembles** third-party tools — it does **not** develop them. **Use at your own risk;** you alone bear responsibility for content and compliance. Full notice: [Legal disclaimer](16-legal-disclaimer.md) · [Aviso legal (ES)](../es/user/16-legal-disclaimer.md)
 
 ## LAN security (access profiles)
 

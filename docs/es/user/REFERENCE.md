@@ -2,7 +2,7 @@
 
 Hoja de consulta para operadores. Valores por defecto tras `./bin/flixbox init`.
 
-> **Tras cambiar `.env`:** ejecutá `./bin/flixbox reload` (no un simple `restart`) para que los contenedores lean las variables nuevas.
+> **Tras cambiar `.env`:** ejecuta `./bin/flixbox reload` (no un simple `restart`) para que los contenedores lean las variables nuevas.
 
 > **Idioma:** si este archivo y la [REFERENCE (EN)](../../user/REFERENCE.md) divergen, **gana el inglés** ([ADR 0011](../../adr/0011-documentation-i18n.md)).
 
@@ -30,7 +30,7 @@ docker compose --profile recyclarr run --rm recyclarr sync
 
 ## Web UI (host)
 
-Reemplazá `localhost` por la IP LAN si entrás desde otro dispositivo.
+Reemplaza `localhost` por la IP LAN si entras desde otro dispositivo.
 
 | Servicio | URL | Notas |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ Reemplazá `localhost` por la IP LAN si entrás desde otro dispositivo.
 
 ## Contrato de hostnames internos
 
-Usá **nombres de servicio Compose** en `flixbox_net` — no `container_name` (`flixbox-radarr`, etc.).
+Usa **nombres de servicio Compose** en `flixbox_net` — no `container_name` (`flixbox-radarr`, etc.).
 
 | Rol | Hostname | Puerto | Notas |
 | --- | --- | --- | --- |
@@ -132,6 +132,7 @@ Más: [Troubleshooting (EN)](../../user/10-troubleshooting.md).
 
 ## Documentación relacionada
 
+- [Aviso legal](16-legal-disclaimer.md) · [Legal disclaimer (EN)](../../user/16-legal-disclaimer.md)
 - Guía EN canónica: [docs/user/INDEX.md](../../user/INDEX.md)
 - [Install](../../user/04-install.md) · [First-run](../../user/05-first-run.md) · [Configuration](../../user/06-configuration.md)
 - [VPN and Direct](../../user/07-vpn-and-direct.md) · [Operations](../../user/09-operations.md)
