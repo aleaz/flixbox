@@ -136,5 +136,6 @@ More: [Troubleshooting](10-troubleshooting.md).
 
 ## Related docs
 
+- [Legal disclaimer](16-legal-disclaimer.md) · [Aviso legal (ES)](../es/user/16-legal-disclaimer.md)
 - [Install](04-install.md) · [First-run](05-first-run.md) · [Configuration](06-configuration.md)
 - [VPN and Direct](07-vpn-and-direct.md) · [Operations](09-operations.md)

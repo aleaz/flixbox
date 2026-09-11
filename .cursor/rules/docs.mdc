@@ -13,5 +13,6 @@ alwaysApply: false
 - Do not restore Jellyseerr/Overseerr or FlareSolverr-as-default without a superseding ADR.
 - Canonical content is the numbered docs + ADRs + `docs/user/`.
 - Spanish user docs go under `docs/es/user/` mirroring EN filenames (ADR 0011); do not move EN to `docs/user/en/`.
+- Spanish register: **neutral** (standard tú). Do not use Rioplatense voseo (`vos`, `ejecutá`, `entrás`, etc.).
 - Roadmap items must not be phrased as MVP MUSTs in requirements.
 - Maintainerr/Decluttarr docs must warn about destructive actions.

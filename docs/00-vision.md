@@ -35,7 +35,7 @@ It is designed as a public GitHub project: modular Compose, documented contracts
 ## Non-goals (product level)
 
 - Not a hosted SaaS or cloud media product
-- Not a legal advice project; users are responsible for how they use download tooling
+- Not a legal advice project; Flixbox only assembles third-party tools — operators alone bear use/risk — see [Legal disclaimer](user/16-legal-disclaimer.md) / [Aviso legal](es/user/16-legal-disclaimer.md)
 - Not a migration tool from any prior personal stack
 - Not “enterprise compliance theater”; documentation stays practical
 

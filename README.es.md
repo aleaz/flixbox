@@ -5,7 +5,7 @@
 <h1 align="center">Flixbox</h1>
 
 <p align="center">
-  <strong>Pedí una película. Mirála en Jellyfin.</strong><br>
+  <strong>Pide una película. Mírala en Jellyfin.</strong><br>
   Un CLI, una biblioteca, VPN opcional — sin pelear Compose a mano.
 </p>
 
@@ -53,25 +53,25 @@ Cold start en el CLI: `cp .env.example .env`, `init`, `up`, `status`, luego `con
 
 ## ¿Por qué Flixbox?
 
-- **Pedir → ver** — pedís en Seerr; Flixbox busca el release, lo descarga y lo deja en Jellyfin
+- **Pedir → ver** — pides en Seerr; Flixbox busca el release, lo descarga y lo deja en Jellyfin
 - **Mismo disco, sin duplicar** — descargas y biblioteca comparten un árbol `/data` (hardlinks)
-- **Direct hoy, VPN mañana** — cambiás de modo sin reconfigurar Radarr / Sonarr
+- **Direct hoy, VPN mañana** — cambias de modo sin reconfigurar Radarr / Sonarr
 - **Cuatro comandos** — `init`, `up`, `configure`, `status` con `./bin/flixbox`
 - **Higiene sin sorpresas** — Decluttarr y Maintainerr con defaults conservadores
 - **Tiempo honesto** — ~15 minutos hasta el stack arriba; indexers de Prowlarr después (no es zero-touch)
 
 ## Inicio rápido
 
-**Necesitás:** Docker Compose v2, **4 GB RAM mínimo / 8 GB cómodo**, Linux x86_64/ARM64 (macOS best-effort). Lista completa: [Requirements (EN)](docs/user/03-requirements.md).
+**Necesitas:** Docker Compose v2, **4 GB RAM mínimo / 8 GB cómodo**, Linux x86_64/ARM64 (macOS best-effort). Lista completa: [Requirements (EN)](docs/user/03-requirements.md).
 
-**1. Clonar y setear paths**
+**1. Clonar y definir paths**
 
 ```bash
 git clone https://github.com/aleaz/flixbox.git
 cd flixbox
 cp .env.example .env
-# Editá DATA_DIR, CONFIG_DIR (escribibles), FLIXBOX_MODE, TZ
-# Opcional: FLIXBOX_ACCESS_PROFILE=shared si compartís Wi‑Fi
+# Edita DATA_DIR, CONFIG_DIR (escribibles), FLIXBOX_MODE, TZ
+# Opcional: FLIXBOX_ACCESS_PROFILE=shared si compartes Wi‑Fi
 ```
 
 **2. Levantar el stack**
@@ -103,11 +103,11 @@ Después, indexers en Prowlarr (~10–15 min): [First-run (EN)](docs/user/05-fir
 
 **Listo cuando:** `status` healthy · `configure` con **0 failed** · ≥1 indexer · pedido Seerr en *arr · reproduce en Jellyfin — detalle en [First-run](docs/user/05-first-run.md#youre-done-when).
 
-**Tip:** En Linux, creá y hacé `chown` de los paths (por defecto `/srv/flixbox/…`), o apuntá `.env` a paths que ya sean tuyos — [Install — storage paths (EN)](docs/user/04-install.md#storage-paths-and-permissions).
+**Tip:** En Linux, crea y haz `chown` de los paths (por defecto `/srv/flixbox/…`), o apunta `.env` a paths que ya sean tuyos — [Install — storage paths (EN)](docs/user/04-install.md#storage-paths-and-permissions).
 
-## Elegí tu camino
+## Elige tu camino
 
-| Camino | Cuándo | Empezá acá |
+| Camino | Cuándo | Empieza aquí |
 | --- | --- | --- |
 | **Primera prueba (Direct)** | Solo LAN, aprender el flujo | [Install (EN)](docs/user/04-install.md) |
 | **Wi‑Fi compartido** | Convivientes en la misma LAN | `FLIXBOX_ACCESS_PROFILE=shared` — [Access profiles (EN)](docs/user/13-access-profiles.md) |
@@ -144,4 +144,6 @@ Defaults alineados con [TRaSH Guides](https://trash-guides.info/) donde aplica. 
 
 ## Aviso legal
 
-Sos responsable de cumplir las leyes y términos de servicio aplicables al contenido, indexers o proveedores VPN que uses con este software.
+> Los autores **no aprueban** la infracción de derechos de autor. **Flixbox no desarrolla** qBittorrent, Radarr, Sonarr, Jellyfin ni las demás apps del stack: solo **ensambla y conecta** herramientas de terceros. **Úsalo bajo tu propio riesgo:** tú eliges el contenido, los indexers y la VPN, y asumes la responsabilidad legal y operativa. Flixbox **no está afiliado** a esos proyectos upstream. Se ofrece **TAL CUAL (*AS IS*)** bajo la [Licencia MIT](LICENSE).
+
+Aviso completo (ES/EN): [Aviso legal](docs/es/user/16-legal-disclaimer.md) · [Legal disclaimer](docs/user/16-legal-disclaimer.md)

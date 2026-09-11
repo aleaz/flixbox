@@ -8,6 +8,7 @@ Documentación en español para operadores. **La versión canónica en inglés e
 
 | Guía | Contenido |
 | --- | --- |
+| [16 — Aviso legal](16-legal-disclaimer.md) | Uso lícito, responsabilidad del operador, sin respaldo a infracciones ([EN](../../user/16-legal-disclaimer.md)) |
 | [REFERENCE — Referencia rápida](REFERENCE.md) | URLs, puertos, CLI, orden first-run (alineada a EN) |
 
 ## Solo en inglés (por ahora)
