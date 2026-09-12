@@ -228,7 +228,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-72 | Host port preflight | `preflight-host.sh`; `up`/`reload` call before compose; first-run doc |
 | C-73 | Configure smoke on PR | `configure-smoke-pr` job; `CI_CONFIGURE_SMOKE_PR` subset |
 | C-74 | VPN structural smoke | `ci-smoke-vpn.sh`; VPN netns + gluetun alias contract |
-| C-75 | Release gate | `release.yml` with `TRIVY_BLOCK=1`; `ci-pin-digests.sh` |
+| C-75 | Release gate | `release.yml` validate+smoke required; Trivy CRITICAL report non-blocking for upstream images; `ci-pin-digests.sh` |
 | C-76 | Compose HTTP healthchecks | Prowlarr/Radarr/Sonarr/Bazarr/Jellyfin; ADR 0017 |
 | C-77 | Bazarr start order | `depends_on` Sonarr/Radarr `service_healthy` |
 | C-78 | Runtime secrets doc | ADR 0018; threat model in access profiles + configuration |
