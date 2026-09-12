@@ -40,7 +40,7 @@ Guarda `${DATA_DIR}` en un filesystem que soporte hardlinks (**no exFAT**). En W
 - Acceso LAN a los puertos de los servicios (o Caddy en 80/443)
 - HTTPS saliente para metadatos e indexers
 - Credenciales VPN si activas el modo VPN
-- **No** expongas puertos *arr crudos a Internet pública sin auth (SSO es post-MVP; preferir LAN o un reverse proxy endurecido)
+- **No** expongas puertos *arr crudos a Internet pública sin auth (SSO es posterior / v0.4; preferir LAN o un reverse proxy endurecido)
 
 Privacidad específica de torrents (modo VPN, ajustes de qBit, chequeos de fugas): [Torrent privacy and security](12-torrent-privacy-and-security.md).
 

@@ -1,9 +1,9 @@
 <a id="mvp-smoke-test-checklist"></a>
-# Checklist de smoke test MVP
+# Checklist de smoke test
 
 **Idiomas:** [English](../../user/11-smoke-test.md) · Español (esta página)
 
-Usa este checklist **antes de etiquetar v0.1**. Valida que el stack implementado funciona en un host real, no solo que Compose resuelve en CI.
+Usa este checklist para validar que el stack funciona en un host real, no solo que Compose resuelve en CI.
 
 **Plataforma de referencia:** Linux x86_64 o ARM64 con Docker Engine + Compose v2. WSL2 (rutas ext4) y macOS (**OrbStack** o Docker Desktop) son best-effort — las pruebas de hardlink pueden ser inconclusas en macOS.
 
@@ -72,7 +72,7 @@ Para bajar el stack:
 Servicios Direct esperados: `bazarr`, `byparr`, `decluttarr`, `homepage`, `jellyfin`, `maintainerr`, `prowlarr`, `qbittorrent`, `radarr`, `seerr`, `sonarr`, `unpackerr`.
 
 <a id="phase-bʹ-access-profile-shared-manual-before-v01"></a>
-## Fase Bʹ — Perfil de acceso `shared` (manual, antes de v0.1)
+## Fase Bʹ — Perfil de acceso `shared` (manual)
 
 Se recomiendan rutas frescas (o recrear *arr + servicios bound a admin tras el cambio de perfil).
 
@@ -193,7 +193,7 @@ Phase F:  [ ] pass  [ ] fail  notes:
 Phase G:  [ ] pass  [ ] fail  notes:  # ADR 0022 footguns
 ```
 
-**Gate v0.1:** Las fases A–C y B pasan en Linux (`trusted`). La fase Bʹ (`shared`) se recomienda antes de anunciar el setup Wi‑Fi shared en el README.
+**Baseline v0.1:** Las fases A–C y B pasan en Linux (`trusted`). La fase Bʹ (`shared`) se recomienda antes de anunciar el setup Wi‑Fi shared en el README.
 
 Cuando las fases A–C y al menos B pasen en Linux, actualiza el checklist de verificación en [06-development-guide.md](../../06-development-guide.md).
 

@@ -106,7 +106,7 @@ Los puertos WebUI de Radarr, Sonarr, Prowlarr y qBittorrent son solo para **LAN 
 <a id="threat-model-homelab"></a>
 ## Modelo de amenaza (homelab)
 
-El MVP de Flixbox asume **un operador de confianza** en el host Docker:
+Flixbox asume **un operador de confianza** en el host Docker:
 
 | Superficie | Riesgo | Mitigación |
 | --- | --- | --- |

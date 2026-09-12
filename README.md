@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <a href="https://github.com/aleaz/flixbox/releases/tag/v0.1.1"><img src="https://img.shields.io/badge/release-v0.1.1-0ea5e9.svg" alt="Release v0.1.1"></a>
   <a href="https://github.com/aleaz/flixbox/actions/workflows/ci.yml"><img src="https://github.com/aleaz/flixbox/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="docs/user/04-install.md"><img src="https://img.shields.io/badge/install-~15%20min-10b981.svg" alt="Install ~15 min"></a>
 </p>

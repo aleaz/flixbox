@@ -269,7 +269,7 @@ BitTorrent privacy does not protect other services:
 | Homepage | Information disclosure |
 | Byparr | Indexer proxy abuse |
 
-**Mitigations:** LAN-only access, Caddy with HTTPS (`proxy` profile), firewall rules on the host. SSO (Authelia/Authentik) is post-MVP — see [Roadmap](../08-roadmap.md).
+**Mitigations:** LAN-only access, Caddy with HTTPS (`proxy` profile), firewall rules on the host. SSO (Authelia/Authentik) is later (v0.4) — see [Roadmap](../08-roadmap.md).
 
 Engineering notes: [Operations risks §3](../07-operations-risks.md#3-security--privacy).
 
@@ -313,6 +313,6 @@ Engineering notes: [Operations risks §3](../07-operations-risks.md#3-security--
 | [07 — VPN and Direct](07-vpn-and-direct.md) | Switching modes, anti-patterns |
 | [06 — Configuration](06-configuration.md) | `.env`, credentials, download client URLs |
 | [05 — First-run](05-first-run.md) | qBit login, paths, *arr wiring |
-| [11 — Smoke test](11-smoke-test.md) | MVP validation including VPN phase |
+| [11 — Smoke test](11-smoke-test.md) | Operator validation including VPN phase |
 | [10 — Troubleshooting](10-troubleshooting.md) | Common qBit and VPN failures |
 | [03 — Requirements](03-requirements.md) | Network and exposure basics |

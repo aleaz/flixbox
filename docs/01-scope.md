@@ -1,9 +1,11 @@
 # Scope
 
-**Status:** Implemented — MVP inventory frozen; Definition of Done met on Linux operator verification (expand only with explicit scope change)  
+**Status:** Implemented — **v0.1.1 shipped**; core inventory frozen (historical MVP Definition of Done met on Linux). Expand only with an explicit scope change.  
 **Related ADRs:** [0004](adr/0004-jellyfin-first.md), [0005](adr/0005-cli-bash-first.md), [0006](adr/0006-mvp-service-inventory.md), [0007](adr/0007-platform-support-tiers.md), [0008](adr/0008-maintenance-decluttarr-maintainerr.md), [0014](adr/0014-stable-qbit-download-hostname.md), [0015](adr/0015-access-profiles.md)
 
-## In scope (MVP)
+## Core inventory (v0.1 baseline)
+
+Formerly labeled “MVP”. The closed service list in [ADR 0006](adr/0006-mvp-service-inventory.md) remains the supported baseline.
 
 ### Services
 
@@ -33,12 +35,13 @@
 - Modular Compose under `compose/`
 - `.env.example` with no real secrets
 - English docs in `docs/`
-### Platforms (MVP)
+
+### Platforms (baseline)
 
 - **First-class:** Linux x86_64 and ARM64 (Docker Engine + Compose v2 plugin)
 - **Best-effort:** Windows Docker Desktop + WSL2 (ext4 paths only), macOS Docker Desktop
 
-## Out of scope (MVP)
+## Out of baseline (later releases)
 
 Do **not** implement these until the roadmap phase says so:
 
@@ -49,24 +52,24 @@ Do **not** implement these until the roadmap phase says so:
 - FlareSolverr as the default image (Byparr is default; FlareSolverr remains a documented alternative)
 - PowerShell CLI (`bin/flixbox.ps1`)
 - Vagrant / lab VM packaging
-- Telegram or other bots as first-class Flixbox features (use Seerr/Maintainerr notifications instead; post-MVP Apprise hub — [ADR 0012](adr/0012-notifications-apprise-hub.md))
+- Telegram or other bots as first-class Flixbox features (use Seerr/Maintainerr notifications instead; Apprise hub — [ADR 0012](adr/0012-notifications-apprise-hub.md))
 - Automatic Direct fallback when VPN fails (privacy fail-closed — [ADR 0013](adr/0013-vpn-resilience-no-direct-fallback.md))
 - Authelia / Authentik / SSO in front of Caddy
 - Autobrr, cross-seed
 - Profilarr (Recyclarr remains the TRaSH sync tool)
-- Streamystats (optional Maintainerr companion — not required for MVP)
+- Streamystats (optional Maintainerr companion — not required for baseline)
 - Kubernetes / Ansible / Terraform packaging
 - Claiming “fully zero-touch” when indexers still need user credentials (API-assisted first-run is in scope; indexers stay manual)
 
-## Later (post-MVP)
+## Later (v0.2+)
 
 See [08-roadmap.md](08-roadmap.md) and planning note [11-future-notifications-and-vpn-resilience.md](11-future-notifications-and-vpn-resilience.md).
 
-## Definition of done (MVP)
+## Definition of done (v0.1 — met)
 
-MVP is done when all of the following are true:
+The v0.1 baseline is **done**. Criteria (historical MVP DoD):
 
-1. Modular Compose starts the MVP inventory with `FLIXBOX_MODE` selecting VPN vs Direct downloaders, plus optional profiles (`plex` / `proxy` / `recyclarr`) as designed. `docker-socket-proxy` always runs with Homepage ([ADR 0022](adr/0022-operator-footgun-remediations.md)).
+1. Modular Compose starts the core inventory with `FLIXBOX_MODE` selecting VPN vs Direct downloaders, plus optional profiles (`plex` / `proxy` / `recyclarr`) as designed. `docker-socket-proxy` always runs with Homepage ([ADR 0022](adr/0022-operator-footgun-remediations.md)).
 2. All download/media containers mount the same `${DATA_DIR}:/data` parent; hardlinks work on a single local filesystem (including `torrents/incomplete`).
 3. VPN mode: qBittorrent shares Gluetun netns; ports published on Gluetun; healthcheck gates start; killswitch drops egress if tunnel is down; port-forward hook documented/wired when provider supports it; `vpn-test` reports the downloader egress public IP (VPN = tunnel IP, not home ISP).
 4. Direct mode: qBittorrent on `flixbox_net` without Gluetun.
@@ -76,6 +79,8 @@ MVP is done when all of the following are true:
 8. README describes real setup steps: `init` → `up` → `configure` covers deterministic wiring; remaining manual steps (indexers, optional Maintainerr rules) are listed honestly — no false “fully zero-touch” claims.
 9. No secrets in git-tracked files; `.gitignore` covers `.env` and local config/data paths.
 10. Operational footguns from [07-operations-risks.md](07-operations-risks.md) are documented and, where feasible, enforced by CLI validation.
+
+Public tag: **[`v0.1.1`](https://github.com/aleaz/flixbox/releases/tag/v0.1.1)** — [release notes](releases/v0.1.1-notes.md).
 
 ## Explicit non-migration
 

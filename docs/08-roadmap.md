@@ -1,42 +1,30 @@
 # Roadmap
 
-**Status:** Working Draft  
-Versions below are planning labels, not semver promises until the first public tag.
+**Status:** Working Draft — first public release **[`v0.1.1`](https://github.com/aleaz/flixbox/releases/tag/v0.1.1)** shipped (2026-09-12).  
+Versions below are planning labels; `v0.1.1` is the first public semver tag.
 
-## Now — MVP scaffolding (current)
+## Shipped — v0.1 baseline (closed MVP)
 
 - [x] Formal docs, ADRs, AGENTS.md, Cursor rules
-- [x] Audit corrections: Seerr, Byparr, port-forward contract, permissions model, Decluttarr + Maintainerr in MVP
-- [x] MIT license; `:latest` allowed for early compose; hygiene defaults documented
-- [x] English user guide (`docs/user/`) + i18n layout reserved (`docs/es/`, `images/{shared,en,es}/`)
-- [x] Modular Compose for MVP inventory (including Decluttarr + Maintainerr)
+- [x] Audit corrections: Seerr, Byparr, port-forward contract, permissions model, Decluttarr + Maintainerr in core inventory
+- [x] MIT license; hygiene defaults documented
+- [x] English user guide (`docs/user/`) + Spanish mirror (`README.es.md` + full `docs/es/user/`)
+- [x] Modular Compose for core inventory (including Decluttarr + Maintainerr)
 - [x] Bash CLI minimum commands (`bin/flixbox`)
 - [x] Hygiene/Recyclarr/Homepage/Caddy templates
 - [x] Key screenshots P0 (`en/homepage-ops.png`, CLI GIF, logo) — P2 story stills optional
-- [x] Spanish user guide mirror (`README.es.md` + full `docs/es/user/`)
-- [x] CI phase 1 (gitleaks + validate) — [10-ci-plan.md](10-ci-plan.md)
-- [x] CI phase 2 (Trivy warn-only + compose render) — [10-ci-plan.md](10-ci-plan.md)
-- [x] `bin/flixbox configure` + `reload` — API wiring (roots, clients, Byparr, Bazarr, Jellyfin/Seerr, secret loop)
-- [x] Image tag pins before public v0.1 tag — [14-image-pins.md](user/14-image-pins.md)
-- [x] Operator verification (Linux): Direct smoke + hardlink + VPN/Direct + `shared` access profile + Seerr→Jellyfin path — [11-smoke-test.md](user/11-smoke-test.md); checklist in [06-development-guide.md](06-development-guide.md)
+- [x] CI phase 1–2 (gitleaks + validate; Trivy warn-only + compose render) — [10-ci-plan.md](10-ci-plan.md)
+- [x] `bin/flixbox configure` + `reload` — API wiring
+- [x] Image tag pins — [14-image-pins.md](user/14-image-pins.md)
+- [x] Operator verification (Linux): Direct + hardlink + VPN/Direct + `shared` + Seerr→Jellyfin — [11-smoke-test.md](user/11-smoke-test.md)
+- [x] Public release notes + GitHub Release **`v0.1.1`** — [releases/v0.1.1-notes.md](releases/v0.1.1-notes.md)
 
-## Next — Public v0.1 polish
+## Now — v0.2
 
-MVP Definition of Done is met. Before announcing a public `v0.1.0` tag:
-
-- [x] Key screenshots P0 in `docs/images/` (P2 `seerr-request` / `jellyfin-library` optional)
-- [x] Complete Spanish user guide mirror (`docs/es/user/`)
-- [x] Finalize [releases/v0.1.0-notes.md](releases/v0.1.0-notes.md) with the release commit SHA
-
-Already done for that gate: pinned images, CI phase 1–2, idempotent `configure`, VPN `tun0` bind path exercised on a live Gluetun install, EN+ES user guides.
-
-## After MVP — v0.2
-
-- CLI UX contract — [ADR 0021](adr/0021-cli-ux-contract.md) (**Accepted**, full UX/QA/security contract): Phase A `version`/help/exits/`doctor`/`status --json`; Phase B `backup`/`restore`/`update`/`recyclarr`/completions; Phase C taxonomy hardening
+- CLI UX contract — [ADR 0021](adr/0021-cli-ux-contract.md) (**Accepted**): Phase A `version`/help/exits/`doctor`/`status --json`; Phase B `backup`/`restore`/`update`/`recyclarr`/completions; Phase C taxonomy hardening
 - CLI: `sync-profiles`, `backup`, `restore`, `update` (names locked by ADR 0021 Phase B)
-- [x] **`configure`:** clear Jellyfin `LocalNetworkAddresses` when it is only `::` (stream URLs break on localhost and LAN; not a listen/firewall setting) — [Troubleshooting](user/10-troubleshooting.md)
+- [x] **`configure`:** clear Jellyfin `LocalNetworkAddresses` when it is only `::` — [Troubleshooting](user/10-troubleshooting.md)
 - Stronger init validation (hardlink probe, config-on-NFS guard, exFAT guard) — fold into `doctor` where practical
-- [x] CI phase 2: Trivy (warn-only) + shared compose render — [10-ci-plan.md](10-ci-plan.md)
 - Optional digest pins (`@sha256:`) for stricter supply chain
 - **Notifications:** optional Apprise API profile (Telegram via Apprise URL, not a Flixbox bot) — [ADR 0012](adr/0012-notifications-apprise-hub.md)
 - **VPN resilience docs + optional heal:** document Gluetun internal reconnect/killswitch; evaluate optional `vpn-heal` watchdog profile; **never** auto-fallback to Direct — [ADR 0013](adr/0013-vpn-resilience-no-direct-fallback.md)
@@ -71,4 +59,4 @@ Already done for that gate: pinned images, CI phase 1–2, idempotent `configure
 ## Change control
 
 - Scope changes require updating `01-scope.md` and, for architectural choices, a new or updated ADR.
-- Do not expand MVP mid-implementation without an explicit maintainer decision.
+- Do not expand the **v0.1 core inventory** without an explicit maintainer decision (same closed list as [ADR 0006](adr/0006-mvp-service-inventory.md)).

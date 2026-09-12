@@ -24,7 +24,7 @@ Writers: tone and visuals follow the [documentation style guide](../00-doc-style
 | [08 — Hygiene](08-hygiene.md) | Decluttarr and Maintainerr in plain language |
 | [09 — Day-2 operations](09-operations.md) | Status, logs, updates, backups, **path changes**, hardlink check |
 | [10 — Troubleshooting](10-troubleshooting.md) | Common failures and fixes |
-| [11 — Smoke test](11-smoke-test.md) | MVP validation checklist before v0.1 |
+| [11 — Smoke test](11-smoke-test.md) | Operator validation checklist (v0.1 baseline) |
 | [12 — Torrent privacy and security](12-torrent-privacy-and-security.md) | VPN privacy, qBit settings, leak prevention, audit checklist |
 | [13 — Access profiles](13-access-profiles.md) | LAN profiles (`trusted` / `shared`) |
 | [14 — Image pins](14-image-pins.md) | Pinned Compose image tags (ADR 0010) |

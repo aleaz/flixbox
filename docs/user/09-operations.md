@@ -104,7 +104,7 @@ Then `./bin/flixbox up` and `docker compose restart qbittorrent`. Set back to `f
 - Env reference: [06 — Configuration](06-configuration.md)
 - Hardlinks / filesystem: [02 — How it works](02-how-it-works.md)
 
-## MVP smoke test (before v0.1)
+## Smoke test
 
 Full checklist and automated helper:
 
