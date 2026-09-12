@@ -101,7 +101,7 @@ Distingue **stack up** (contenedores healthy) de **pipeline works** (pedido → 
 | Ruta de pedidos | Un pedido de Seerr aparece en Radarr o Sonarr |
 | Import + play | Archivo bajo `/data/media/…`, se reproduce en Jellyfin |
 
-Walkthrough opcional completo: [Smoke test — Phase F](11-smoke-test.md#phase-f--end-to-end-request-flow-manual) (happy path manual; no es la puerta CI de v0.1).
+Recorrido opcional completo: [Smoke test — Phase F](11-smoke-test.md#phase-f--end-to-end-request-flow-manual) (happy path manual; no es la puerta CI de v0.1).
 
 <a id="verify"></a>
 ## Verificar

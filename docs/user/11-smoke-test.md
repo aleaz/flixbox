@@ -106,6 +106,7 @@ ls -i "${DATA_DIR}/media/movies/"*/*.mkv 2>/dev/null | head -1
 
 Same leading number ⇒ hardlink OK.
 
+<a id="phase-d--vpn-mode-optional-needs-provider-creds"></a>
 ## Phase D — VPN mode (optional, needs provider creds)
 
 | # | Check | How | Pass |
@@ -134,6 +135,7 @@ Reference: [Credentials and API keys](06-configuration.md#credentials-and-api-ke
 | E4 | Maintainerr rules | Rules disabled or preview first | No surprise deletes |
 | E5 | Recyclarr | `docker compose --profile recyclarr run --rm recyclarr sync` | Sync completes (after keys in recyclarr.yml) |
 
+<a id="phase-f--end-to-end-request-flow-manual"></a>
 ## Phase F — End-to-end request flow (manual)
 
 | # | Check | How | Pass |

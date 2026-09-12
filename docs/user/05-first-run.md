@@ -107,6 +107,7 @@ Optional full walkthrough: [Smoke test — Phase F](11-smoke-test.md#phase-f--en
 
 ---
 
+<a id="1-prowlarr--byparr"></a>
 ## 1. Prowlarr + Byparr
 
 If you ran `configure`, the Byparr proxy and Radarr/Sonarr apps should already exist. Verify under **Settings → Indexers → Indexer Proxies** and **Settings → Apps**.
@@ -167,6 +168,7 @@ If `VPN_PORT_FORWARDING=on`: enable **Bypass authentication for clients on local
 
 ---
 
+<a id="3-radarr--sonarr--hygiene"></a>
 ## 3. Radarr / Sonarr / hygiene
 
 <a id="3-radarr--sonarr"></a>
@@ -198,6 +200,7 @@ If Jellyfin or Seerr automation fails (version quirks), finish the UI wizard onc
 
 ---
 
+<a id="5-recyclarr--maintainerr--homepage"></a>
 ## 5. Recyclarr / Maintainerr / Homepage
 
 <a id="8-decluttarr--maintainerr"></a>

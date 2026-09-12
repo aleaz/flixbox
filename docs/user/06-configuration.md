@@ -127,6 +127,8 @@ Flixbox uses **five credential types** for inter-app wiring (plus per-indexer tr
 
 Compose passes some credentials as **container environment variables** (for example `QBITTORRENT_PASSWORD`, `RADARR_API_KEY` on Decluttarr). Anyone who can run `docker inspect` or `docker exec` on the host can read them. That is normal for Compose homelab stacks — keep Docker socket access limited to the operator account. API keys also live under `${CONFIG_DIR}` in app config files; treat backups of `config/` like `.env`. See [ADR 0018](../adr/0018-runtime-secrets-and-lan-trust.md) and [Access profiles — threat model](13-access-profiles.md#threat-model-homelab).
 
+<a id="accidental--intentional-key-changes"></a>
+<a id="accidental-intentional-key-changes"></a>
 ### Accidental / intentional key changes
 
 Changing a password or regenerating an API key **in a WebUI alone** does not update every consumer. Use this table — especially after an accidental click on “Regenerate”. For full rotation procedures, see [Credential rotation runbook](15-credential-rotation.md).
@@ -210,6 +212,8 @@ To re-enable slow with a custom floor, set `DECLUTTARR_REMOVE_SLOW=True` (Declut
 | `SEERR_LOG_LEVEL` | `info` | `error`, `warn`, `info`, `debug`. |
 | `PLEX_CLAIM` | (empty) | One-time claim token from [plex.tv/claim](https://www.plex.tv/claim/) (profile `plex`). |
 
+<a id="vpn-only-gluetun"></a>
+<a id="vpn-mode-only"></a>
 ## VPN only (Gluetun)
 
 Ignore when `FLIXBOX_MODE=direct`. Full guide: [VPN and Direct](07-vpn-and-direct.md).

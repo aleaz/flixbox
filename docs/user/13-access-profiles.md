@@ -65,6 +65,8 @@ With `FLIXBOX_ACCESS_PROFILE=shared`, `init` generates **`FLIXBOX_ARR_UI_USER`**
 | qBittorrent WebUI | `127.0.0.1` only (BitTorrent listen port stays published) |
 | Jellyfin, Seerr, Homepage | Still on LAN (household consumers) |
 
+<a id="homepage-links-from-phones--tvs"></a>
+<a id="homepage-links-from-phones-tvs"></a>
 ### Homepage links from phones / TVs
 
 Templates default to `href: http://localhost:…`, which only works on the Docker host.

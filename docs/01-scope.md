@@ -68,7 +68,7 @@ MVP is done when all of the following are true:
 
 1. Modular Compose starts the MVP inventory with `FLIXBOX_MODE` selecting VPN vs Direct downloaders, plus optional profiles (`plex` / `proxy` / `recyclarr`) as designed. `docker-socket-proxy` always runs with Homepage ([ADR 0022](adr/0022-operator-footgun-remediations.md)).
 2. All download/media containers mount the same `${DATA_DIR}:/data` parent; hardlinks work on a single local filesystem (including `torrents/incomplete`).
-3. VPN mode: qBittorrent shares Gluetun netns; ports published on Gluetun; healthcheck gates start; killswitch drops egress if tunnel is down; port-forward hook documented/wired when provider supports it; `vpn-test` reports masked IP.
+3. VPN mode: qBittorrent shares Gluetun netns; ports published on Gluetun; healthcheck gates start; killswitch drops egress if tunnel is down; port-forward hook documented/wired when provider supports it; `vpn-test` reports the downloader egress public IP (VPN = tunnel IP, not home ISP).
 4. Direct mode: qBittorrent on `flixbox_net` without Gluetun.
 5. Decluttarr reaches Radarr/Sonarr and qBittorrent at `http://qbittorrent:8080` in both VPN and Direct ([ADR 0014](adr/0014-stable-qbit-download-hostname.md)).
 6. Maintainerr is configured against Jellyfin + Radarr/Sonarr (Plex only if Plex profile enabled).

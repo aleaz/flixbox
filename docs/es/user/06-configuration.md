@@ -33,7 +33,7 @@ Defaults de plataforma cuando ejecutas `./bin/flixbox init` (`.env` nuevo):
 
 En Linux, `/srv/flixbox/…` no es escribible hasta que lo crees (normalmente con `sudo`) o elijas otra ruta — ver [Install — Storage paths and permissions](04-install.md#storage-paths-and-permissions). Flixbox solo lee rutas desde `.env`; un `export DATA_DIR=…` en el shell no afecta a `init` ni a `up` a menos que también escribas ese valor en `.env`.
 
-| Variable | Default | Valores válidos | Notas |
+| Variable | Valor por defecto | Valores válidos | Notas |
 | --- | --- | --- | --- |
 | `FLIXBOX_MODE` | `direct` | `direct`, `vpn` | **Único switch que Compose lee** para downloaders. Ver [VPN y Direct](07-vpn-and-direct.md). |
 | `VPN_ENABLED` | `false` | `true`, `false` | **Compose no lo lee.** Espejo del modo; `init` lo sincroniza. Manténlo alineado (`direct`↔`false`, `vpn`↔`true`) para que docs/CLI no mientan. |
@@ -46,7 +46,7 @@ En Linux, `/srv/flixbox/…` no es escribible hasta que lo crees (normalmente co
 
 Guía completa: [13 — Access profiles](13-access-profiles.md).
 
-| Variable | Default | Valores | Efecto |
+| Variable | Valor por defecto | Valores | Efecto |
 | --- | --- | --- | --- |
 | `FLIXBOX_ACCESS_PROFILE` | `trusted` | `trusted`, `shared` | `trusted`: WebUI *arr abierta en LAN (RFC1918). `shared`: *arr exige login (`Forms`) + puertos admin en localhost. |
 | `FLIXBOX_ARR_AUTH_METHOD` | *(desde el perfil)* | `External`, `Forms` | Lo pone `init` — no lo edites a mano salvo que conozcas la auth de Servarr. |
@@ -62,7 +62,7 @@ Tras cambiar `FLIXBOX_ACCESS_PROFILE`: `./bin/flixbox up`, `reload` o `configure
 <a id="file-ownership-and-timezone"></a>
 ## Propiedad de archivos y zona horaria
 
-| Variable | Default | Notas |
+| Variable | Valor por defecto | Notas |
 | --- | --- | --- |
 | `PUID` | `1000` (Linux) / `id -u` (macOS vía `init`) | UID para contenedores estilo linuxserver y propiedad de archivos. |
 | `PGID` | `1000` (Linux) / `id -g` (macOS vía `init`) | GID; debe coincidir con el grupo dueño de `DATA_DIR`. |
@@ -80,14 +80,14 @@ Tras cambiar cualquier `*_PORT` en `.env`:
 2. Si `up`/`reload` avisan que las **plantillas de Homepage son más nuevas que la config en vivo**, ejecuta `./bin/flixbox homepage refresh` (o `reload --reset-homepage`) para que layout/CSS/icons del repo reemplacen los archivos gestionados en vivo (se escribe un backup con timestamp bajo `${CONFIG_DIR}/homepage.bak.*`).
 2. Los download clients de *arr siguen usando puertos **internos** (`8080` para qBit) — ver [URLs del download client](#download-client-urls-arr-ui).
 
-| Variable | Default | Servicio |
+| Variable | Valor por defecto | Servicio |
 | --- | --- | --- |
 | `HOMEPAGE_PORT` | `3000` | Homepage |
 | `SEERR_PORT` | `5055` | Seerr |
 | `JELLYFIN_PORT` | `8096` | Jellyfin |
 | `QBITTORRENT_PORT` | `8080` | WebUI de qBittorrent (publicado en Gluetun en modo VPN). El navegador usa este puerto; *arr usan el **8080** interno. Si lo remapeas, ver [First-run §2b.1](05-first-run.md#2b1-webui-stuck-on-plain-unauthorized-qbittorrent-5x) (Host header vs publish de Docker). |
 | `QBITTORRENT_BT_PORT` | `6881` | Puerto de escucha BitTorrent |
-| `FLIXBOX_QBIT_FORCE_PATHS` | `false` | Si es `true`, las rutas de guardado de qBit se resetean a `/data/torrents/...` en cada arranque. Default: solo corrige rutas faltantes o de linuxserver `/downloads/` ([First-run §2c](05-first-run.md#2c-download-paths-automatic)). |
+| `FLIXBOX_QBIT_FORCE_PATHS` | `false` | Si es `true`, las rutas de guardado de qBit se resetean a `/data/torrents/...` en cada arranque. Por defecto: solo corrige rutas faltantes o de linuxserver `/downloads/` ([First-run §2c](05-first-run.md#2c-download-paths-automatic)). |
 | `PROWLARR_PORT` | `9696` | Prowlarr |
 | `BYPARR_PORT` | `8191` | Byparr |
 | `RADARR_PORT` | `7878` | Radarr |
@@ -208,7 +208,7 @@ La mayoría de las apps de Flixbox hablan por la red Docker (`flixbox_net`). Sol
 <a id="decluttarr-tuning"></a>
 ## Ajuste de Decluttarr
 
-| Variable | Default | Notas |
+| Variable | Valor por defecto | Notas |
 | --- | --- | --- |
 | `DECLUTTARR_QBIT_URL` | `http://qbittorrent:8080` | Siempre (ADR 0014). La pone/normaliza `flixbox init`. |
 | `DECLUTTARR_REMOVE_TIMER` | `15` | Minutos entre comprobaciones de cola. |
@@ -220,7 +220,7 @@ Para reactivar slow con un piso personalizado, pon `DECLUTTARR_REMOVE_SLOW=True`
 <a id="app-specific"></a>
 ## Específico por app
 
-| Variable | Default | Notas |
+| Variable | Valor por defecto | Notas |
 | --- | --- | --- |
 | `FLIXBOX_PUBLIC_HOST` | (vacío) | IP LAN o DNS (sin scheme/port). En `up`/`reload`/`configure`: fija hrefs de Jellyfin/Seerr en Homepage; añade `host:HOMEPAGE_PORT` a `HOMEPAGE_ALLOWED_HOSTS`; rellena `JELLYFIN_PUBLISHED_URL` vacío. Ver [Access profiles — Homepage](13-access-profiles.md#homepage-links-from-phones--tvs). |
 | `HOMEPAGE_ALLOWED_HOSTS` | `localhost:3000,127.0.0.1:3000` | Allowlist de Host de Homepage. Se auto-extiende desde `FLIXBOX_PUBLIC_HOST` cuando está definido. Aún puedes añadir hosts extra (DNS de Caddy, etc.). |
@@ -239,7 +239,7 @@ Ignora cuando `FLIXBOX_MODE=direct`. Guía completa: [VPN y Direct](07-vpn-and-d
 
 **El modo no está en esta tabla** — pon `FLIXBOX_MODE=vpn` y `VPN_ENABLED=true` en la sección **REQUIRED** de `.env` (arriba), luego rellena las variables de abajo. `flixbox init` sincroniza `VPN_ENABLED` y `DECLUTTARR_QBIT_URL`.
 
-| Variable | Default | Notas |
+| Variable | Valor por defecto | Notas |
 | --- | --- | --- |
 | `VPN_SERVICE_PROVIDER` | `protonvpn` | Id de proveedor Gluetun, o `custom` para un `.ovpn` montado — ver [gluetun-wiki](https://github.com/qdm12/gluetun-wiki). |
 | `VPN_TYPE` | `wireguard` | `wireguard` u `openvpn`. |

@@ -90,7 +90,7 @@ Configúralos en el WebUI tras el primer login. Ruta: **Options** (icono de engr
 | --- | --- | --- | --- |
 | **UPnP / NAT-PMP** | Off | Off | Evita abrir puertos en tu router real; el hook Flixbox/Gluetun ya desactiva UPnP al actualizar el port-forward |
 | **Use a proxy** | Off | Off | Flixbox usa el netns de la VPN, no un proxy SOCKS/HTTP en qBit |
-| **Interface / bind** | Default | Default | En modo VPN el netns de Gluetun ya restringe el egress; el bind manual suele ser innecesario |
+| **Interface / bind** | Predeterminado | Predeterminado | En modo VPN el netns de Gluetun ya restringe el egress; el bind manual suele ser innecesario |
 
 **Port forwarding de VPN** (`VPN_PORT_FORWARDING=on` en `.env`): mejora la conectividad entrante y el ratio en algunos setups. Los peers siguen viendo la **IP de la VPN**, no la de casa. Compromiso: algunos trackers bloquean rangos VPN conocidos; tu proveedor puede correlacionar el puerto reenviado con tu sesión.
 
