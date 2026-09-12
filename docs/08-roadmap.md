@@ -26,7 +26,7 @@ MVP Definition of Done is met. Before announcing a public `v0.1.0` tag:
 
 - [x] Key screenshots P0 in `docs/images/` (P2 `seerr-request` / `jellyfin-library` optional)
 - [x] Complete Spanish user guide mirror (`docs/es/user/`)
-- Finalize [releases/v0.1.0-notes.md](releases/v0.1.0-notes.md) with the release commit SHA after push
+- [x] Finalize [releases/v0.1.0-notes.md](releases/v0.1.0-notes.md) with the release commit SHA
 
 Already done for that gate: pinned images, CI phase 1–2, idempotent `configure`, VPN `tun0` bind path exercised on a live Gluetun install, EN+ES user guides.
 
