@@ -12,13 +12,13 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="Licencia MIT"></a>
   <a href="https://github.com/aleaz/flixbox/actions/workflows/ci.yml"><img src="https://github.com/aleaz/flixbox/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="docs/user/04-install.md"><img src="https://img.shields.io/badge/install-~15%20min-10b981.svg" alt="Install ~15 min"></a>
+  <a href="docs/es/user/04-install.md"><img src="https://img.shields.io/badge/install-~15%20min-10b981.svg" alt="Install ~15 min"></a>
 </p>
 
 <p align="center">
   <a href="README.md">English</a> ·
   <a href="docs/es/user/INDEX.md">Guía</a> ·
-  <a href="docs/user/04-install.md">Install (EN)</a>
+  <a href="docs/es/user/04-install.md">Install</a>
 </p>
 
 ---
@@ -33,7 +33,7 @@
 | **2** | **Descargar** | qBittorrent — Direct, o vía Gluetun en modo VPN |
 | **3** | **Ver** | Hardlink a `/data/media` → Jellyfin |
 
-No hace falta Pi-hole ni reverse proxy para arrancar. Diagrama completo: [How it works (EN)](docs/user/02-how-it-works.md).
+No hace falta Pi-hole ni reverse proxy para arrancar. Diagrama completo: [Cómo funciona](docs/es/user/02-how-it-works.md).
 
 ---
 
@@ -62,7 +62,7 @@ Cold start en el CLI: `cp .env.example .env`, `init`, `up`, `status`, luego `con
 
 ## Inicio rápido
 
-**Necesitas:** Docker Compose v2, **4 GB RAM mínimo / 8 GB cómodo**, Linux x86_64/ARM64 (macOS best-effort). Lista completa: [Requirements (EN)](docs/user/03-requirements.md).
+**Necesitas:** Docker Compose v2, **4 GB RAM mínimo / 8 GB cómodo**, Linux x86_64/ARM64 (macOS best-effort). Lista completa: [Requisitos](docs/es/user/03-requirements.md).
 
 **1. Clonar y definir paths**
 
@@ -73,6 +73,8 @@ cp .env.example .env
 # Edita DATA_DIR, CONFIG_DIR (escribibles), FLIXBOX_MODE, TZ
 # Opcional: FLIXBOX_ACCESS_PROFILE=shared si compartes Wi‑Fi
 ```
+
+**Tip (Linux):** crea y haz `chown` de los paths primero (por defecto `/srv/flixbox/…`), o apunta `.env` a paths que ya sean tuyos — [Install — rutas](docs/es/user/04-install.md#storage-paths-and-permissions).
 
 **2. Levantar el stack**
 
@@ -91,28 +93,28 @@ cp .env.example .env
 ./bin/flixbox credentials show admin   # admin de Jellyfin (cuando esté)
 ```
 
-Mapa completo: [Credentials and API keys (EN)](docs/user/06-configuration.md#credentials-and-api-keys).
+Mapa completo: [Credenciales y API keys](docs/es/user/06-configuration.md#credentials-and-api-keys).
 
 **3. Cablear las apps**
 
 ```bash
 ./bin/flixbox configure
+# Si FLIXBOX_ACCESS_PROFILE=shared:
+# ./bin/flixbox credentials set arr-ui --generate
 ```
 
-Después, indexers en Prowlarr (~10–15 min): [First-run (EN)](docs/user/05-first-run.md).
+Después, indexers en Prowlarr (~10–15 min): [First-run](docs/es/user/05-first-run.md).
 
-**Listo cuando:** `status` healthy · `configure` con **0 failed** · ≥1 indexer · pedido Seerr en *arr · reproduce en Jellyfin — detalle en [First-run](docs/user/05-first-run.md#youre-done-when).
-
-**Tip:** En Linux, crea y haz `chown` de los paths (por defecto `/srv/flixbox/…`), o apunta `.env` a paths que ya sean tuyos — [Install — storage paths (EN)](docs/user/04-install.md#storage-paths-and-permissions).
+**Listo cuando:** `status` healthy · `configure` con **0 failed** · ≥1 indexer · pedido Seerr en *arr · reproduce en Jellyfin — detalle en [First-run](docs/es/user/05-first-run.md#youre-done-when).
 
 ## Elige tu camino
 
 | Camino | Cuándo | Empieza aquí |
 | --- | --- | --- |
-| **Primera prueba (Direct)** | Solo LAN, aprender el flujo | [Install (EN)](docs/user/04-install.md) |
-| **Wi‑Fi compartido** | Convivientes en la misma LAN | `FLIXBOX_ACCESS_PROFILE=shared` — [Access profiles (EN)](docs/user/13-access-profiles.md) |
-| **Privacidad (VPN)** | Torrents en producción | [VPN and Direct (EN)](docs/user/07-vpn-and-direct.md) |
-| **HTTPS** | Reverse proxy | Perfil Caddy en [Configuration (EN)](docs/user/06-configuration.md) |
+| **Primera prueba (Direct)** | Solo LAN, aprender el flujo | [Install](docs/es/user/04-install.md) |
+| **Wi‑Fi compartido** | Convivientes en la misma LAN | `FLIXBOX_ACCESS_PROFILE=shared` y luego `credentials set arr-ui` — [Perfiles de acceso](docs/es/user/13-access-profiles.md) |
+| **Privacidad (VPN)** | Torrents en producción | [VPN y Direct](docs/es/user/07-vpn-and-direct.md) |
+| **HTTPS** | Reverse proxy (LAN; no endurecido solo para WAN) | Perfil Caddy en [Configuración](docs/es/user/06-configuration.md) |
 | **+ Plex** | Junto a Jellyfin o en su lugar | `./bin/flixbox up plex` |
 
 ## Documentación
@@ -120,10 +122,10 @@ Después, indexers en Prowlarr (~10–15 min): [First-run (EN)](docs/user/05-fir
 | Doc | Para qué |
 | --- | --- |
 | [Guía de usuario (ES)](docs/es/user/INDEX.md) | Hub en español (espejo completo) |
-| [Install (EN)](docs/user/04-install.md) | Clone → `init` → `up` |
-| [First-run (EN)](docs/user/05-first-run.md) | `configure` + indexers |
-| [Referencia rápida (ES)](docs/es/user/REFERENCE.md) | URLs, puertos, CLI |
-| [Troubleshooting (EN)](docs/user/10-troubleshooting.md) | Fallos frecuentes |
+| [Install](docs/es/user/04-install.md) | Clone → `init` → `up` |
+| [First-run](docs/es/user/05-first-run.md) | `configure` + indexers |
+| [Referencia rápida](docs/es/user/REFERENCE.md) | URLs, puertos, CLI |
+| [Troubleshooting](docs/es/user/10-troubleshooting.md) | Fallos frecuentes |
 
 **Contribuidores:** [Docs map (EN)](docs/INDEX.md) · [ADRs](docs/adr/) · [AGENTS.md](AGENTS.md) · [Doc style (EN)](docs/00-doc-style.md)
 

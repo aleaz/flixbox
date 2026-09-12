@@ -4,6 +4,10 @@
 # Default: LAN virtual hosts on port 80 (HTTP).
 # For public HTTPS, replace domain prefixes with your public FQDN (e.g. jellyfin.yourdomain.com)
 # and Caddy will automatically manage Let's Encrypt / ZeroSSL TLS certificates on port 443.
+#
+# WARNING: This file has NO authentication. Do not publish :80/:443 to the WAN without a
+# separate auth layer (SSO is post-MVP). Prefer LAN-only or a hardened reverse proxy you control.
+# Homepage has no login; Seerr/Jellyfin auth alone is not a substitute for edge access control.
 
 http://{$JELLYFIN_DOMAIN:jellyfin.local} {
 	encode gzip

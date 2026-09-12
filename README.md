@@ -74,6 +74,8 @@ cp .env.example .env
 # Optional: FLIXBOX_ACCESS_PROFILE=shared for roommates on the same Wi‑Fi
 ```
 
+**Tip (Linux):** create and `chown` data paths first (defaults use `/srv/flixbox/…`), or point `.env` at paths you already own — [Install — storage paths](docs/user/04-install.md#storage-paths-and-permissions).
+
 **2. Bring the stack up**
 
 ```bash
@@ -97,22 +99,22 @@ Full map: [Credentials and API keys](docs/user/06-configuration.md#credentials-a
 
 ```bash
 ./bin/flixbox configure
+# If FLIXBOX_ACCESS_PROFILE=shared:
+# ./bin/flixbox credentials set arr-ui --generate
 ```
 
 Then add Prowlarr indexers (~10–15 min): [First-run guide](docs/user/05-first-run.md).
 
 **You’re done when:** `status` healthy · `configure` with **0 failed** · ≥1 indexer · Seerr request hits *arr · plays in Jellyfin — details in [First-run](docs/user/05-first-run.md#youre-done-when).
 
-**Tip:** On Linux, create and `chown` your data paths first (defaults use `/srv/flixbox/…`), or point `.env` at paths you already own — [Install — storage paths](docs/user/04-install.md#storage-paths-and-permissions).
-
 ## Choose your path
 
 | Path | When | Start here |
 | --- | --- | --- |
 | **First try (Direct)** | LAN only, learn the flow | [Install](docs/user/04-install.md) |
-| **Shared Wi‑Fi** | Roommates on the same LAN | `FLIXBOX_ACCESS_PROFILE=shared` — [Access profiles](docs/user/13-access-profiles.md) |
+| **Shared Wi‑Fi** | Roommates on the same LAN | `FLIXBOX_ACCESS_PROFILE=shared` then `credentials set arr-ui` — [Access profiles](docs/user/13-access-profiles.md) |
 | **Privacy (VPN)** | Production torrents | [VPN and Direct](docs/user/07-vpn-and-direct.md) |
-| **HTTPS** | Reverse proxy | Caddy profile in [Configuration](docs/user/06-configuration.md) |
+| **HTTPS** | Reverse proxy (LAN; not WAN-hardened alone) | Caddy profile in [Configuration](docs/user/06-configuration.md) |
 | **+ Plex** | Alongside or instead of Jellyfin | `./bin/flixbox up plex` |
 
 ## Documentation

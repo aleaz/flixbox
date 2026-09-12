@@ -10,7 +10,7 @@ Monolithic compose files drift, become unreadable, and mix optional concerns (pr
 ## Decision
 
 - Use Docker Compose v2 **`include:`** with files under `compose/`.
-- Use **profiles** for optional pieces (e.g. Plex, socket-proxy).
+- Use **profiles** for optional pieces (e.g. Plex, Caddy/`proxy`, Recyclarr). **`docker-socket-proxy` is not a profile** — it always runs with Homepage ([ADR 0022](0022-operator-footgun-remediations.md)).
 - No single compose YAML file may exceed **150 lines**.
 
 ## Consequences

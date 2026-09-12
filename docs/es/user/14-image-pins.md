@@ -1,4 +1,5 @@
-# Image pins
+<a id="image-pins"></a>
+# Pins de imágenes
 
 **Idiomas:** [English](../../user/14-image-pins.md) · Español (esta página)
 

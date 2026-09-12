@@ -32,7 +32,7 @@ configure_prowlarr() {
   if json_query prowlarr-has-cf-proxy "$proxies" '{}' >/dev/null 2>&1; then
     skip "Prowlarr: Byparr/FlareSolverr proxy"
   elif ! flixbox_container_running flixbox-byparr; then
-    info "Prowlarr: Byparr not running — skipping CF proxy (start with profile proxy or add manually)"
+    info "Prowlarr: Byparr not running — skipping CF proxy (ensure Byparr is up with the full stack, then re-run configure, or add the proxy manually)"
     skip "Prowlarr: Byparr/FlareSolverr proxy"
   else
     local proxy_payload

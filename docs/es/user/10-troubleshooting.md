@@ -1,4 +1,5 @@
-# Troubleshooting
+<a id="troubleshooting"></a>
+# Solución de problemas
 
 **Idiomas:** [English](../../user/10-troubleshooting.md) · Español (esta página)
 

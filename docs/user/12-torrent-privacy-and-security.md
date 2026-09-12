@@ -130,8 +130,8 @@ Your host / Docker
     │
     ├─► *arr/Jellyfin behind Gluetun ─────► broken metadata + wrong design
     │
-    └─► Radarr host still `qbittorrent` ───► *arr cannot reach qBit in VPN mode
-        after switching to VPN without UI update
+    └─► Download client host changed off `qbittorrent` ───► *arr cannot reach qBit
+        (keep host `qbittorrent` in VPN and Direct — ADR 0014)
 ```
 
 | Symptom | Likely cause | Fix |

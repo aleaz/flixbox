@@ -68,8 +68,8 @@ See also [`docs/es/README.md`](../es/README.md).
 | Root landing | `README.es.md` | Link from `README.md` when present |
 | User guide pages | `docs/es/user/*.md` | Same basenames as `docs/user/` (`01-overview.md`, …) |
 | User guide index | `docs/es/user/INDEX.md` | Tracks EN revision when useful |
-| Quick reference | `docs/es/user/REFERENCE.md` | **Currently the only translated user page besides INDEX** |
-| UI screenshots | `docs/images/es/` | Same basenames as `docs/images/en/` |
+| Quick reference | `docs/es/user/REFERENCE.md` | Same basename as EN |
+| UI screenshots | `docs/images/es/` | Same basenames as `docs/images/en/` (P0 may reuse `en/` until captured) |
 | Shared UI assets | `docs/images/shared/` | Logo, CLI GIF — language-neutral |
 | Concept diagrams | Mermaid in markdown | Not raster under `shared/` |
 
@@ -80,15 +80,14 @@ See also [`docs/es/README.md`](../es/README.md).
 | Engineering docs | `docs/00–09`, `docs/10-ci-plan.md`, `docs/08-roadmap.md` | Low ROI for operators; EN canonical |
 | ADRs | `docs/adr/` | Decision record, not operator-facing |
 | Agent / contributor | `AGENTS.md`, `.cursor/rules/` | Tooling and contributor contracts |
-| Operator runbooks added after v0.1 EN freeze | e.g. `docs/user/15-credential-rotation.md` | Translate in a follow-up ES PR after EN stabilizes |
 | In-container templates | `templates/maintainerr/rule-pack.md`, etc. | Copied to `${CONFIG_DIR}`; EN only in MVP |
 
-**Process boundary:** Spanish mirrors **user guide pages** under `docs/es/user/` only. Do not create `docs/es/adr/` or duplicate engineering trees. Untranslated EN pages remain the source of truth; ES INDEX may link to EN for deep dives.
+**Process boundary:** Spanish mirrors **user guide pages** under `docs/es/user/` only. Do not create `docs/es/adr/` or duplicate engineering trees. If EN and ES diverge, **EN wins** until ES is updated.
 
-**Current mirror state (2026-09):** `docs/es/user/INDEX.md` + `docs/es/user/REFERENCE.md` exist; full page mirror (`01`–`14`) is scheduled before first public release, not required for MVP CI.
+**Current mirror state (2026-09):** Full `docs/es/user/` mirror (`01`–`16` + INDEX + REFERENCE) ships with the English guide. `README.es.md` is the Spanish landing. UI screenshots under `docs/images/es/` remain optional (P0 assets live in `en/` + `shared/`).
 
 ## Consequences
 
 - Folder layout is fixed now (`docs/es/` reserved, `images/{shared,en,es}/` ready).
 - No doc toolchain dependency yet.
-- Spanish work is scheduled for “functional stack → before first release”, not day one of coding.
+- Spanish work lands as an EN-first mirror; keep ES current when operator-facing EN pages change.
