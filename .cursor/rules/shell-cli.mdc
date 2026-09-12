@@ -6,11 +6,11 @@ alwaysApply: false
 
 # Shell / CLI rules
 
-- Bash only for MVP (`bin/flixbox`); do not add `bin/flixbox.ps1` unless scope changes.
+- Bash only for the core CLI (`bin/flixbox`); do not add `bin/flixbox.ps1` unless scope changes.
 - Start scripts with `set -euo pipefail`.
 - Trap EXIT/INT/TERM when altering terminal state or temp files.
 - Respect `NO_COLOR` and non-TTY output.
-- MVP commands: `init`, `up`, `down`, `restart`, `reload`, `status`, `logs`, `vpn-test`, `configure`, `credentials`.
+- Core CLI commands: `init`, `up`, `down`, `restart`, `reload`, `status`, `logs`, `vpn-test`, `configure`, `credentials`.
 - `init` must create data/config trees, generate empty Servarr API keys / passwords when missing, and write local untracked env — never commit secrets.
 - `configure` is idempotent (GET → skip if correct); closes the Decluttarr/Unpackerr secret loop; does not invent indexer credentials.
 - `credentials show|set` (ADR 0020): operator secret read/rotate; `arr-ui` apply only under `shared` via Host Config; never print secrets from `status`.

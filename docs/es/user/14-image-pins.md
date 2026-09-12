@@ -36,7 +36,7 @@ Los módulos Compose de Flixbox fijan las imágenes Docker a **tags de versión 
 4. Ejecuta `./scripts/ci-validate.sh` (falla si queda algún `image: …:latest`).
 5. Smoke: [11 — Smoke test](11-smoke-test.md).
 
-Los digests (`@sha256:…`) son opcionales para un pin más estricto de supply-chain; los tags de versión son la línea base del MVP.
+Los digests (`@sha256:…`) son opcionales para un pin más estricto de supply-chain; los tags de versión son la línea base de v0.1.
 
 <a id="related"></a>
 ## Relacionado

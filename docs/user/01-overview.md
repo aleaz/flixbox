@@ -20,7 +20,7 @@ Flixbox is an open-source, Docker-based home media suite: request a title, downl
 - People who need Kubernetes or multi-node cloud HA as the primary model
 - Anyone expecting Flixbox to decide legal questions about what you download
 
-## What you get (MVP)
+## What you get
 
 | Piece | Role |
 | --- | --- |

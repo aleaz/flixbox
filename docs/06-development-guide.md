@@ -1,7 +1,7 @@
 # Development guide
 
-**Status:** Working Draft  
-Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP services before the Compose contracts work.
+**Status:** Working Draft — v0.1 baseline shipped; follow this order for new work (current focus: v0.2).  
+Implement Flixbox in this order. Do not skip ahead to CLI polish or out-of-baseline services before the Compose contracts work.
 
 ## Prerequisites for contributors
 
@@ -14,7 +14,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 1. Root `README.md`, `AGENTS.md`, `.gitignore`, `.editorconfig`, `.gitattributes`, `LICENSE` (MIT)
 2. `.env.example` (`DATA_DIR`, `CONFIG_DIR`, `PUID`, `PGID`, `UMASK`, `TZ`, `VPN_ENABLED`, Gluetun vars)
 3. Document target dirs: `compose/`, `bin/`, `scripts/`
-4. Image tags: `:latest` OK for early phases (ADR 0010); pin before v0.1
+4. Image tags: pin before public tags (ADR 0010); `:latest` only for local experiments
 
 **Exit criteria:** Clone is understandable; no secrets; docs link correctly; MIT `LICENSE` present.
 
@@ -74,7 +74,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 3. `up` selects VPN vs Direct compose set from env
 4. Warn on unsafe paths (NFS config, `/mnt/c`, exFAT)
 
-**Exit criteria:** Matches FR-9 MVP command set on Linux.
+**Exit criteria:** Matches FR-9 core CLI command set on Linux.
 
 **Status:** Done.
 
@@ -88,7 +88,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 
 **Status:** Done.
 
-## Phase 7 — Release hygiene (before public v0.1)
+## Phase 7 — Release hygiene (v0.1 — done)
 
 1. Pin image tags
 2. CI phase 1 done — see [10-ci-plan.md](10-ci-plan.md); phase 2 (Trivy) before public tag
@@ -97,7 +97,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 5. Pin image tags (leave `:latest` only for pre-release experimentation)
 6. Tag/release only when Definition of Done in scope doc is met
 
-**Status:** Done for DoD / operator verification on Linux. Spanish user-guide mirror complete. Remaining before a public `v0.1.0` tag: push + fill release SHA (optional P2 screenshots — see [08-roadmap.md](08-roadmap.md)).
+**Status:** Done. Public tag **`v0.1.1`** published; notes in [releases/v0.1.1-notes.md](releases/v0.1.1-notes.md). Next work follows [08-roadmap.md](08-roadmap.md) (v0.2). Optional P2 screenshots may still land later.
 
 ## Manual wiring still expected (document, don’t fake)
 

@@ -32,7 +32,7 @@ Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010
 4. Run `./scripts/ci-validate.sh` (fails if any `image: …:latest` remains).
 5. Smoke: [11 — Smoke test](11-smoke-test.md).
 
-Digests (`@sha256:…`) are optional for stricter supply-chain pinning; version tags are the MVP baseline.
+Digests (`@sha256:…`) are optional for stricter supply-chain pinning; version tags are the v0.1 baseline.
 
 ## Related
 

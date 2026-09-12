@@ -34,7 +34,7 @@ Store `${DATA_DIR}` on a filesystem that supports hardlinks (**not exFAT**). On 
 - LAN access to service ports (or Caddy on 80/443)
 - Outbound HTTPS for metadata and indexers
 - VPN credentials if you enable VPN mode
-- **Do not** expose raw *arr ports to the public internet without auth (SSO is post-MVP; prefer LAN or a hardened reverse proxy)
+- **Do not** expose raw *arr ports to the public internet without auth (SSO is later / v0.4; prefer LAN or a hardened reverse proxy)
 
 Torrent-specific privacy (VPN mode, qBit settings, leak checks): [Torrent privacy and security](12-torrent-privacy-and-security.md).
 

@@ -97,7 +97,7 @@ Radarr, Sonarr, Prowlarr, and qBittorrent WebUI ports are for **LAN or localhost
 
 ## Threat model (homelab)
 
-Flixbox MVP assumes **one trusted operator** on the Docker host:
+Flixbox assumes **one trusted operator** on the Docker host:
 
 | Surface | Risk | Mitigation |
 | --- | --- | --- |

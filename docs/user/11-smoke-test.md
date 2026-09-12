@@ -1,4 +1,4 @@
-# MVP smoke test checklist
+# Smoke test checklist
 
 Use this checklist **before tagging v0.1**. It validates that the implemented stack works on a real host, not only that Compose resolves in CI.
 
@@ -64,7 +64,7 @@ To tear down:
 
 Expected Direct services: `bazarr`, `byparr`, `decluttarr`, `homepage`, `jellyfin`, `maintainerr`, `prowlarr`, `qbittorrent`, `radarr`, `seerr`, `sonarr`, `unpackerr`.
 
-## Phase Bʹ — Access profile `shared` (manual, before v0.1)
+## Phase Bʹ — Access profile `shared` (manual)
 
 Fresh paths recommended (or recreate *arr + admin-bound services after profile change).
 

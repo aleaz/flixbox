@@ -1,7 +1,7 @@
 # Vision
 
 **Project:** Flixbox  
-**Status:** Working Draft
+**Status:** Working Draft — product baseline shipped as **`v0.1.1`**
 
 ## Problem
 
@@ -24,7 +24,7 @@ It is designed as a public GitHub project: modular Compose, documented contracts
 ## Principles
 
 1. **Contracts over folklore** — Storage, VPN dual-mode, and Compose layout are explicit and tested.
-2. **MVP honesty** — Ship a closed service inventory first; optional media types and CLIs come later.
+2. **Inventory honesty** — Keep a closed core service list (v0.1 baseline); optional media types and CLIs come later.
 3. **Linux first** — Native Linux is the reference platform; WSL2 and macOS are best-effort.
 4. **FOSS-first media** — Jellyfin is primary; Plex is optional.
 5. **No secrets in git** — Credentials live only in local env/config volumes.
@@ -41,4 +41,4 @@ It is designed as a public GitHub project: modular Compose, documented contracts
 
 ## Success (north star)
 
-A new Linux host can clone the repo, run `./bin/flixbox init` and `./bin/flixbox up`, get a healthy MVP stack, verify hardlinks and (if enabled) VPN isolation, and use Seerr → Servarr → qBittorrent → Jellyfin end to end, with Decluttarr/Maintainerr available for queue and library hygiene.
+A new Linux host can clone the repo, run `./bin/flixbox init` and `./bin/flixbox up`, get a healthy core stack, verify hardlinks and (if enabled) VPN isolation, and use Seerr → Servarr → qBittorrent → Jellyfin end to end, with Decluttarr/Maintainerr available for queue and library hygiene.

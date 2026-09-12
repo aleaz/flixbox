@@ -26,8 +26,8 @@ Flixbox es un suite de medios doméstico open-source basado en Docker: pides un 
 - Quienes necesitan Kubernetes o HA multi-nodo en la nube como modelo principal
 - Quien espera que Flixbox decida las cuestiones legales sobre lo que descargas
 
-<a id="what-you-get-mvp"></a>
-## Qué obtienes (MVP)
+<a id="what-you-get"></a>
+## Qué obtienes
 
 | Pieza | Rol |
 | --- | --- |

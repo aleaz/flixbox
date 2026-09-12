@@ -19,4 +19,4 @@ alwaysApply: false
 - `requests.yml`: Seerr with `init: true` (`ghcr.io/seerr-team/seerr`).
 - `optimization.yml`: Unpackerr, Recyclarr, Decluttarr, Maintainerr — follow `docs/09-hygiene-defaults.md`.
 - Decluttarr qBit URL is always `http://qbittorrent:8080` (ADR 0014 — Gluetun aliases `qbittorrent` in VPN mode).
-- Do not add Lidarr/Readarr/SABnzbd/Whisper/Autobrr during MVP.
+- Do not add Lidarr/Readarr/SABnzbd/Whisper/Autobrr unless scope expands.

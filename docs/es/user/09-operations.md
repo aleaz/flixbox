@@ -117,7 +117,7 @@ Luego `./bin/flixbox up` y `docker compose restart qbittorrent`. Vuelve a `false
 - Hardlinks / filesystem: [02 — Cómo funciona](02-how-it-works.md)
 
 <a id="mvp-smoke-test-before-v01"></a>
-## Smoke test MVP (antes de v0.1)
+## Smoke test
 
 Checklist completo y helper automatizado:
 
