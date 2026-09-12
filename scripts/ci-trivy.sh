@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# Trivy config + image scans (warn-only until v0.1 pin policy tightens — docs/10-ci-plan.md §4.3).
-# Used by .github/workflows/ci.yml security job; optional locally when trivy is installed.
+# Trivy config + image scans.
+# CI (warn-only): TRIVY_BLOCK unset/0 — docs/10-ci-plan.md §4.3.
+# Release tags: TRIVY_BLOCK=1; prefer TRIVY_SEVERITY=CRITICAL for upstream image noise.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,6 +13,7 @@ source "${ROOT_DIR}/scripts/lib/platform.sh"
 
 CI_ENV="${ROOT_DIR}/.ci-env"
 TRIVY_BLOCK="${TRIVY_BLOCK:-0}"
+TRIVY_SEVERITY="${TRIVY_SEVERITY:-CRITICAL,HIGH}"
 
 if ! command -v trivy >/dev/null 2>&1; then
   echo "WARN: trivy not installed — skipping security scans (install for local parity)" >&2
@@ -57,9 +59,9 @@ trap cleanup EXIT
 write_ci_env
 
 trivy_or_warn "config scan compose/" \
-  trivy config --severity CRITICAL,HIGH --exit-code 1 compose/
+  trivy config --severity "${TRIVY_SEVERITY}" --exit-code 1 compose/
 trivy_or_warn "config scan compose.yaml" \
-  trivy config --severity CRITICAL,HIGH --exit-code 1 compose.yaml
+  trivy config --severity "${TRIVY_SEVERITY}" --exit-code 1 compose.yaml
 pass "config scan (compose/)"
 
 mapfile -t images < <(docker compose --env-file "${CI_ENV}" config --images 2>/dev/null | sort -u)
@@ -70,9 +72,11 @@ for img in "${images[@]}"; do
   [[ -n "$img" ]] || continue
   printf 'Scanning image: %s\n' "$img"
   trivy_or_warn "image scan ${img}" \
-    trivy image --severity CRITICAL,HIGH --exit-code 1 "$img"
+    trivy image --severity "${TRIVY_SEVERITY}" --exit-code 1 "$img"
   scanned=$((scanned + 1))
 done
 
 pass "image scan (${scanned} images from compose config)"
-printf 'Trivy scans completed (policy: %s).\n' "$([[ "$TRIVY_BLOCK" == "1" ]] && echo block || echo warn-only)"
+printf 'Trivy scans completed (policy: %s, severity: %s).\n' \
+  "$([[ "$TRIVY_BLOCK" == "1" ]] && echo block || echo warn-only)" \
+  "${TRIVY_SEVERITY}"

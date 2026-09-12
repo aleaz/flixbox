@@ -45,9 +45,12 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq trivy
 
-      - name: Trivy scan (blocking on release)
+      - name: Trivy scan (blocking CRITICAL on release)
         env:
           TRIVY_BLOCK: "1"
+          # Upstream *arr/Homepage images often carry HIGH findings we cannot patch in-repo.
+          # Block release on CRITICAL; CI on main still warns on CRITICAL+HIGH.
+          TRIVY_SEVERITY: "CRITICAL"
         run: ./scripts/ci-trivy.sh
 
   release-digests:

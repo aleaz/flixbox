@@ -29,7 +29,7 @@ services:
       - flixbox_net
 
   homepage:
-    image: ghcr.io/gethomepage/homepage:v2.2.0
+    image: ghcr.io/gethomepage/homepage:v2.3.0
     container_name: flixbox-homepage
     environment:
       TZ: ${TZ:-UTC}

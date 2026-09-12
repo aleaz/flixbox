@@ -2,7 +2,7 @@
 
 Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010). Do not use `:latest` in `compose/`.
 
-**Pin set date:** 2026-09-06
+**Pin set date:** 2026-09-12
 
 | Service | Image | Tag |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010
 | Seerr | `ghcr.io/seerr-team/seerr` | `v3.4.1` |
 | Jellyfin | `lscr.io/linuxserver/jellyfin` | `10.11.11` |
 | Plex (profile) | `lscr.io/linuxserver/plex` | `1.43.3` |
-| Homepage | `ghcr.io/gethomepage/homepage` | `v2.2.0` |
+| Homepage | `ghcr.io/gethomepage/homepage` | `v2.3.0` |
 | Caddy (profile) | `caddy` | `2.11.4` |
 | docker-socket-proxy | `tecnativa/docker-socket-proxy` | `v0.5.0` |
 

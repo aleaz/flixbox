@@ -5,7 +5,7 @@
 
 Los módulos Compose de Flixbox fijan las imágenes Docker a **tags de versión explícitos** (ADR 0010). No uses `:latest` en `compose/`.
 
-**Fecha del set de pins:** 2026-09-06
+**Fecha del set de pins:** 2026-09-12
 
 | Servicio | Imagen | Tag |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ Los módulos Compose de Flixbox fijan las imágenes Docker a **tags de versión 
 | Seerr | `ghcr.io/seerr-team/seerr` | `v3.4.1` |
 | Jellyfin | `lscr.io/linuxserver/jellyfin` | `10.11.11` |
 | Plex (profile) | `lscr.io/linuxserver/plex` | `1.43.3` |
-| Homepage | `ghcr.io/gethomepage/homepage` | `v2.2.0` |
+| Homepage | `ghcr.io/gethomepage/homepage` | `v2.3.0` |
 | Caddy (profile) | `caddy` | `2.11.4` |
 | docker-socket-proxy | `tecnativa/docker-socket-proxy` | `v0.5.0` |
 
