@@ -1,0 +1,5 @@
+# Upstream image findings Flixbox cannot patch in-repo (assembler).
+# Revisit when bumping the Homepage pin past the fixed dependency versions.
+
+# Homepage v2.3.0 ships node-tar 7.5.11; fixed in 7.5.19 (gzip-bomb DoS in tar tooling).
+CVE-2026-59873

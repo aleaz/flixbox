@@ -59,9 +59,9 @@ trap cleanup EXIT
 write_ci_env
 
 trivy_or_warn "config scan compose/" \
-  trivy config --severity "${TRIVY_SEVERITY}" --exit-code 1 compose/
+  trivy config --severity "${TRIVY_SEVERITY}" --exit-code 1 --ignorefile "${ROOT_DIR}/.trivyignore" compose/
 trivy_or_warn "config scan compose.yaml" \
-  trivy config --severity "${TRIVY_SEVERITY}" --exit-code 1 compose.yaml
+  trivy config --severity "${TRIVY_SEVERITY}" --exit-code 1 --ignorefile "${ROOT_DIR}/.trivyignore" compose.yaml
 pass "config scan (compose/)"
 
 mapfile -t images < <(docker compose --env-file "${CI_ENV}" config --images 2>/dev/null | sort -u)
@@ -72,7 +72,7 @@ for img in "${images[@]}"; do
   [[ -n "$img" ]] || continue
   printf 'Scanning image: %s\n' "$img"
   trivy_or_warn "image scan ${img}" \
-    trivy image --severity "${TRIVY_SEVERITY}" --exit-code 1 "$img"
+    trivy image --severity "${TRIVY_SEVERITY}" --exit-code 1 --ignorefile "${ROOT_DIR}/.trivyignore" "$img"
   scanned=$((scanned + 1))
 done
 
