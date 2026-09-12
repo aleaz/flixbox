@@ -13,7 +13,7 @@ jobs:
     name: release-validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Contract validation
         run: ./scripts/ci-validate.sh
@@ -32,7 +32,7 @@ jobs:
     name: release-security
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Trivy
         run: |
@@ -55,13 +55,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [release-validate, release-security]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Record image digests
         run: ./scripts/ci-pin-digests.sh
 
       - name: Upload digest lock artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: image-digests
           path: compose/lock/digests.txt
