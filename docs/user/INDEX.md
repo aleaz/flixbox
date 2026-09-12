@@ -2,7 +2,7 @@
 
 Run a home media pipeline: request a title, download it (optionally over VPN), hardlink it into your library, and stream on Jellyfin — with a single CLI and sane defaults.
 
-**Language:** English (canonical). Spanish: [`docs/es/user/INDEX.md`](../es/user/INDEX.md) · [Quick reference (ES)](../es/user/REFERENCE.md).
+**Language:** English (canonical). Full Spanish mirror: [`docs/es/user/INDEX.md`](../es/user/INDEX.md) · [Quick reference (ES)](../es/user/REFERENCE.md).
 
 **Start here:** [Overview](01-overview.md) → [How it works](02-how-it-works.md) → [Install](04-install.md) (~15 min to `up`) → [First-run](05-first-run.md) (indexers + wiring).
 

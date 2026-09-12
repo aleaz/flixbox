@@ -119,7 +119,7 @@ Después, indexers en Prowlarr (~10–15 min): [First-run (EN)](docs/user/05-fir
 
 | Doc | Para qué |
 | --- | --- |
-| [Guía de usuario (ES)](docs/es/user/INDEX.md) | Hub en español (parcial) |
+| [Guía de usuario (ES)](docs/es/user/INDEX.md) | Hub en español (espejo completo) |
 | [Install (EN)](docs/user/04-install.md) | Clone → `init` → `up` |
 | [First-run (EN)](docs/user/05-first-run.md) | `configure` + indexers |
 | [Referencia rápida (ES)](docs/es/user/REFERENCE.md) | URLs, puertos, CLI |

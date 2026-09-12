@@ -97,7 +97,7 @@ Implement Flixbox in this order. Do not skip ahead to CLI polish or post-MVP ser
 5. Pin image tags (leave `:latest` only for pre-release experimentation)
 6. Tag/release only when Definition of Done in scope doc is met
 
-**Status:** Done for DoD / operator verification on Linux. Remaining before a public `v0.1.0` tag: screenshots + full Spanish user-guide mirror (see [08-roadmap.md](08-roadmap.md)).
+**Status:** Done for DoD / operator verification on Linux. Spanish user-guide mirror complete. Remaining before a public `v0.1.0` tag: push + fill release SHA (optional P2 screenshots — see [08-roadmap.md](08-roadmap.md)).
 
 ## Manual wiring still expected (document, don’t fake)
 

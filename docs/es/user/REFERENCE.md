@@ -1,3 +1,4 @@
+<a id="quick-reference"></a>
 # Referencia rápida
 
 Hoja de consulta para operadores. Valores por defecto tras `./bin/flixbox init`.
@@ -10,7 +11,7 @@ Hoja de consulta para operadores. Valores por defecto tras `./bin/flixbox init`.
 
 | Comando | Para qué |
 | --- | --- |
-| `./bin/flixbox init [--non-interactive]` | Crear `.env`, carpetas, plantillas; generar API keys/passwords. **Linux:** paths escribibles en `.env` antes de `--non-interactive` — [Install § paths (EN)](../../user/04-install.md#storage-paths-and-permissions) |
+| `./bin/flixbox init [--non-interactive]` | Crear `.env`, carpetas, plantillas; generar API keys/passwords. **Linux:** paths escribibles en `.env` antes de `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
 | `./bin/flixbox up [perfiles...]` | Levantar stack (`plex`, `proxy`, `recyclarr`; elimina huérfanos al cambiar de modo) |
 | `./bin/flixbox reload [--reset-homepage] [perfiles...]` | Recrear contenedores tras cambios en `.env` o compose. `--reset-homepage` también pisa plantillas Homepage gestionadas (con backup) |
 | `./bin/flixbox homepage refresh [--dry-run]` | Aplicar plantillas Homepage del repo a `${CONFIG_DIR}/homepage`. Usar tras `git pull` si `up`/`reload` avisan que hay templates más nuevos |
@@ -46,6 +47,7 @@ Reemplaza `localhost` por la IP LAN si entras desde otro dispositivo.
 | Byparr | — | Sin WebUI; logs con `./bin/flixbox logs byparr` |
 | Caddy | `http://localhost:80` | Solo perfil `proxy` |
 
+<a id="internal-hostname-contract-automation"></a>
 ## Contrato de hostnames internos
 
 Usa **nombres de servicio Compose** en `flixbox_net` — no `container_name` (`flixbox-radarr`, etc.).
@@ -62,6 +64,7 @@ Usa **nombres de servicio Compose** en `flixbox_net` — no `container_name` (`f
 | Streaming | `jellyfin` | `8096` | |
 | VPN | `gluetun` | — | Solo modo VPN; no es el host de descarga de *arr |
 
+<a id="internal-urls-arr-ui-wiring"></a>
 ## URLs internas (cableado en UIs *arr)
 
 | Destino | URL |
@@ -73,6 +76,7 @@ Usa **nombres de servicio Compose** en `flixbox_net` — no `container_name` (`f
 | Sonarr | `http://sonarr:8989` |
 | Jellyfin | `http://jellyfin:8096` |
 
+<a id="paths-inside-containers"></a>
 ## Rutas dentro de contenedores
 
 | Ruta | Uso |
@@ -84,6 +88,7 @@ Usa **nombres de servicio Compose** en `flixbox_net` — no `container_name` (`f
 
 Equivalente en host: `${DATA_DIR}/…` del `.env`.
 
+<a id="first-run-order-1015-min-with-configure"></a>
 ## Orden first-run (~10–15 min con configure)
 
 ```
@@ -92,9 +97,9 @@ init → up → configure → indexers en Prowlarr → Maintainerr / Recyclarr o
 
 | Paso | Tiempo | Acción |
 | --- | --- | --- |
-| 1 | ~10 min | [Install (EN)](../../user/04-install.md): `init`, revisar `.env` (VPN si aplica), `up` |
+| 1 | ~10 min | [Install](04-install.md): `init`, revisar `.env` (VPN si aplica), `up` |
 | 2 | ~2 min | `./bin/flixbox configure` |
-| 3 | ~10 min | Agregar indexers en Prowlarr — [First-run (EN)](../../user/05-first-run.md) |
+| 3 | ~10 min | Agregar indexers en Prowlarr — [First-run](05-first-run.md) |
 
 Vista previa sin cambios:
 
@@ -102,8 +107,9 @@ Vista previa sin cambios:
 ./bin/flixbox configure --dry-run   # sin escribir .env ni llamar APIs; el stack debe estar up
 ```
 
-**Listo cuando:** status healthy · configure con 0 failed · ≥1 indexer · pedido Seerr en *arr · reproduce en Jellyfin — [You’re done when (EN)](../../user/05-first-run.md#youre-done-when).
+**Listo cuando:** status healthy · configure con 0 failed · ≥1 indexer · pedido Seerr en *arr · reproduce en Jellyfin — [Listo cuando](05-first-run.md#youre-done-when).
 
+<a id="credentials-quick-map"></a>
 ## Mapa rápido de credenciales
 
 | Credencial | La usa | Dónde |
@@ -115,24 +121,26 @@ Vista previa sin cambios:
 
 Auth de *arr sigue `FLIXBOX_ACCESS_PROFILE` (ADR 0015): **`trusted`** = sin login en LAN; **`shared`** = Forms + puertos admin en `127.0.0.1` — aplicar con `credentials set arr-ui` / `configure --sync-arr-ui` (ADR 0020).
 
-Detalle: [Configuration — Credentials (EN)](../../user/06-configuration.md#credentials-and-api-keys).
+Detalle: [Configuración — Credenciales](06-configuration.md#credentials-and-api-keys).
 
+<a id="common-fixes"></a>
 ## Arreglos frecuentes
 
 | Síntoma | Probar |
 | --- | --- |
 | Cambio en `.env` ignorado | `./bin/flixbox reload` |
-| WebUI qBit muestra `Unauthorized` | [First-run §2b.1 (EN)](../../user/05-first-run.md#2b1-webui-stuck-on-plain-unauthorized-qbittorrent-5x) |
+| WebUI qBit muestra `Unauthorized` | [First-run §2b.1](05-first-run.md#2b1-webui-stuck-on-plain-unauthorized-qbittorrent-5x) |
 | `configure` falla en VPN | Esperar Gluetun healthy: `./bin/flixbox logs gluetun` |
 | Torrents trabados en metaDL (VPN) | Confirmar bind `tun0` — `./bin/flixbox configure` |
-| Hardlinks fallan / doble disco | Mismo filesystem en `${DATA_DIR}` — [How it works (EN)](../../user/02-how-it-works.md) |
+| Hardlinks fallan / doble disco | Mismo filesystem en `${DATA_DIR}` — [Cómo funciona](02-how-it-works.md) |
 | Decluttarr idle | `QBITTORRENT_*` en `.env`, luego `configure` o `reload` |
 
-Más: [Troubleshooting (EN)](../../user/10-troubleshooting.md).
+Más: [Troubleshooting](10-troubleshooting.md).
 
+<a id="related-docs"></a>
 ## Documentación relacionada
 
 - [Aviso legal](16-legal-disclaimer.md) · [Legal disclaimer (EN)](../../user/16-legal-disclaimer.md)
-- Guía EN canónica: [docs/user/INDEX.md](../../user/INDEX.md)
-- [Install](../../user/04-install.md) · [First-run](../../user/05-first-run.md) · [Configuration](../../user/06-configuration.md)
-- [VPN and Direct](../../user/07-vpn-and-direct.md) · [Operations](../../user/09-operations.md)
+- Índice ES: [INDEX.md](INDEX.md) · canónico EN: [docs/user/INDEX.md](../../user/INDEX.md)
+- [Install](04-install.md) · [First-run](05-first-run.md) · [Configuración](06-configuration.md)
+- [VPN y Direct](07-vpn-and-direct.md) · [Operación](09-operations.md)

@@ -1,18 +1,16 @@
-# Spanish documentation (`es`)
+# Documentación en español (`es`)
 
-This directory is reserved for the **Spanish user guide** and related assets.
+Guía de usuario en **español neutro** (espejo de `docs/user/`).
 
-- Canonical language: English (`docs/user/`, root `README.md`)
-- Spanish landing: [`README.es.md`](../../README.es.md) (root)
-- Spanish mirror (in progress): `docs/es/user/` — same filenames as EN when translated
-- Engineering docs (`docs/00–09`, `docs/adr/`) stay English-only by default
+- Idioma canónico: inglés (`docs/user/`, `README.md`)
+- Landing en español: [`README.es.md`](../../README.es.md)
+- Espejo de la guía: [`docs/es/user/INDEX.md`](user/INDEX.md) — mismos nombres de archivo que EN
+- Docs de ingeniería (`docs/00–09`, `docs/adr/`) siguen en inglés por defecto
 
-## Register (español neutro)
+## Registro (español neutro)
 
-Write **neutral Spanish** for a pan-Hispanic audience:
+- Preferir conjugaciones estándar de **tú** (`ejecuta`, `reemplaza`, `entras`, `usas`).
+- **No** usar voseo rioplatense (`ejecutá`, `reemplazá`, `entrás`, `usá`, `vos sos`).
+- Preferir vocabulario panhispánico frente a jerga muy local.
 
-- Prefer standard **tú** forms (`ejecuta`, `reemplaza`, `entras`, `usas`).
-- Do **not** use Rioplatense **voseo** (`ejecutá`, `reemplazá`, `entrás`, `usá`, `vos sos`).
-- Prefer widely understood vocabulary over strongly local slang.
-
-See [ADR 0011](../adr/0011-documentation-i18n.md).
+Si EN y ES divergen, **gana el inglés** hasta actualizar el espejo ([ADR 0011](../adr/0011-documentation-i18n.md)).

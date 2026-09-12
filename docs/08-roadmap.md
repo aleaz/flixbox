@@ -12,8 +12,8 @@ Versions below are planning labels, not semver promises until the first public t
 - [x] Modular Compose for MVP inventory (including Decluttarr + Maintainerr)
 - [x] Bash CLI minimum commands (`bin/flixbox`)
 - [x] Hygiene/Recyclarr/Homepage/Caddy templates
-- [ ] Key screenshots in `docs/images/en/`
-- [x] Spanish user guide (`README.es.md` + `docs/es/user/`) — partial (REFERENCE + INDEX); full mirror before public v0.1 tag
+- [x] Key screenshots P0 (`en/homepage-ops.png`, CLI GIF, logo) — P2 story stills optional
+- [x] Spanish user guide mirror (`README.es.md` + full `docs/es/user/`)
 - [x] CI phase 1 (gitleaks + validate) — [10-ci-plan.md](10-ci-plan.md)
 - [x] CI phase 2 (Trivy warn-only + compose render) — [10-ci-plan.md](10-ci-plan.md)
 - [x] `bin/flixbox configure` + `reload` — API wiring (roots, clients, Byparr, Bazarr, Jellyfin/Seerr, secret loop)
@@ -24,11 +24,11 @@ Versions below are planning labels, not semver promises until the first public t
 
 MVP Definition of Done is met. Before announcing a public `v0.1.0` tag:
 
-- [ ] Key screenshots in `docs/images/en/`
-- [ ] Complete Spanish user guide mirror (`docs/es/user/`)
+- [x] Key screenshots P0 in `docs/images/` (P2 `seerr-request` / `jellyfin-library` optional)
+- [x] Complete Spanish user guide mirror (`docs/es/user/`)
 - Finalize [releases/v0.1.0-notes.md](releases/v0.1.0-notes.md) with the release commit SHA after push
 
-Already done for that gate: pinned images, CI phase 1–2, idempotent `configure`, VPN `tun0` bind path exercised on a live Gluetun install.
+Already done for that gate: pinned images, CI phase 1–2, idempotent `configure`, VPN `tun0` bind path exercised on a live Gluetun install, EN+ES user guides.
 
 ## After MVP — v0.2
 
