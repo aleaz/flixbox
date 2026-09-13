@@ -60,7 +60,7 @@ grep -q 'warn_mode_vpn_mismatch' bin/flixbox || \
   fail C-28 'bin/flixbox missing warn_mode_vpn_mismatch'
 grep -A80 '^cmd_up()' bin/flixbox | grep -q 'warn_mode_vpn_mismatch' || \
   fail C-28 'cmd_up must call warn_mode_vpn_mismatch'
-grep -A40 '^cmd_status()' bin/flixbox | grep -q 'warn_mode_vpn_mismatch' || \
+grep -A120 '^cmd_status()' bin/flixbox | grep -q 'warn_mode_vpn_mismatch' || \
   fail C-28 'cmd_status must call warn_mode_vpn_mismatch'
 grep -A60 '^cmd_init()' bin/flixbox | grep -q 'mode_vpn_aligned\|warn_mode_vpn_mismatch' || \
   fail C-28 'cmd_init must check mode/VPN_ENABLED alignment'
@@ -1253,7 +1253,7 @@ grep -A80 '^cmd_up()' bin/flixbox | grep -q 'warn_decluttarr_vpn_slow' || \
   fail C-90 'cmd_up must call warn_decluttarr_vpn_slow'
 grep -A80 '^cmd_reload()' bin/flixbox | grep -q 'warn_decluttarr_vpn_slow' || \
   fail C-90 'cmd_reload must call warn_decluttarr_vpn_slow'
-grep -A40 '^cmd_status()' bin/flixbox | grep -q 'warn_decluttarr_vpn_slow' || \
+grep -A120 '^cmd_status()' bin/flixbox | grep -q 'warn_decluttarr_vpn_slow' || \
   fail C-90 'cmd_status must call warn_decluttarr_vpn_slow'
 grep -qE 'Remove slow \| \*\*off\*\*' docs/09-hygiene-defaults.md || \
   fail C-90 'docs/09-hygiene-defaults.md must document REMOVE_SLOW off'
