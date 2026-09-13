@@ -1272,4 +1272,35 @@ if command -v shellcheck >/dev/null 2>&1; then
   pass shellcheck
 fi
 
+
+# --- C-91: ADR 0021 Phase A CLI contract (Q-01..Q-06) ---
+grep -q 'cmd_version()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_version'
+grep -q 'cmd_doctor()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_doctor'
+grep -q 'die_usage()' bin/flixbox || fail C-91 'bin/flixbox missing die_usage (exit 2)'
+grep -q 'die_docker()' bin/flixbox || fail C-91 'bin/flixbox missing die_docker (exit 3)'
+grep -q 'cli-phase-a.sh' bin/flixbox || fail C-91 'bin/flixbox must source cli-phase-a.sh'
+[[ -f scripts/lib/cli-phase-a.sh ]] || fail C-91 'missing scripts/lib/cli-phase-a.sh'
+[[ -f VERSION ]] || fail C-91 'missing VERSION file'
+[[ -f docs/user/17-cli.md ]] || fail C-91 'missing docs/user/17-cli.md'
+# Q-01 unknown command → exit 2
+rc=0; ./bin/flixbox __no_such_command__ >/dev/null 2>&1 || rc=$?
+[[ "$rc" -eq 2 ]] || fail C-91 "unknown command exit want 2 got ${rc}"
+# Q-02 version / --version → exit 0; stdout non-empty
+out="$(./bin/flixbox version 2>/dev/null)" || fail C-91 'version failed'
+[[ -n "$out" ]] || fail C-91 'version stdout empty'
+./bin/flixbox --version >/dev/null || fail C-91 '--version failed'
+# Q-03 help and status --help → exit 0
+./bin/flixbox help >/dev/null || fail C-91 'help failed'
+./bin/flixbox status --help >/dev/null || fail C-91 'status --help failed'
+# Q-04/Q-05 status --json: schemaVersion present; Docker-down → exit 3 (this environment may lack daemon)
+rc=0
+json="$(./bin/flixbox status --json 2>/dev/null)" || rc=$?
+echo "$json" | grep -q '"schemaVersion"[[:space:]]*:[[:space:]]*1' || fail C-91 'status --json missing schemaVersion 1'
+if ! docker info >/dev/null 2>&1; then
+  [[ "$rc" -eq 3 ]] || fail C-91 "status --json without Docker want exit 3 got ${rc}"
+fi
+# Q-06 ShellCheck covers bin/flixbox via existing shellcheck block
+pass C-91
+
+
 printf 'All contract checks passed.\n'
