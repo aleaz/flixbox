@@ -6,6 +6,9 @@ Cheat sheet for operators. Defaults assume a local install with `./bin/flixbox i
 
 ## CLI
 
+Full contract: [17 — CLI reference](17-cli.md) (ADR 0021 Phase A).
+
+
 | Command | Purpose |
 | --- | --- |
 | `./bin/flixbox init [--non-interactive]` | Create `.env`, dirs, templates; generate API keys/passwords. **Linux:** set writable `DATA_DIR`/`CONFIG_DIR` in `.env` before `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
@@ -15,7 +18,9 @@ Cheat sheet for operators. Defaults assume a local install with `./bin/flixbox i
 | `./bin/flixbox configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]` | Idempotent wiring; heals drifted API keys. `--dry-run` previews only (no `.env`/API changes). `--sync-qbit-auth` forces qBit WebUI password from `.env` into qBit + *arr + Decluttarr. `--sync-arr-ui` applies `FLIXBOX_ARR_UI_*` Forms under `shared` (ADR 0020) |
 | `./bin/flixbox credentials show <target>` | Print operator secret (`qbit`, `arr-ui`, `admin`, or `api radarr\|sonarr\|prowlarr`) — stdout only; keep private |
 | `./bin/flixbox credentials set <target> --generate\|--prompt` | Write `.env` and apply. `qbit` = **rotate** (auth with current password first). `arr-ui` = shared Forms Host Config. `admin` = best-effort Jellyfin. Align-only qBit path remains `configure --sync-qbit-auth` |
-| `./bin/flixbox status` | Container status + mode + download-client URL |
+| `./bin/flixbox status [--json]` | Container status + mode + download-client URL |
+| `./bin/flixbox version` | CLI identity (VERSION / git describe) |
+| `./bin/flixbox doctor [--json]` | Readiness checks (Docker, .env, paths, VPN align) |
 | `./bin/flixbox logs [service]` | Tail logs |
 | `./bin/flixbox vpn-test` | VPN egress check (VPN mode only) |
 | `./bin/flixbox down` | Stop stack (config volumes kept) |

@@ -21,6 +21,8 @@ source "${ROOT_DIR}/scripts/lib/qbit-webui-bootstrap.sh"
 source "${ROOT_DIR}/scripts/lib/credentials.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/homepage-templates.sh"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/cli-phase-a.sh"
 
 NO_COLOR="${NO_COLOR:-}"
 if [[ -t 1 && -z "${NO_COLOR}" ]]; then
@@ -37,12 +39,15 @@ log() { printf '%b%s%b\n' "${C_INFO}" "$*" "${C_RST}"; }
 ok() { printf '%b%s%b\n' "${C_OK}" "$*" "${C_RST}"; }
 warn() { printf '%b%s%b\n' "${C_WARN}" "$*" "${C_RST}" >&2; }
 die() { printf '%b%s%b\n' "${C_ERR}" "$*" "${C_RST}" >&2; exit 1; }
+die_usage() { printf '%b%s%b\n' "${C_ERR}" "$*" "${C_RST}" >&2; exit 2; }
+die_docker() { printf '%b%s%b\n' "${C_ERR}" "$*" "${C_RST}" >&2; exit 3; }
+die_config() { printf '%b%s%b\n' "${C_ERR}" "$*" "${C_RST}" >&2; exit 4; }
 
 load_env() { flixbox_load_env; }
 
 assert_docker_accessible() {
   if ! command -v docker >/dev/null 2>&1; then
-    die "Docker is not installed or not in PATH. See docs/user/03-requirements.md"
+    die_docker "Docker is not installed or not in PATH. See docs/user/03-requirements.md"
   fi
   if ! docker info >/dev/null 2>&1; then
     warn "Cannot connect to the Docker daemon at ${DOCKER_HOST:-unix:///var/run/docker.sock}."
@@ -51,7 +56,7 @@ assert_docker_accessible() {
     warn "  2. Current user ($(id -un)) lacks permission ('sudo usermod -aG docker \$USER' then relogin)"
     warn "  3. Rootless Docker or Podman socket is not exported in DOCKER_HOST"
     warn "Troubleshooting: docs/user/10-troubleshooting.md#docker-daemon-access"
-    die "Docker daemon check failed."
+    die_docker "Docker daemon check failed."
   fi
 }
 
@@ -538,31 +543,266 @@ cmd_configure() {
 }
 
 cmd_status() {
-  load_env
+  local json=0 quiet=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --json) json=1; shift ;;
+      -q|--quiet) quiet=1; shift ;;
+      -h|--help)
+        cat <<'EOF'
+Usage: flixbox status [--json] [-q|--quiet]
+
+Show Compose service status and operator context (mode, access profile, paths).
+
+Options:
+  --json          Machine-readable object on stdout (schemaVersion: 1)
+  -q, --quiet     Suppress human info lines (warnings still on stderr)
+  -h, --help      Show this help
+
+Exit codes: 0 ok; 3 Docker unreachable; 2 usage error
+EOF
+        return 0
+        ;;
+      *) die_usage "status: unknown option: $1 (try --help)" ;;
+    esac
+  done
+
+  if ! load_env 2>/dev/null; then
+    if [[ "$json" -eq 1 ]]; then
+      flixbox_emit_json '{"schemaVersion":1,"ok":false,"error":"env_load_failed"}'
+    fi
+    die_config "Failed to load .env — run ./bin/flixbox init first."
+  fi
+
+  if [[ "$json" -eq 1 ]]; then
+    local docker_ok=false services_json="[]" err=""
+    if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+      docker_ok=true
+      local compose_out=""
+      if compose_out="$(docker compose --project-directory "${ROOT_DIR}" ps --format json 2>/dev/null)"; then
+        services_json="$(printf '%s' "$compose_out" | python3 "${ROOT_DIR}/scripts/lib/compose-ps-json.py")" || services_json="[]"
+      else
+        err="compose_ps_failed"
+      fi
+    else
+      err="docker_unreachable"
+    fi
+    local mode_aligned=true
+    mode_vpn_aligned || mode_aligned=false
+    local profile
+    profile="$(flixbox_access_profile)"
+    MODE_ALIGNED="$mode_aligned" DOCKER_OK="$docker_ok" PROFILE="$profile" \
+      SERVICES_JSON="$services_json" ERR="$err" \
+      FLIXBOX_MODE="${FLIXBOX_MODE:-direct}" VPN_ENABLED="${VPN_ENABLED:-false}" \
+      FLIXBOX_ADMIN_BIND_IP="${FLIXBOX_ADMIN_BIND_IP:-}" \
+      DATA_DIR="${DATA_DIR:-}" CONFIG_DIR="${CONFIG_DIR:-}" \
+      CLI_VER="$(flixbox_cli_version)" \
+      python3 "${ROOT_DIR}/scripts/lib/status-json.py"
+    if [[ "$docker_ok" != true || -n "$err" ]]; then
+      flixbox_exit_docker
+    fi
+    return 0
+  fi
+
+  if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
+    die_docker "Docker daemon check failed."
+  fi
   compose ps
-  echo
-  log "FLIXBOX_MODE=${FLIXBOX_MODE}  VPN_ENABLED=${VPN_ENABLED}"
+  if [[ "$quiet" -eq 0 ]]; then
+    echo
+    log "FLIXBOX_MODE=${FLIXBOX_MODE}  VPN_ENABLED=${VPN_ENABLED}"
+  fi
   warn_mode_vpn_mismatch || true
   warn_decluttarr_vpn_slow || true
-  log "Access profile: $(flixbox_access_profile)  FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP:-(unset)}"
-  log "DATA_DIR=${DATA_DIR}"
-  log "CONFIG_DIR=${CONFIG_DIR}"
-  log "Download client URL for *arr / Decluttarr: http://qbittorrent:8080 (same in VPN and Direct — ADR 0014)"
+  if [[ "$quiet" -eq 0 ]]; then
+    log "Access profile: $(flixbox_access_profile)  FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP:-(unset)}"
+    log "DATA_DIR=${DATA_DIR}"
+    log "CONFIG_DIR=${CONFIG_DIR}"
+    log "Download client URL for *arr / Decluttarr: http://qbittorrent:8080 (same in VPN and Direct — ADR 0014)"
+  fi
   flixbox_homepage_warn_if_stale || true
 }
 
-cmd_logs() {
-  load_env
-  if [[ $# -eq 0 ]]; then
-    compose logs --tail=100 -f
-  else
-    compose logs --tail=100 "$@"
+cmd_version() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -h|--help)
+        cat <<'EOF'
+Usage: flixbox version
+
+Print CLI version identity (VERSION file or git describe). No secrets.
+Also available as: flixbox --version
+EOF
+        return 0
+        ;;
+      *) die_usage "version: unknown option: $1" ;;
+    esac
+  done
+  local ver project mode=""
+  ver="$(flixbox_cli_version)"
+  project="${COMPOSE_PROJECT_NAME:-flixbox}"
+  if [[ -f "${ROOT_DIR}/.env" ]]; then
+    load_env 2>/dev/null || true
+    mode="${FLIXBOX_MODE:-}"
+  fi
+  printf 'flixbox %s\n' "$ver"
+  printf 'project: %s\n' "$project"
+  if [[ -n "$mode" ]]; then
+    printf 'mode: %s\n' "$mode"
   fi
 }
 
-cmd_vpn_test() {
-  load_env
-  exec "${ROOT_DIR}/scripts/vpn-test.sh"
+cmd_doctor() {
+  local json=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --json) json=1; shift ;;
+      -h|--help)
+        cat <<'EOF'
+Usage: flixbox doctor [--json]
+
+Aggregate readiness checks for day-0 / day-2 operations.
+
+Checks: Docker CLI/daemon, Compose plugin, .env, DATA_DIR/CONFIG_DIR,
+FLIXBOX_MODE↔VPN_ENABLED alignment, access profile, API key presence (booleans),
+Gluetun health when mode=vpn and the container exists.
+
+Options:
+  --json      Machine-readable report (schemaVersion: 1); no secret values
+  -h, --help  Show this help
+
+Exit codes: 0 all hard checks pass; 3 Docker; 4 config; 5 dependency not ready
+EOF
+        return 0
+        ;;
+      *) die_usage "doctor: unknown option: $1 (try --help)" ;;
+    esac
+  done
+
+  local hard_fail=0 docker_fail=0 config_fail=0 deps_fail=0
+  local docker_cli=false docker_daemon=false compose_plugin=false
+  local env_file=false data_dir_ok=false config_dir_ok=false
+  local mode_aligned=false profile_ok=false
+  local radarr_key=false sonarr_key=false prowlarr_key=false
+  local gluetun="skipped"
+  local mode="unknown" profile="unknown" hint=""
+
+  if command -v docker >/dev/null 2>&1; then
+    docker_cli=true
+  else
+    hard_fail=1; docker_fail=1
+    hint="Install Docker Engine + Compose v2 plugin."
+  fi
+
+  if [[ "$docker_cli" == true ]] && docker info >/dev/null 2>&1; then
+    docker_daemon=true
+  elif [[ "$docker_cli" == true ]]; then
+    hard_fail=1; docker_fail=1
+    hint="Start Docker or fix group permissions (docs/user/10-troubleshooting.md)."
+  fi
+
+  if [[ "$docker_daemon" == true ]] && docker compose version >/dev/null 2>&1; then
+    compose_plugin=true
+  elif [[ "$docker_daemon" == true ]]; then
+    hard_fail=1; docker_fail=1
+    hint="Install Docker Compose v2 plugin ('docker compose version')."
+  fi
+
+  if [[ -f "${ROOT_DIR}/.env" ]]; then
+    env_file=true
+    if load_env 2>/dev/null; then
+      mode="${FLIXBOX_MODE:-direct}"
+      profile="$(flixbox_access_profile)"
+      if mode_vpn_aligned; then
+        mode_aligned=true
+      else
+        config_fail=1; hard_fail=1
+        hint="Align VPN_ENABLED with FLIXBOX_MODE in .env."
+      fi
+      if flixbox_validate_access_profile 2>/dev/null; then
+        profile_ok=true
+      else
+        config_fail=1; hard_fail=1
+        hint="Set FLIXBOX_ACCESS_PROFILE to trusted or shared."
+      fi
+      if [[ -n "${DATA_DIR:-}" && -d "${DATA_DIR}" ]]; then
+        data_dir_ok=true
+      else
+        config_fail=1; hard_fail=1
+        hint="DATA_DIR missing — run init or create ${DATA_DIR:-'(unset)'}."
+      fi
+      if [[ -n "${CONFIG_DIR:-}" && -d "${CONFIG_DIR}" ]]; then
+        config_dir_ok=true
+      else
+        config_fail=1; hard_fail=1
+        hint="CONFIG_DIR missing — run init or create ${CONFIG_DIR:-'(unset)'}."
+      fi
+      flixbox_secret_present "${RADARR_API_KEY:-}" && radarr_key=true
+      flixbox_secret_present "${SONARR_API_KEY:-}" && sonarr_key=true
+      flixbox_secret_present "${PROWLARR_API_KEY:-}" && prowlarr_key=true
+      if [[ "$mode" == "vpn" && "$docker_daemon" == true ]]; then
+        local st=""
+        st="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' flixbox-gluetun 2>/dev/null || true)"
+        if [[ -z "$st" ]]; then
+          gluetun="not_running"
+          deps_fail=1; hard_fail=1
+          hint="FLIXBOX_MODE=vpn but flixbox-gluetun is not running — ./bin/flixbox up"
+        elif [[ "$st" == "healthy" || "$st" == "running" ]]; then
+          gluetun="ok"
+        else
+          gluetun="$st"
+          deps_fail=1; hard_fail=1
+          hint="Gluetun status is ${st} — check VPN credentials and ./bin/flixbox vpn-test"
+        fi
+      fi
+    else
+      config_fail=1; hard_fail=1
+      hint="Failed to load .env"
+    fi
+  else
+    config_fail=1; hard_fail=1
+    hint="No .env — run ./bin/flixbox init"
+  fi
+
+  if [[ "$json" -eq 1 ]]; then
+    DOCKER_CLI="$docker_cli" DOCKER_DAEMON="$docker_daemon" COMPOSE_PLUGIN="$compose_plugin" \
+      ENV_FILE="$env_file" DATA_DIR_OK="$data_dir_ok" CONFIG_DIR_OK="$config_dir_ok" \
+      MODE_ALIGNED="$mode_aligned" PROFILE_OK="$profile_ok" \
+      RADARR_KEY="$radarr_key" SONARR_KEY="$sonarr_key" PROWLARR_KEY="$prowlarr_key" \
+      GLUETUN="$gluetun" MODE="$mode" PROFILE="$profile" HINT="$hint" HARD_FAIL="$hard_fail" \
+      CLI_VER="$(flixbox_cli_version)" \
+      python3 "${ROOT_DIR}/scripts/lib/doctor-json.py"
+  else
+    log "flixbox doctor $(flixbox_cli_version)"
+    [[ "$docker_cli" == true ]] && ok "Docker CLI" || warn "Docker CLI: missing"
+    [[ "$docker_daemon" == true ]] && ok "Docker daemon" || warn "Docker daemon: unreachable"
+    [[ "$compose_plugin" == true ]] && ok "Compose plugin" || warn "Compose plugin: missing"
+    if [[ "$env_file" == true ]]; then
+      ok ".env present"
+      [[ "$data_dir_ok" == true ]] && ok "DATA_DIR" || warn "DATA_DIR missing/unusable"
+      [[ "$config_dir_ok" == true ]] && ok "CONFIG_DIR" || warn "CONFIG_DIR missing/unusable"
+      [[ "$mode_aligned" == true ]] && ok "FLIXBOX_MODE ↔ VPN_ENABLED" || warn "FLIXBOX_MODE ↔ VPN_ENABLED misaligned"
+      [[ "$profile_ok" == true ]] && ok "Access profile (${profile})" || warn "Access profile invalid"
+      log "API keys present: radarr=${radarr_key} sonarr=${sonarr_key} prowlarr=${prowlarr_key}"
+      if [[ "$mode" == "vpn" ]]; then
+        [[ "$gluetun" == "ok" ]] && ok "Gluetun (${gluetun})" || warn "Gluetun: ${gluetun}"
+      else
+        log "Gluetun: skipped (mode=${mode})"
+      fi
+    else
+      warn ".env missing"
+    fi
+    if [[ -n "$hint" && "$hard_fail" -ne 0 ]]; then
+      warn "Next: ${hint}"
+    elif [[ "$hard_fail" -eq 0 ]]; then
+      ok "Doctor: ready"
+    fi
+  fi
+
+  if [[ "$docker_fail" -ne 0 ]]; then flixbox_exit_docker; fi
+  if [[ "$config_fail" -ne 0 ]]; then flixbox_exit_config; fi
+  if [[ "$deps_fail" -ne 0 ]]; then flixbox_exit_deps; fi
+  return 0
 }
 
 usage() {
@@ -570,6 +810,8 @@ usage() {
 Flixbox CLI
 
 Usage:
+  flixbox version
+  flixbox doctor [--json]
   flixbox init [--force] [--non-interactive]
   flixbox up [plex|proxy|recyclarr]...
   flixbox down [--volumes]
@@ -579,9 +821,13 @@ Usage:
   flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
   flixbox credentials show <target>
   flixbox credentials set  <target> --generate|--prompt
-  flixbox status
+  flixbox status [--json] [-q|--quiet]
   flixbox logs [service] [-f]
   flixbox vpn-test
+
+Global:
+  -h, --help       Show this help
+  --version        Same as version
 
 Credentials targets: qbit | arr-ui | admin | api radarr|sonarr|prowlarr
   (arr-ui apply requires shared profile — ADR 0020)
@@ -592,14 +838,17 @@ Homepage: after git pull, up/reload/status warn if templates are newer than live
 Recyclarr sync (one-shot):
   docker compose --profile recyclarr run --rm recyclarr sync
 
+Docs: docs/user/17-cli.md · ADR 0021
 EOF
 }
 
 main() {
   local cmd="${1:-}"
-  [[ -n "${cmd}" ]] || { usage; exit 1; }
+  [[ -n "${cmd}" ]] || { usage; flixbox_exit_usage; }
   shift || true
   case "${cmd}" in
+    version|--version) cmd_version "$@" ;;
+    doctor) cmd_doctor "$@" ;;
     init) cmd_init "$@" ;;
     up) cmd_up "$@" ;;
     down) cmd_down "$@" ;;
@@ -612,7 +861,7 @@ main() {
     logs) cmd_logs "$@" ;;
     vpn-test) cmd_vpn_test "$@" ;;
     -h|--help|help) usage ;;
-    *) die "Unknown command: ${cmd}" ;;
+    *) die_usage "Unknown command: ${cmd} (try ./bin/flixbox --help)" ;;
   esac
 }
 

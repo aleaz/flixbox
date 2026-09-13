@@ -14,6 +14,7 @@ Writers: tone and visuals follow the [documentation style guide](../00-doc-style
 | --- | --- |
 | [01 — Overview](01-overview.md) | What Flixbox is, who it is for, short disclaimer |
 | [16 — Legal disclaimer](16-legal-disclaimer.md) | Lawful use, operator liability, no endorsement of infringement ([ES](../es/user/16-legal-disclaimer.md)) |
+| [17 — CLI reference](17-cli.md) | version, doctor, status --json, exit codes (ADR 0021 Phase A) |
 | [02 — How it works](02-how-it-works.md) | Mental model: pipeline, `/data`, VPN vs Direct |
 | [03 — Requirements](03-requirements.md) | Hardware, Docker, storage, network |
 | [04 — Install](04-install.md) | Clone, `init`, `up` (~15 min) |
