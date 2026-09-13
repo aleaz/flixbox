@@ -574,6 +574,11 @@ EOF
     die_config "Failed to load .env — run ./bin/flixbox init first."
   fi
 
+  # Keep immediately after load_env so C-28/C-90 grep windows still see them,
+  # and so --json also surfaces mode/Decluttarr warnings on stderr.
+  warn_mode_vpn_mismatch || true
+  warn_decluttarr_vpn_slow || true
+
   if [[ "$json" -eq 1 ]]; then
     local docker_ok=false services_json="[]" err=""
     if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
@@ -611,10 +616,6 @@ EOF
   if [[ "$quiet" -eq 0 ]]; then
     echo
     log "FLIXBOX_MODE=${FLIXBOX_MODE}  VPN_ENABLED=${VPN_ENABLED}"
-  fi
-  warn_mode_vpn_mismatch || true
-  warn_decluttarr_vpn_slow || true
-  if [[ "$quiet" -eq 0 ]]; then
     log "Access profile: $(flixbox_access_profile)  FLIXBOX_ADMIN_BIND_IP=${FLIXBOX_ADMIN_BIND_IP:-(unset)}"
     log "DATA_DIR=${DATA_DIR}"
     log "CONFIG_DIR=${CONFIG_DIR}"
