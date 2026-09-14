@@ -1,6 +1,6 @@
 # CLI reference (ADR 0021)
 
-**Status:** Phase A diagnostics **landed**; Phase **A2** help safety + global `--no-color` **landed**; remaining globals deferred — see [ADR 0021](../adr/0021-cli-ux-contract.md)
+**Status:** Phase A diagnostics **landed**; Phase **A2** help safety + global `--no-color` **landed**; lifecycle command **help stubs** landed (CONFIG-only scope freeze) — mutating bodies next — see [ADR 0021](../adr/0021-cli-ux-contract.md)
 **Audience:** Operators and automation  
 **Related:** [ADR 0021](../adr/0021-cli-ux-contract.md) · [REFERENCE](REFERENCE.md)
 
@@ -23,7 +23,7 @@ ln -sf "$(pwd)/bin/flixbox" ~/.local/bin/flixbox
 flixbox version
 ```
 
-Requires **Bash 4+**. Completions land in Phase B.
+Requires **Bash 4+**. Completions: `flixbox completion bash|zsh` (help available now; scripts land with completions work).
 
 ## Global flags
 
@@ -94,6 +94,17 @@ Human default: narrow `SERVICE` / `STATE` / `HEALTH` glance, then `key: value` c
 4. `./bin/flixbox doctor` on a configured host → actionable hints; exit 0 when ready  
 5. `./bin/flixbox status --json | jq .schemaVersion` → `2` when Docker works  
 
-## Deferred (Phase B+)
+## Lifecycle commands (in progress)
 
-`backup` / `restore` / `update` / `recyclarr sync` / shell completions / full `die`→taxonomy migration — see [08-roadmap.md](../08-roadmap.md).
+| Command | Status | Notes |
+| --- | --- | --- |
+| `backup` / `restore` | Help + flags landed; archive bodies next | Archives **`${CONFIG_DIR}`** only. **`${DATA_DIR}`** (media/torrents) is **operator-owned** — back it up yourself. Optional `.env` via `--include-env`. |
+| `update` | Help stub | Pulls pinned tags (ADR 0010); never rewrites to `:latest` |
+| `recyclarr sync` / `sync-profiles` | Help stub | Will replace raw Compose as the primary operator path |
+| `completion bash\|zsh` | Help stub | Fish deferred |
+
+Until `backup` archives, `scripts/backup.sh` remains usable and will become a **thin wrapper** around `flixbox backup` (same CONFIG-only scope).
+
+## Deferred (later)
+
+Global `-q`/`-v`, `--env-file`, `--project-dir`; full `die`→taxonomy (Phase C); fish completions; optional Apprise / VPN-heal profiles — see [08-roadmap.md](../08-roadmap.md).

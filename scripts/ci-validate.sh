@@ -1355,7 +1355,8 @@ fi
 ./bin/flixbox vpn-test --help >/dev/null || fail C-91 'vpn-test --help failed'
 ./bin/flixbox logs --help >/dev/null || fail C-91 'logs --help failed'
 # A2 help safety: every shipped command accepts --help with exit 0 and no false success
-for _cmd in version doctor status logs vpn-test init up down restart reload homepage configure credentials; do
+for _cmd in version doctor status logs vpn-test init up down restart reload homepage configure credentials \
+  backup restore update recyclarr sync-profiles completion; do
   _rc=0
   ./bin/flixbox "${_cmd}" --help >/dev/null 2>&1 || _rc=$?
   [[ "${_rc}" -eq 0 ]] || fail C-91 "${_cmd} --help want exit 0 got ${_rc}"
@@ -1368,5 +1369,27 @@ printf '%s\n' "$_down_help" | grep -qi 'Usage: flixbox down' || \
 # Q-06 ShellCheck covers bin/flixbox via existing shellcheck block
 pass C-91
 
+# --- C-92: ADR 0021 Phase B progressive (Q-10 help portions; bodies later) ---
+[[ -f scripts/lib/cli-phase-b.sh ]] || fail C-92 'missing scripts/lib/cli-phase-b.sh'
+grep -q 'cli-phase-b.sh' bin/flixbox || fail C-92 'bin/flixbox must source cli-phase-b.sh'
+grep -q 'cmd_backup()' scripts/lib/cli-phase-b.sh || fail C-92 'missing cmd_backup'
+# Q-10: backup --help documents include/exclude (DATA_DIR operator-owned)
+_bak_help="$(./bin/flixbox backup --help 2>&1)" || true
+printf '%s\n' "$_bak_help" | grep -qi 'include-env' || \
+  fail C-92 'Q-10 backup --help must document --include-env'
+printf '%s\n' "$_bak_help" | grep -qi 'DATA_DIR' || \
+  fail C-92 'Q-10 backup --help must state DATA_DIR is out of scope / operator-owned'
+_rest_help="$(./bin/flixbox restore --help 2>&1)" || true
+printf '%s\n' "$_rest_help" | grep -qi 'force' || \
+  fail C-92 'restore --help must document --force'
+_upd_help="$(./bin/flixbox update --help 2>&1)" || true
+printf '%s\n' "$_upd_help" | grep -qi 'dry-run' || \
+  fail C-92 'update --help must document --dry-run'
+# NYI bodies must not pretend success
+_rc=0
+./bin/flixbox backup >/dev/null 2>&1 || _rc=$?
+[[ "${_rc}" -ne 0 ]] || fail C-92 'backup body stub must not exit 0 until implemented'
+# Q-11/Q-12/Q-13 full checks land with backup/restore/update/completion bodies
+pass C-92
 
 printf 'All contract checks passed.\n'

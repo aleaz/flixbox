@@ -24,6 +24,8 @@ source "${ROOT_DIR}/scripts/lib/homepage-templates.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/cli-phase-a.sh"
 # shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/cli-phase-b.sh"
+# shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/cli-msg.sh"
 
 # Thin wrappers — progress on stderr with text tokens (ADR 0021 / cli-msg).
@@ -1007,6 +1009,12 @@ Lifecycle:
   flixbox down [--volumes]
   flixbox restart <service>
   flixbox reload [--reset-homepage] [plex|proxy|recyclarr]...
+  flixbox backup [--include-env] [--stop] [DEST_DIR]
+  flixbox restore <archive.tar.gz> [--force]
+  flixbox update [--dry-run]
+  flixbox recyclarr sync [--dry-run]
+  flixbox sync-profiles [--dry-run]
+  flixbox completion bash|zsh
 
 Config:
   flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
@@ -1028,8 +1036,8 @@ Credentials targets: qbit | arr-ui | admin | api radarr|sonarr|prowlarr
 Homepage: after git pull, up/reload/status warn if templates are newer than live config.
   Apply with: ./bin/flixbox homepage refresh  (or reload --reset-homepage)
 
-Recyclarr sync (one-shot):
-  docker compose --profile recyclarr run --rm recyclarr sync
+Backup scope: CONFIG_DIR only (+ optional --include-env). DATA_DIR media is operator-owned.
+  Until archive bodies land, use: scripts/backup.sh  (will become a thin CLI wrapper)
 
 Docs: docs/user/17-cli.md · ADR 0021
 EOF
@@ -1072,6 +1080,12 @@ main() {
     status) cmd_status "$@" ;;
     logs) cmd_logs "$@" ;;
     vpn-test) cmd_vpn_test "$@" ;;
+    backup) cmd_backup "$@" ;;
+    restore) cmd_restore "$@" ;;
+    update) cmd_update "$@" ;;
+    recyclarr) cmd_recyclarr "$@" ;;
+    sync-profiles) cmd_sync_profiles "$@" ;;
+    completion) cmd_completion "$@" ;;
     -h|--help|help) usage ;;
     *) die_usage "Unknown command: ${cmd} (try ./bin/flixbox --help)" ;;
   esac

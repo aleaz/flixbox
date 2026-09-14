@@ -2,7 +2,7 @@
 
 **Idiomas:** [English](../../user/17-cli.md) · Español (esta página)
 
-**Estado:** Phase A diagnósticos **listo**; Phase **A2** help safety + `--no-color` global **listo**; resto de globals diferidos — ver [ADR 0021](../../adr/0021-cli-ux-contract.md)
+**Estado:** Phase A diagnósticos **listo**; Phase **A2** help safety + `--no-color` global **listo**; stubs de help de lifecycle **listos** (alcance CONFIG-only) — cuerpos mutadores después — ver [ADR 0021](../../adr/0021-cli-ux-contract.md)
 **Audiencia:** Operadores y automatización  
 **Relacionado:** [ADR 0021](../../adr/0021-cli-ux-contract.md) · [REFERENCE](REFERENCE.md)
 
@@ -25,7 +25,7 @@ ln -sf "$(pwd)/bin/flixbox" ~/.local/bin/flixbox
 flixbox version
 ```
 
-Requiere **Bash 4+**. Las completions llegan en Phase B.
+Requiere **Bash 4+**. Completions: `flixbox completion bash|zsh` (help disponible ahora; scripts con el trabajo de completions).
 
 ## Flags globales
 
@@ -96,6 +96,17 @@ Humano por defecto: glance `SERVICE` / `STATE` / `HEALTH`, luego contexto `key: 
 4. `./bin/flixbox doctor` en un host configurado → hints accionables; exit 0 cuando esté listo  
 5. `./bin/flixbox status --json | jq .schemaVersion` → `2` cuando Docker funciona  
 
-## Diferido (Phase B+)
+## Comandos de lifecycle (en curso)
 
-`backup` / `restore` / `update` / `recyclarr sync` / completions de shell / migración completa `die`→taxonomía — ver [08-roadmap.md](../../08-roadmap.md).
+| Comando | Estado | Notas |
+| --- | --- | --- |
+| `backup` / `restore` | Help + flags listos; cuerpos de archivo después | Solo **`${CONFIG_DIR}`**. **`${DATA_DIR}`** (media/torrents) es **del operador** — respaldalo vos. `.env` opcional con `--include-env`. |
+| `update` | Help stub | Pull de tags pineados (ADR 0010); nunca reescribe a `:latest` |
+| `recyclarr sync` / `sync-profiles` | Help stub | Reemplazará Compose crudo como path primario de operador |
+| `completion bash\|zsh` | Help stub | Fish diferido |
+
+Mientras no existan archivos de `backup`, `scripts/backup.sh` sigue sirviendo y pasará a ser un **wrapper fino** de `flixbox backup` (mismo alcance CONFIG-only).
+
+## Diferido (después)
+
+`-q`/`-v` globales, `--env-file`, `--project-dir`; migración completa `die`→taxonomía (Phase C); completions fish; perfiles opcionales Apprise / VPN-heal — ver [08-roadmap.md](../../08-roadmap.md).

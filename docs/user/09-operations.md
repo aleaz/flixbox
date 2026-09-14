@@ -22,17 +22,17 @@
 
 ## Updates
 
-Planned:
-
 ```bash
-./bin/flixbox update
+./bin/flixbox update [--dry-run]   # help landed; body next
 ```
 
-Until that exists: pull images and recreate containers carefully; prefer pinned tags in production.
+Until the body ships: pull pinned images and recreate carefully; see [14-image-pins.md](14-image-pins.md).
 
 ## Backups
 
-Config lives under `${CONFIG_DIR}`. Prefer SQLite-safe backups (`scripts/backup.sh`; not yet wrapped as `flixbox backup`). Always stop or use live-safe tools before copying DB files blindly.
+**Config** lives under `${CONFIG_DIR}`. Use `./bin/flixbox backup --help` (archive body next) or, until then, `scripts/backup.sh` (will become a thin wrapper around the CLI). Prefer `--stop` / live-safe tools before copying SQLite blindly.
+
+**Media (`${DATA_DIR}`)** is **not** included in Flixbox config backups. Back up libraries/torrents yourself (rsync, snapshots, NAS). Restoring config does not restore media.
 
 ## Hardlink health check
 

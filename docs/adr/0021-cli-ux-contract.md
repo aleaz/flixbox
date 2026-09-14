@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (post-MVP — target ~v0.2; Phase A slices MAY land before public v0.1 if low risk)
 - **Date:** 2026-09-06
-- **Updated:** 2026-09-14 — implementation progress vs contract; doc path `17-cli.md`; help MUST be side-effect free; globals deferral table; JSON type-change rule
+- **Updated:** 2026-09-14 — implementation progress vs contract; doc path `17-cli.md`; help MUST be side-effect free; globals deferral table; JSON type-change rule; lifecycle help stubs + DATA_DIR operator-owned
 - **Related:** [0005](0005-cli-bash-first.md), [0007](0007-platform-support-tiers.md), [0010](0010-mit-and-image-tags.md), [0011](0011-documentation-i18n.md), [0015](0015-access-profiles.md), [0016](0016-configure-state-machine.md), [0018](0018-runtime-secrets-and-lan-trust.md), [0020](0020-operator-credentials-cli.md)
 
 ## Implementation progress (2026-09-14)
@@ -18,7 +18,7 @@ Honest snapshot against this contract (does **not** reopen decisions):
 | Per-command `--help` for **all** shipped commands | **Landed** (A2 help safety — no Compose/env side effects; no false success lines) |
 | Global `-q`/`-v`/`--json`/`--no-color` | **Partial** — `--no-color` + command-scoped `-q`/`--json` where documented; global `-q`/`-v` deferred (see table) |
 | `--env-file` / `--project-dir` | **Deferred** (explicit) |
-| Phase B lifecycle (`backup`/`restore`/`update`/`recyclarr`/`completion`) | **Not started** |
+| Phase B lifecycle (`backup`/`restore`/`update`/`recyclarr`/`completion`) | **Help stubs landed** — flags + CONFIG-only / DATA_DIR operator-owned freeze; mutating bodies next |
 | Phase C full `die`→taxonomy + `configure --json` | **Not started** |
 
 ### Global flags — implement vs defer
@@ -350,11 +350,12 @@ ADR 0005 remains Bash-first + MVP command set. This ADR **extends** day-2 UX qua
 
 ### Phase B
 
-- [ ] `backup` / `restore` with documented scope + `--include-env` / `--force`
+- [x] Help stubs + flag parse for `backup`/`restore`/`update`/`recyclarr sync`/`sync-profiles`/`completion`; CONFIG-only scope + DATA_DIR operator-owned documented; `scripts/backup.sh` → thin CLI wrapper (decision locked)
+- [ ] `backup` / `restore` bodies with documented scope + `--include-env` / `--force`
 - [ ] `update` respects ADR 0010 pins; `--dry-run`
 - [ ] `recyclarr sync` (alias `sync-profiles`)
 - [ ] bash/zsh completions + install notes
-- [ ] QA Q-10–Q-13 + manual checklist items
+- [ ] QA Q-10–Q-13 + manual checklist items (progressive; help portions landed)
 
 ### Phase C
 
