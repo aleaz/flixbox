@@ -3,8 +3,8 @@
 # Idempotent API wiring for Flixbox after first container start (ADR 0005).
 #
 # Usage:
-#   ./scripts/configure-apps.sh [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
-#   ./bin/flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
+#   ./scripts/configure-apps.sh [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui] [--json]
+#   ./bin/flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui] [--json]
 #
 # Module layout: scripts/configure/*.sh (preflight, arr-common, per-service modules).
 # Shared helpers: scripts/lib/configure-helpers.sh
@@ -24,10 +24,12 @@ source "${ROOT_DIR}/scripts/lib/configure-helpers.sh"
 
 DRY_RUN=false
 VERBOSE=false
+FLIXBOX_CONFIGURE_JSON=0
 # Exported: consumed by sourced configure modules (ShellCheck SC2034).
 export SYNC_QBIT_AUTH=false
 export SYNC_ARR_UI=false
 export QBIT_COOKIE=""
+export FLIXBOX_CONFIGURE_JSON
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -35,14 +37,15 @@ while [[ $# -gt 0 ]]; do
     --verbose|-v) VERBOSE=true; shift ;;
     --sync-qbit-auth) SYNC_QBIT_AUTH=true; shift ;;
     --sync-arr-ui) SYNC_ARR_UI=true; shift ;;
+    --json) FLIXBOX_CONFIGURE_JSON=1; export FLIXBOX_CONFIGURE_JSON; shift ;;
     --help|-h)
       sed -n '2,28p' "$0"
       exit 0
       ;;
     *)
       echo "Unknown option: $1" >&2
-      echo "Usage: $0 [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]" >&2
-      exit 1
+      echo "Usage: $0 [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui] [--json]" >&2
+      exit 2
       ;;
   esac
 done
@@ -102,12 +105,16 @@ if [[ "${SYNC_ARR_UI:-false}" == "true" ]]; then
 fi
 
 printf -v _flixbox_summary '%s updated, %s unchanged, %s failed' "${CONFIGURED}" "${SKIPPED}" "${FAILED}"
-cli_summary "${_flixbox_summary}"
-info "Still manual:"
-info "  Prowlarr: add your indexers (tag cf on Cloudflare indexers)"
-info "  Maintainerr: connect services + enable rules deliberately"
-info "  Optional: docker compose --profile recyclarr run --rm recyclarr sync"
-info "  Guide: docs/user/05-first-run.md"
+if [[ "${FLIXBOX_CONFIGURE_JSON:-0}" == "1" ]]; then
+  flixbox_configure_emit_json
+else
+  cli_summary "${_flixbox_summary}"
+  info "Still manual:"
+  info "  Prowlarr: add your indexers (tag cf on Cloudflare indexers)"
+  info "  Maintainerr: connect services + enable rules deliberately"
+  info "  Optional: ./bin/flixbox recyclarr sync"
+  info "  Guide: docs/user/05-first-run.md"
+fi
 
 if [[ "$FAILED" -gt 0 ]]; then
   exit 1

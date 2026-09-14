@@ -57,7 +57,11 @@ source "${FLIXBOX_LIB}/cli-msg.sh"
 
 # Configure report lines on stdout (primary result); tips/warnings on stderr via cli_*.
 # Vocab: updated | unchanged | failed | dry-run (ADR 0021). No Unicode status glyphs.
+# When FLIXBOX_CONFIGURE_JSON=1, suppress human lines — emit one JSON object at end.
 _configure_line() {
+  if [[ "${FLIXBOX_CONFIGURE_JSON:-0}" == "1" ]]; then
+    return 0
+  fi
   cli_configure_line "$1" "$2"
 }
 
@@ -71,8 +75,49 @@ fail() {
   return 0
 }
 warn() { cli_warn "$*"; }
-info() { cli_info "$*"; }
+info() {
+  if [[ "${FLIXBOX_CONFIGURE_JSON:-0}" == "1" ]]; then
+    return 0
+  fi
+  cli_info "$*"
+}
 dry()  { _configure_line dry-run "$*"; }
+
+flixbox_configure_emit_json() {
+  UPDATED="$CONFIGURED" UNCHANGED="$SKIPPED" FAILED_N="$FAILED" \
+    DRY_RUN="${DRY_RUN:-false}" python3 - <<'PY'
+import json, os
+updated = int(os.environ.get("UPDATED") or 0)
+unchanged = int(os.environ.get("UNCHANGED") or 0)
+failed = int(os.environ.get("FAILED_N") or 0)
+dry = (os.environ.get("DRY_RUN") or "false").lower() == "true"
+obj = {
+    "schemaVersion": 1,
+    "ok": failed == 0,
+    "dryRun": dry,
+    "summary": {
+        "updated": updated,
+        "unchanged": unchanged,
+        "failed": failed,
+    },
+}
+print(json.dumps(obj, indent=2))
+PY
+}
+
+# Taxonomy helpers when configure runs standalone (also provided by bin/flixbox).
+if ! declare -F die >/dev/null 2>&1; then
+  die() { cli_die 1 "$*"; }
+fi
+if ! declare -F die_usage >/dev/null 2>&1; then
+  die_usage() { cli_die 2 "$*"; }
+fi
+if ! declare -F die_config >/dev/null 2>&1; then
+  die_config() { cli_die 4 "$*"; }
+fi
+if ! declare -F die_partial >/dev/null 2>&1; then
+  die_partial() { cli_die 6 "$*"; }
+fi
 
 _api_request() {
   local method="$1" url="$2"

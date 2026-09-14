@@ -19,7 +19,7 @@ Honest snapshot against this contract (does **not** reopen decisions):
 | Global `-q`/`-v`/`--json`/`--no-color` | **Partial** — `--no-color` + command-scoped `-q`/`--json` where documented; global `-q`/`-v` deferred (see table) |
 | `--env-file` / `--project-dir` | **Deferred** (explicit) |
 | Phase B lifecycle (`backup`/`restore`/`update`/`recyclarr`/`completion`) | **Landed** (CONFIG-only backup; DATA_DIR operator-owned; update pin-safe; recyclarr + bash/zsh completions) |
-| Phase C full `die`→taxonomy + `configure --json` | **Not started** |
+| Phase C full `die`→taxonomy + `configure --json` | **Partial** — high-traffic paths + `configure --json` landed; remaining legacy `die`→1 OK where unclassified |
 
 ### Global flags — implement vs defer
 
@@ -359,11 +359,11 @@ ADR 0005 remains Bash-first + MVP command set. This ADR **extends** day-2 UX qua
 
 ### Phase C
 
-- [ ] Remaining `die` paths classified into 2–6 where meaningful
-- [ ] `configure --json` summary (optional) without secrets
+- [x] Remaining high-traffic `die` paths classified into 2–6 (`die_usage`/`die_config`/`die_partial` on credentials, preflight, init/up/reload)
+- [x] `configure --json` summary without secrets
 - [x] `homepage` / `credentials set` emit ADR §6 outcome vocabulary via `cli-msg`
 - [x] JSON type cleanups (`vpnEnabled` boolean) behind `schemaVersion` bump (`status` → 2)
-- [ ] Smoke-test doc cross-links CLI doctor path
+- [x] Smoke-test doc cross-links CLI doctor path
 
 ## Alternatives considered
 

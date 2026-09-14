@@ -64,11 +64,11 @@ credentials_show() {
         radarr) printf '%s\n' "${RADARR_API_KEY:-}" ;;
         sonarr) printf '%s\n' "${SONARR_API_KEY:-}" ;;
         prowlarr) printf '%s\n' "${PROWLARR_API_KEY:-}" ;;
-        *) die "Usage: flixbox credentials show api radarr|sonarr|prowlarr" ;;
+        *) die_usage "Usage: flixbox credentials show api radarr|sonarr|prowlarr" ;;
       esac
       ;;
     *)
-      die "Unknown credentials target: ${target} (try qbit|arr-ui|admin|api)"
+      die_usage "Unknown credentials target: ${target} (try qbit|arr-ui|admin|api)"
       ;;
   esac
 }
@@ -81,7 +81,7 @@ credentials_read_password() {
       ;;
     --prompt)
       if [[ ! -t 0 ]]; then
-        die "credentials set --prompt requires a TTY"
+        die_usage "credentials set --prompt requires a TTY"
       fi
       local confirm=""
       printf 'New password: ' >&2
@@ -92,11 +92,11 @@ credentials_read_password() {
       # shellcheck disable=SC2162
       read -s confirm
       printf '\n' >&2
-      [[ -n "$value" ]] || die "Password must not be empty"
-      [[ "$value" == "$confirm" ]] || die "Passwords do not match"
+      [[ -n "$value" ]] || die_usage "Password must not be empty"
+      [[ "$value" == "$confirm" ]] || die_usage "Passwords do not match"
       ;;
     *)
-      die "credentials set requires --generate or --prompt"
+      die_usage "credentials set requires --generate or --prompt"
       ;;
   esac
   printf -v "$out_var" '%s' "$value"
@@ -232,14 +232,14 @@ credentials_set() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --generate|--prompt) mode="$1"; shift ;;
-      *) die "Unknown credentials set option: $1" ;;
+      *) die_usage "Unknown credentials set option: $1" ;;
     esac
   done
-  [[ -n "$mode" ]] || die "credentials set requires --generate or --prompt"
+  [[ -n "$mode" ]] || die_usage "credentials set requires --generate or --prompt"
 
   load_env
   local env_file="${ROOT_DIR}/.env"
-  [[ -f "$env_file" ]] || die "Missing .env — run ./bin/flixbox init first"
+  [[ -f "$env_file" ]] || die_config "Missing .env — run ./bin/flixbox init first"
 
   local new_pass=""
   credentials_read_password "$mode" new_pass
@@ -271,7 +271,7 @@ credentials_set() {
       ;;
     arr-ui)
       if [[ "$(flixbox_access_profile)" != "shared" ]]; then
-        die "arr-ui set requires FLIXBOX_ACCESS_PROFILE=shared (current: $(flixbox_access_profile))"
+        die_config "arr-ui set requires FLIXBOX_ACCESS_PROFILE=shared (current: $(flixbox_access_profile))"
       fi
       assert_docker_accessible
       cli_info "Applying Forms via Host Config before writing .env..."
@@ -290,7 +290,7 @@ credentials_set() {
           flixbox_env_file_set "$env_file" FLIXBOX_ARR_UI_USER admin
         cli_configure_line credentials updated "arr-ui .env (partial ${ARR_UI_APPLY_OK}/3)"
         load_env
-        die "arr-ui: applied on ${ARR_UI_APPLY_OK}/3 apps — retry: ./bin/flixbox configure --sync-arr-ui"
+        die_partial "arr-ui: applied on ${ARR_UI_APPLY_OK}/3 apps — retry: ./bin/flixbox configure --sync-arr-ui"
       else
         cli_configure_line credentials failed "arr-ui Host Config apply"
         die "arr-ui: Host Config apply failed on all apps — .env left unchanged"
@@ -316,10 +316,10 @@ credentials_set() {
       cli_info "If Seerr Jellyfin login breaks: ./bin/flixbox configure"
       ;;
     api)
-      die "credentials set api is not supported — regenerate in the app UI then ./bin/flixbox configure"
+      die_usage "credentials set api is not supported — regenerate in the app UI then ./bin/flixbox configure"
       ;;
     *)
-      die "Unknown credentials target: ${target}"
+      die_usage "Unknown credentials target: ${target}"
       ;;
   esac
 }
@@ -332,6 +332,6 @@ cmd_credentials() {
     show) credentials_show "$@" ;;
     set) credentials_set "$@" ;;
     -h|--help|help) credentials_usage ;;
-    *) die "Unknown credentials subcommand: ${sub} (show|set)" ;;
+    *) die_usage "Unknown credentials subcommand: ${sub} (show|set)" ;;
   esac
 }

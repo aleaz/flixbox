@@ -14,7 +14,9 @@ From the repo root:
 ./scripts/smoke-test.sh preflight   # docker + compose config
 ```
 
-**Idempotency (stack running):** after first `./bin/flixbox configure`, a second run should report **`0 configured`** (all skipped). If not, file an issue with both outputs.
+**Idempotency (stack running):** after first `./bin/flixbox configure`, a second run should report **`0` updated** (all unchanged). If not, file an issue with both outputs.
+
+**Day-2 readiness:** `./bin/flixbox doctor` (filesystem hardlink/NFS/exFAT guards + Docker/VPN). Prefer doctor before blaming Compose when imports or SQLite misbehave — [17 — CLI](17-cli.md) · [09 — Operations](09-operations.md#hardlink-health-check).
 
 ## Full automated smoke (Direct mode, `trusted`)
 

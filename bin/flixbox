@@ -46,6 +46,8 @@ die() { cli_die 1 "$*"; }
 die_usage() { cli_die 2 "$*"; }
 die_docker() { cli_die 3 "$*"; }
 die_config() { cli_die 4 "$*"; }
+die_deps() { cli_die 5 "$*"; }
+die_partial() { cli_die 6 "$*"; }
 
 load_env() { flixbox_load_env; }
 
@@ -360,18 +362,18 @@ EOF
   flixbox_prepare_paths_for_host_write || true
 
   validate_flixbox_paths "${DATA_DIR}" "${CONFIG_DIR}" || \
-    die "Path validation failed. Fix DATA_DIR and CONFIG_DIR in .env, then re-run init."
+    die_config "Path validation failed. Fix DATA_DIR and CONFIG_DIR in .env, then re-run init."
 
   "${ROOT_DIR}/scripts/bootstrap-dirs.sh"
   load_env
   flixbox_prepare_paths_for_host_write || true
   copy_templates
-  flixbox_validate_access_profile || die "Fix FLIXBOX_ACCESS_PROFILE in .env (trusted or shared)."
+  flixbox_validate_access_profile || die_config "Fix FLIXBOX_ACCESS_PROFILE in .env (trusted or shared)."
   flixbox_sync_access_profile_env "${ROOT_DIR}/.env"
   ensure_first_run_secrets
   load_env
   if ! flixbox_apply_runtime_ownership; then
-    die "Runtime ownership failed (Seerr requires UID 1000 on ${CONFIG_DIR}/seerr). See docs/user/10-troubleshooting.md"
+    die_config "Runtime ownership failed (Seerr requires UID 1000 on ${CONFIG_DIR}/seerr). See docs/user/10-troubleshooting.md"
   fi
   ok "Init complete."
   log "Access profile: $(flixbox_access_profile) (*arr UI auth — ADR 0015)"
@@ -415,7 +417,7 @@ EOF
   local profiles=()
   parse_profiles profiles "$@"
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
-    die "Directories missing. Run ./bin/flixbox init after fixing paths in .env."
+    die_config "Directories missing. Run ./bin/flixbox init after fixing paths in .env."
   if [[ -z "${QBITTORRENT_PASSWORD:-}" || -z "${QBITTORRENT_USERNAME:-}" ]]; then
     warn "QBITTORRENT_USERNAME/PASSWORD incomplete — Decluttarr stays idle until both are set in .env and Decluttarr is recreated."
   fi
@@ -435,7 +437,7 @@ EOF
   copy_templates
   flixbox_homepage_warn_if_stale || true
   flixbox_apply_config_runtime_ownership || \
-    die "Config ownership failed (Seerr requires UID 1000 on ${CONFIG_DIR}/seerr). See docs/user/10-troubleshooting.md"
+    die_config "Config ownership failed (Seerr requires UID 1000 on ${CONFIG_DIR}/seerr). See docs/user/10-troubleshooting.md"
   warn_legacy_socket_proxy_profile || true
   flixbox_preflight_host_ports "${profiles[@]}"
   log "Starting Flixbox (FLIXBOX_MODE=${FLIXBOX_MODE})..."
@@ -570,7 +572,7 @@ EOF
   done
   parse_profiles profiles "${args[@]+"${args[@]}"}"
   require_flixbox_dirs "${DATA_DIR}" "${CONFIG_DIR}" || \
-    die "Directories missing. Run ./bin/flixbox init first."
+    die_config "Directories missing. Run ./bin/flixbox init first."
   if [[ -z "${FLIXBOX_PUBLIC_HOST:-}" ]]; then
     warn "Set FLIXBOX_PUBLIC_HOST (LAN IP/DNS) so Homepage Jellyfin/Seerr links work from phones/TVs — HOMEPAGE_ALLOWED_HOSTS and empty JELLYFIN_PUBLISHED_URL sync automatically (docs/user/13-access-profiles.md)."
   fi
@@ -586,7 +588,7 @@ EOF
     flixbox_homepage_warn_if_stale || true
   fi
   flixbox_apply_config_runtime_ownership || \
-    die "Config ownership failed (Seerr requires UID 1000 on ${CONFIG_DIR}/seerr). See docs/user/10-troubleshooting.md"
+    die_config "Config ownership failed (Seerr requires UID 1000 on ${CONFIG_DIR}/seerr). See docs/user/10-troubleshooting.md"
   warn_legacy_socket_proxy_profile || true
   flixbox_preflight_host_ports "${profiles[@]}"
   log "Recreating containers (applies .env and compose changes)..."
@@ -637,7 +639,7 @@ EOF
 cmd_configure() {
   if flixbox_wants_help "$@"; then
     cat <<'EOF'
-Usage: flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
+Usage: flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui] [--json]
 
 Idempotent API wiring after the stack is up (download clients, root folders,
 Jellyfin/Seerr, hygiene). Indexers and Maintainerr rules stay manual.
@@ -647,9 +649,10 @@ Options:
   --verbose, -v       Extra HTTP diagnostics on stderr
   --sync-qbit-auth    Force-align qBit WebUI password from .env
   --sync-arr-ui       Apply Forms credentials under shared (ADR 0020)
+  --json              Single summary object on stdout (no secrets); suppress human lines
   -h, --help          Show this help
 
-Exit codes: 0 ok; 1 partial wiring failures; 3 Docker; 5 deps not ready
+Exit codes: 0 ok; 1 partial wiring failures; 2 usage; 3 Docker; 5 deps not ready
 Docs: docs/user/05-first-run.md · ADR 0016 / 0020
 EOF
     return 0
@@ -1072,7 +1075,7 @@ Lifecycle:
   flixbox completion bash|zsh
 
 Config:
-  flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
+  flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui] [--json]
   flixbox credentials show <target>
   flixbox credentials set  <target> --generate|--prompt
   flixbox homepage refresh [--dry-run]

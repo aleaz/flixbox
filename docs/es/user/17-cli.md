@@ -53,6 +53,7 @@ Requiere **Bash 4+**. Completions:
 No dependas solo del color: los tokens (`PASS` / `FAIL` / `WARN` / `INFO` / `OK`) siguen en texto plano con `NO_COLOR` o sin TTY.
 
 Vocabulario de outcomes de `configure` en stdout: `updated` / `unchanged` / `failed` / `dry-run`, luego `summary: N updated, M unchanged, K failed`.
+Con `--json`, stdout es un solo objeto `{ schemaVersion, ok, dryRun, summary }` (sin secretos).
 
 ## Códigos de salida (rutas tocadas)
 

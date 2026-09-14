@@ -1314,7 +1314,15 @@ grep -q 'cmd_vpn_test()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_vpn_t
 grep -q 'cli-msg.sh' bin/flixbox || fail C-91 'bin/flixbox must source cli-msg.sh'
 [[ -f scripts/lib/cli-msg.sh ]] || fail C-91 'missing scripts/lib/cli-msg.sh'
 [[ -f scripts/lib/status-glance.py ]] || fail C-91 'missing scripts/lib/status-glance.py'
-grep -q 'die_usage()' bin/flixbox || fail C-91 'bin/flixbox missing die_usage (exit 2)'
+grep -q 'die_partial()' bin/flixbox || fail C-91 'bin/flixbox missing die_partial (exit 6)'
+grep -q 'flixbox_configure_emit_json' scripts/lib/configure-helpers.sh || \
+  fail C-91 'configure --json helper missing'
+./bin/flixbox configure --help 2>/dev/null | grep -qi json || \
+  fail C-91 'configure --help must document --json'
+# credentials unknown option → exit 2
+_rc=0
+./bin/flixbox credentials show nosuch >/dev/null 2>&1 || _rc=$?
+[[ "${_rc}" -eq 2 ]] || fail C-91 "credentials show unknown target want exit 2 got ${_rc}"
 grep -q 'die_docker()' bin/flixbox || fail C-91 'bin/flixbox missing die_docker (exit 3)'
 grep -q 'cli-phase-a.sh' bin/flixbox || fail C-91 'bin/flixbox must source cli-phase-a.sh'
 [[ -f scripts/lib/cli-phase-a.sh ]] || fail C-91 'missing scripts/lib/cli-phase-a.sh'

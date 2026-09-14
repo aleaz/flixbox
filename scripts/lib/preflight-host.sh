@@ -218,6 +218,6 @@ PY
   done
 
   if [[ "$failed" -ne 0 ]]; then
-    die "Host port preflight failed — fix .env ports before starting the stack."
+    die_config "Host port preflight failed — fix .env ports before starting the stack."
   fi
 }

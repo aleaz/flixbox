@@ -18,7 +18,9 @@ Desde la raíz del repo:
 ./scripts/smoke-test.sh preflight   # docker + compose config
 ```
 
-**Idempotencia (stack en ejecución):** tras el primer `./bin/flixbox configure`, una segunda ejecución debería reportar **`0 configured`** (todo skipped). Si no, abre un issue con ambas salidas.
+**Idempotencia (stack en ejecución):** tras el primer `./bin/flixbox configure`, una segunda ejecución debería reportar **`0` updated** (todo unchanged). Si no, abre un issue con ambas salidas.
+
+**Listo day-2:** `./bin/flixbox doctor` (hardlink/NFS/exFAT + Docker/VPN). Preferí doctor antes de culpar a Compose si fallan imports o SQLite — [17 — CLI](17-cli.md) · [09 — Operaciones](09-operations.md#hardlink-health-check).
 
 <a id="full-automated-smoke-direct-mode-trusted"></a>
 ## Smoke automatizado completo (modo Direct, `trusted`)
