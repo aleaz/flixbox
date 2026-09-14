@@ -59,13 +59,16 @@ Imprime la identidad de la CLI desde `VERSION` (o `git describe`), el nombre del
 
 Diagnóstico agregado: Docker CLI/daemon, plugin Compose, `.env`, `DATA_DIR`/`CONFIG_DIR`, alineación `FLIXBOX_MODE`↔`VPN_ENABLED`, perfil de acceso, **presencia** de API keys (solo booleanos), salud de Gluetun cuando `mode=vpn`.
 
+Salida humana con tokens `PASS` / `FAIL` / `INFO` / `OK` (el color solo pinta el token).
+
 `--json` emite un solo objeto con `schemaVersion: 1`. Nunca incluye valores de keys.
 
-### `flixbox status [--json] [-q|--quiet]`
+### `flixbox status [--json] [-q|--quiet] [-v|--verbose]`
 
-Humano: `docker compose ps` más modo / perfil de acceso / paths.  
+Humano por defecto: glance `SERVICE` / `STATE` / `HEALTH`, luego contexto `key: value`.  
+`-v`: también imprime el `docker compose ps` completo.  
 `--json`: vista de servicios + contexto; si Docker está caído, igual imprime JSON con `error` y sale **3**.  
-`-q`: suprime líneas informativas humanas; los warnings siguen en stderr.
+`-q`: solo glance (sin bloque de contexto); los warnings siguen en stderr.
 
 ## I/O de seguridad
 

@@ -18,7 +18,7 @@ Full contract: [17 — CLI reference](17-cli.md) (ADR 0021 Phase A).
 | `./bin/flixbox configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]` | Idempotent wiring; heals drifted API keys. `--dry-run` previews only (no `.env`/API changes). `--sync-qbit-auth` forces qBit WebUI password from `.env` into qBit + *arr + Decluttarr. `--sync-arr-ui` applies `FLIXBOX_ARR_UI_*` Forms under `shared` (ADR 0020) |
 | `./bin/flixbox credentials show <target>` | Print operator secret (`qbit`, `arr-ui`, `admin`, or `api radarr\|sonarr\|prowlarr`) — stdout only; keep private |
 | `./bin/flixbox credentials set <target> --generate\|--prompt` | Write `.env` and apply. `qbit` = **rotate** (auth with current password first). `arr-ui` = shared Forms Host Config. `admin` = best-effort Jellyfin. Align-only qBit path remains `configure --sync-qbit-auth` |
-| `./bin/flixbox status [--json]` | Container status + mode + download-client URL |
+| `./bin/flixbox status [--json] [-q] [-v]` | Health glance + mode/paths; `-v` = full compose ps |
 | `./bin/flixbox version` | CLI identity (VERSION / git describe) |
 | `./bin/flixbox doctor [--json]` | Readiness checks (Docker, .env, paths, VPN align) |
 | `./bin/flixbox logs [service]` | Tail logs |

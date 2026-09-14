@@ -1278,6 +1278,9 @@ grep -q 'cmd_version()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_versio
 grep -q 'cmd_doctor()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_doctor'
 grep -q 'cmd_logs()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_logs (must stay wired to usage)'
 grep -q 'cmd_vpn_test()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_vpn_test (must stay wired to usage)'
+grep -q 'cli-msg.sh' bin/flixbox || fail C-91 'bin/flixbox must source cli-msg.sh'
+[[ -f scripts/lib/cli-msg.sh ]] || fail C-91 'missing scripts/lib/cli-msg.sh'
+[[ -f scripts/lib/status-glance.py ]] || fail C-91 'missing scripts/lib/status-glance.py'
 grep -q 'die_usage()' bin/flixbox || fail C-91 'bin/flixbox missing die_usage (exit 2)'
 grep -q 'die_docker()' bin/flixbox || fail C-91 'bin/flixbox missing die_docker (exit 3)'
 grep -q 'cli-phase-a.sh' bin/flixbox || fail C-91 'bin/flixbox must source cli-phase-a.sh'
@@ -1301,6 +1304,9 @@ echo "$json" | grep -q '"schemaVersion"[[:space:]]*:[[:space:]]*1' || fail C-91 
 if ! docker info >/dev/null 2>&1; then
   [[ "$rc" -eq 3 ]] || fail C-91 "status --json without Docker want exit 3 got ${rc}"
 fi
+# Human doctor tokens remain meaningful without color
+doctor_out="$(NO_COLOR=1 ./bin/flixbox doctor 2>/dev/null || true)"
+echo "$doctor_out" | grep -qE '^PASS  ' || fail C-91 'doctor human output missing PASS tokens under NO_COLOR'
 # Q-06 ShellCheck covers bin/flixbox via existing shellcheck block
 pass C-91
 

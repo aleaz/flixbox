@@ -57,13 +57,16 @@ Prints CLI identity from `VERSION` (or `git describe`), compose project name, an
 
 Aggregate readiness: Docker CLI/daemon, Compose plugin, `.env`, `DATA_DIR`/`CONFIG_DIR`, `FLIXBOX_MODE`↔`VPN_ENABLED`, access profile, API key **presence** (booleans only), Gluetun health when `mode=vpn`.
 
+Human output uses `PASS` / `FAIL` / `INFO` / `OK` text tokens (color is optional chrome on the token only).
+
 `--json` emits a single object with `schemaVersion: 1`. Never includes key values.
 
-### `flixbox status [--json] [-q|--quiet]`
+### `flixbox status [--json] [-q|--quiet] [-v|--verbose]`
 
-Human: `docker compose ps` plus mode / access profile / paths.  
+Human default: narrow `SERVICE` / `STATE` / `HEALTH` glance, then `key: value` context (mode, profile, paths).  
+`-v`: also print full `docker compose ps`.  
 `--json`: service glance + context; if Docker is down, still prints JSON with `error` and exits **3**.  
-`-q`: suppress human info lines; warnings stay on stderr.
+`-q`: glance only (skip context block); warnings stay on stderr.
 
 ## Security I/O
 

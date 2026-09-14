@@ -20,7 +20,7 @@ Contrato completo: [17 — Referencia CLI](17-cli.md) (ADR 0021 Phase A).
 | `./bin/flixbox configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]` | Cableado idempotente; sana API keys. `--dry-run` solo preview. `--sync-qbit-auth` fuerza password qBit desde `.env`. `--sync-arr-ui` aplica Forms en `shared` (ADR 0020) |
 | `./bin/flixbox credentials show <target>` | Imprimir secreto (`qbit`, `arr-ui`, `admin`, o `api radarr\|sonarr\|prowlarr`) — solo stdout; no pegar en issues |
 | `./bin/flixbox credentials set <target> --generate\|--prompt` | Escribir `.env` y aplicar. `qbit` = rotar; `arr-ui` = Forms en shared; `admin` = Jellyfin best-effort |
-| `./bin/flixbox status` | Estado + modo + URL del cliente de descarga |
+| `./bin/flixbox status [--json] [-q] [-v]` | Glance de salud + modo/paths; `-v` = compose ps completo |
 | `./bin/flixbox logs [servicio]` | Ver logs |
 | `./bin/flixbox vpn-test` | Comprobar VPN (solo modo VPN) |
 | `./bin/flixbox down` | Parar stack (volúmenes de config se conservan) |
