@@ -23,7 +23,7 @@ Full contract: [17 — CLI reference](17-cli.md) (ADR 0021).
 | `./bin/flixbox credentials set <target> --generate\|--prompt` | Write `.env` and apply. `qbit` = **rotate** (auth with current password first). `arr-ui` = shared Forms Host Config. `admin` = best-effort Jellyfin. Align-only qBit path remains `configure --sync-qbit-auth` |
 | `./bin/flixbox status [--json] [-q] [-v]` | Health glance + mode/paths; `-v` = full compose ps |
 | `./bin/flixbox version` | CLI identity (VERSION / git describe) |
-| `./bin/flixbox doctor [--json]` | Readiness checks (Docker, .env, paths, VPN align) |
+| `./bin/flixbox doctor [--json]` | Readiness checks (Docker, .env, paths, hardlink/NFS/exFAT guards, VPN align) |
 | `./bin/flixbox logs [service]` | Tail logs |
 | `./bin/flixbox vpn-test` | VPN egress check (VPN mode only) |
 | `./bin/flixbox recyclarr sync [--dry-run]` | Recyclarr one-shot (alias: `sync-profiles`) |

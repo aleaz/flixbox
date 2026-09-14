@@ -24,6 +24,8 @@ source "${ROOT_DIR}/scripts/lib/homepage-templates.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/cli-phase-a.sh"
 # shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/fs-guards.sh"
+# shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/cli-phase-b.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/backup-restore.sh"
@@ -69,11 +71,16 @@ compose() {
 
 warn_unsafe_paths() {
   local path="$1"
-  if [[ "${path}" == /mnt/c/* || "${path}" == /mnt/d/* ]]; then
-    warn "${path} looks like a Windows/WSL NTFS mount — hardlinks may fail."
+  local fst
+  if flixbox_path_is_wsl_ntfs "$path"; then
+    warn "${path} looks like a Windows/WSL NTFS mount — hardlinks/SQLite may fail (docs/user/03-requirements.md)."
   fi
-  if [[ "${path}" == *exfat* ]]; then
-    warn "path mentions exfat — hardlinks are unsupported."
+  fst="$(flixbox_fs_type "$path")"
+  if flixbox_fs_is_exfat "$fst" || [[ "$path" == *exfat* ]]; then
+    warn "${path} appears to be exFAT — hardlinks are unsupported (docs/07-operations-risks.md)."
+  fi
+  if flixbox_fs_is_remote "$fst"; then
+    warn "${path} looks like a remote FS (${fst}) — unsafe for CONFIG_DIR SQLite (docs/07-operations-risks.md §4.2)."
   fi
 }
 
@@ -790,14 +797,15 @@ Usage: flixbox doctor [--json]
 Aggregate readiness checks for day-0 / day-2 operations.
 
 Checks: Docker CLI/daemon, Compose plugin, .env, DATA_DIR/CONFIG_DIR,
-FLIXBOX_MODE↔VPN_ENABLED alignment, access profile, API key presence (booleans),
-Gluetun health when mode=vpn and the container exists.
+filesystem guards (hardlink probe on DATA_DIR; NFS/SMB refuse on CONFIG_DIR;
+exFAT/WSL NTFS), FLIXBOX_MODE↔VPN_ENABLED alignment, access profile,
+API key presence (booleans), Gluetun health when mode=vpn.
 
 Options:
-  --json      Machine-readable report (schemaVersion: 1); no secret values
+  --json      Machine-readable report (schemaVersion: 2); no secret values
   -h, --help  Show this help
 
-Exit codes: 0 all hard checks pass; 3 Docker; 4 config; 5 dependency not ready
+Exit codes: 0 all hard checks pass (WARN allowed); 3 Docker; 4 config; 5 dependency not ready
 EOF
         return 0
         ;;
@@ -812,6 +820,8 @@ EOF
   local radarr_key=false sonarr_key=false prowlarr_key=false
   local gluetun="skipped"
   local mode="unknown" profile="unknown" hint=""
+  local hardlink_probe=skipped data_fs_status=skipped config_fs_status=skipped
+  local data_fs_type="" config_fs_type="" data_fs_detail="" config_fs_detail=""
 
   if command -v docker >/dev/null 2>&1; then
     docker_cli=true
@@ -853,12 +863,31 @@ EOF
       fi
       if [[ -n "${DATA_DIR:-}" && -d "${DATA_DIR}" ]]; then
         data_dir_ok=true
+        if flixbox_guard_data_dir "${DATA_DIR}"; then
+          :
+        else
+          config_fail=1; hard_fail=1
+          hint="${FLIXBOX_DATA_FS_DETAIL}"
+        fi
+        hardlink_probe="${FLIXBOX_HARDLINK_PROBE:-skipped}"
+        data_fs_status="${FLIXBOX_DATA_FS_STATUS:-ok}"
+        data_fs_type="${FLIXBOX_DATA_FS_TYPE:-}"
+        data_fs_detail="${FLIXBOX_DATA_FS_DETAIL:-}"
       else
         config_fail=1; hard_fail=1
         hint="DATA_DIR missing — run init or create ${DATA_DIR:-'(unset)'}."
       fi
       if [[ -n "${CONFIG_DIR:-}" && -d "${CONFIG_DIR}" ]]; then
         config_dir_ok=true
+        if flixbox_guard_config_dir "${CONFIG_DIR}"; then
+          :
+        else
+          config_fail=1; hard_fail=1
+          hint="${FLIXBOX_CONFIG_FS_DETAIL}"
+        fi
+        config_fs_status="${FLIXBOX_CONFIG_FS_STATUS:-ok}"
+        config_fs_type="${FLIXBOX_CONFIG_FS_TYPE:-}"
+        config_fs_detail="${FLIXBOX_CONFIG_FS_DETAIL:-}"
       else
         config_fail=1; hard_fail=1
         hint="CONFIG_DIR missing — run init or create ${CONFIG_DIR:-'(unset)'}."
@@ -896,6 +925,9 @@ EOF
       MODE_ALIGNED="$mode_aligned" PROFILE_OK="$profile_ok" \
       RADARR_KEY="$radarr_key" SONARR_KEY="$sonarr_key" PROWLARR_KEY="$prowlarr_key" \
       GLUETUN="$gluetun" MODE="$mode" PROFILE="$profile" HINT="$hint" HARD_FAIL="$hard_fail" \
+      HARDLINK_PROBE="$hardlink_probe" \
+      DATA_FS_STATUS="$data_fs_status" DATA_FS_TYPE="$data_fs_type" DATA_FS_DETAIL="$data_fs_detail" \
+      CONFIG_FS_STATUS="$config_fs_status" CONFIG_FS_TYPE="$config_fs_type" CONFIG_FS_DETAIL="$config_fs_detail" \
       CLI_VER="$(flixbox_cli_version)" \
       python3 "${ROOT_DIR}/scripts/lib/doctor-json.py"
   else
@@ -907,11 +939,26 @@ EOF
       cli_pass ".env"
       if [[ "$data_dir_ok" == true ]]; then
         cli_pass "DATA_DIR" "${DATA_DIR}"
+        case "$data_fs_status" in
+          fail) cli_fail_line "DATA_DIR FS" "${data_fs_detail:-fail}" ;;
+          warn) cli_warn_out "DATA_DIR FS" "${data_fs_detail:-${data_fs_type:-unknown}}" ;;
+          *) cli_pass "DATA_DIR FS" "${data_fs_type:-unknown}" ;;
+        esac
+        case "$hardlink_probe" in
+          ok) cli_pass "hardlink probe" "ok" ;;
+          fail) cli_fail_line "hardlink probe" "${FLIXBOX_HARDLINK_DETAIL:-fail}" ;;
+          *) cli_warn_out "hardlink probe" "${FLIXBOX_HARDLINK_DETAIL:-skipped}" ;;
+        esac
       else
         cli_fail_line "DATA_DIR" "missing/unusable"
       fi
       if [[ "$config_dir_ok" == true ]]; then
         cli_pass "CONFIG_DIR" "${CONFIG_DIR}"
+        case "$config_fs_status" in
+          fail) cli_fail_line "CONFIG_DIR FS" "${config_fs_detail:-fail}" ;;
+          warn) cli_warn_out "CONFIG_DIR FS" "${config_fs_detail:-${config_fs_type:-unknown}}" ;;
+          *) cli_pass "CONFIG_DIR FS" "${config_fs_type:-unknown}" ;;
+        esac
       else
         cli_fail_line "CONFIG_DIR" "missing/unusable"
       fi

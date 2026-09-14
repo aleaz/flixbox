@@ -74,11 +74,13 @@ Imprime la identidad de la CLI desde `VERSION` (o `git describe`), el nombre del
 
 ### `flixbox doctor [--json]`
 
-Diagnóstico agregado: Docker CLI/daemon, plugin Compose, `.env`, `DATA_DIR`/`CONFIG_DIR`, alineación `FLIXBOX_MODE`↔`VPN_ENABLED`, perfil de acceso, **presencia** de API keys (solo booleanos), salud de Gluetun cuando `mode=vpn`.
+Diagnóstico agregado: Docker CLI/daemon, plugin Compose, `.env`, `DATA_DIR`/`CONFIG_DIR`,
+**guards de filesystem** (hardlink en `DATA_DIR`; rechazo NFS/SMB/`9p` en `CONFIG_DIR`; exFAT y montajes WSL `/mnt/c`),
+alineación `FLIXBOX_MODE`↔`VPN_ENABLED`, perfil de acceso, **presencia** de API keys (solo booleanos), salud de Gluetun cuando `mode=vpn`.
 
-Salida humana con tokens `PASS` / `FAIL` / `INFO` / `OK` (el color solo pinta el token).
+Salida humana con tokens `PASS` / `FAIL` / `WARN` / `INFO` / `OK`. Fallos duros de FS → exit **4**; WARN suave permite exit **0**.
 
-`--json` emite un solo objeto con `schemaVersion: 2` (`vpnEnabled` es boolean JSON). Nunca incluye valores de keys.
+`--json` emite un solo objeto con `schemaVersion: 2` (incluye `checks.hardlinkProbe`, `checks.dataFs`, `checks.configFs`). Nunca incluye valores de keys.
 
 ### `flixbox status [--json] [-q|--quiet] [-v|--verbose]`
 

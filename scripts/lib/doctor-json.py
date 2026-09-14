@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build flixbox doctor --json payload (schemaVersion 1). No secrets."""
+"""Build flixbox doctor --json payload (schemaVersion 2). No secrets."""
 from __future__ import annotations
 
 import json
@@ -13,7 +13,7 @@ def b(name: str) -> bool:
 
 def main() -> int:
     obj = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "ok": os.environ.get("HARD_FAIL") == "0",
         "cliVersion": os.environ.get("CLI_VER") or "",
         "mode": os.environ.get("MODE") or "",
@@ -27,6 +27,17 @@ def main() -> int:
             "configDir": b("CONFIG_DIR_OK"),
             "modeVpnAligned": b("MODE_ALIGNED"),
             "accessProfileOk": b("PROFILE_OK"),
+            "hardlinkProbe": os.environ.get("HARDLINK_PROBE") or "skipped",
+            "dataFs": {
+                "status": os.environ.get("DATA_FS_STATUS") or "skipped",
+                "type": os.environ.get("DATA_FS_TYPE") or "",
+                "detail": os.environ.get("DATA_FS_DETAIL") or "",
+            },
+            "configFs": {
+                "status": os.environ.get("CONFIG_FS_STATUS") or "skipped",
+                "type": os.environ.get("CONFIG_FS_TYPE") or "",
+                "detail": os.environ.get("CONFIG_FS_DETAIL") or "",
+            },
             "apiKeysPresent": {
                 "radarr": b("RADARR_KEY"),
                 "sonarr": b("SONARR_KEY"),

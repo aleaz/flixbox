@@ -24,7 +24,7 @@ Use this as an implementation checklist. Mitigations marked **enforce** should b
 ### 1.4 Filesystems without hardlinks
 
 - **Risk:** `exFAT` and similar cannot hardlink.
-- **Mitigation (document/enforce):** `init` warns; docs forbid exFAT for `${DATA_DIR}`.
+- **Mitigation (enforce):** `flixbox doctor` hardlink probe + exFAT/WSL detection (exit 4); `init` warns via shared FS guards; docs forbid exFAT for `${DATA_DIR}`.
 
 ---
 
@@ -99,7 +99,7 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 
 ### 4.2 SQLite on NFS/SMB
 
-- **Mitigation (enforce):** Refuse/warn if `CONFIG_DIR` looks remote.
+- **Mitigation (enforce):** `flixbox doctor` fails (exit 4) when `CONFIG_DIR` is on nfs/cifs/smb/9p/sshfs; `init` warns via shared FS guards.
 
 ### 4.3 `/dev/shm` transcode vs. memory exhaustion
 
@@ -108,7 +108,7 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 
 ### 4.4 Hardlink verification
 
-- **Mitigation (document):** Compare inodes with `ls -i` after import.
+- **Mitigation (enforce + document):** `flixbox doctor` runs a write/`ln` probe under `${DATA_DIR}`; after import, compare inodes with `ls -i` (day-2 ops).
 
 ### 4.5 Path changes do not propagate to all apps
 

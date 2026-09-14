@@ -55,7 +55,9 @@
 <a id="hardlink-health-check"></a>
 ## Comprobación de salud de hardlinks
 
-Tras un import:
+Listo day-2: `./bin/flixbox doctor` prueba hardlinks bajo `${DATA_DIR}` (y marca filesystems de CONFIG inseguros).
+
+Tras un import, confirmá que los inodes coinciden:
 
 ```bash
 ls -i ${DATA_DIR}/torrents/movies/example.mkv

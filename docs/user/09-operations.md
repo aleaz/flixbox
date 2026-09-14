@@ -48,7 +48,9 @@
 
 ## Hardlink health check
 
-After an import:
+Day-2 readiness: `./bin/flixbox doctor` probes hardlink support under `${DATA_DIR}` (and flags unsafe CONFIG filesystems).
+
+After an import, confirm inodes match:
 
 ```bash
 ls -i ${DATA_DIR}/torrents/movies/example.mkv

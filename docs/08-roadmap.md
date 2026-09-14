@@ -24,7 +24,7 @@ Versions below are planning labels; `v0.1.1` is the first public semver tag.
 - CLI UX contract — [ADR 0021](adr/0021-cli-ux-contract.md) (**Accepted**): Phase A diagnostics + Phase B lifecycle (`backup`/`restore`/`update`/`recyclarr`/`completion`) **landed** — [17-cli.md](user/17-cli.md); Phase C taxonomy hardening ongoing
 - [x] CLI: `sync-profiles`, `backup`, `restore`, `update` (names locked by ADR 0021 Phase B)
 - [x] **`configure`:** clear Jellyfin `LocalNetworkAddresses` when it is only `::` — [Troubleshooting](user/10-troubleshooting.md)
-- Stronger init validation (hardlink probe, config-on-NFS guard, exFAT guard) — fold into `doctor` where practical
+- [x] Stronger init/doctor validation (hardlink probe, config-on-NFS guard, exFAT/WSL guards) — folded into `doctor`
 - Optional digest pins (`@sha256:`) for stricter supply chain
 - **Notifications:** optional Apprise API profile (Telegram via Apprise URL, not a Flixbox bot) — [ADR 0012](adr/0012-notifications-apprise-hub.md)
 - **VPN resilience docs + optional heal:** document Gluetun internal reconnect/killswitch; evaluate optional `vpn-heal` watchdog profile; **never** auto-fallback to Direct — [ADR 0013](adr/0013-vpn-resilience-no-direct-fallback.md)

@@ -24,6 +24,7 @@ Contrato completo: [17 — Referencia CLI](17-cli.md) (ADR 0021).
 | `./bin/flixbox credentials show <target>` | Imprimir secreto (`qbit`, `arr-ui`, `admin`, o `api radarr\|sonarr\|prowlarr`) — solo stdout; no pegar en issues |
 | `./bin/flixbox credentials set <target> --generate\|--prompt` | Escribir `.env` y aplicar. `qbit` = rotar; `arr-ui` = Forms en shared; `admin` = Jellyfin best-effort |
 | `./bin/flixbox status [--json] [-q] [-v]` | Glance de salud + modo/paths; `-v` = compose ps completo |
+| `./bin/flixbox doctor [--json]` | Checks de listo (Docker, .env, paths, hardlink/NFS/exFAT, VPN) |
 | `./bin/flixbox logs [servicio]` | Ver logs |
 | `./bin/flixbox vpn-test` | Comprobar VPN (solo modo VPN) |
 | `./bin/flixbox recyclarr sync [--dry-run]` | Recyclarr one-shot (alias: `sync-profiles`) |

@@ -1342,6 +1342,32 @@ fi
 # Human doctor tokens remain meaningful without color
 doctor_out="$(NO_COLOR=1 ./bin/flixbox doctor 2>/dev/null || true)"
 echo "$doctor_out" | grep -qE '^PASS  ' || fail C-91 'doctor human output missing PASS tokens under NO_COLOR'
+[[ -f scripts/lib/fs-guards.sh ]] || fail C-91 'missing scripts/lib/fs-guards.sh'
+grep -q 'fs-guards.sh' bin/flixbox || fail C-91 'bin/flixbox must source fs-guards.sh'
+# FS guard unit: hardlink ok on temp dir; remote FS type classification
+bash -c '
+set -euo pipefail
+REPO="'"$(pwd)"'"
+# shellcheck disable=SC1091
+source "${REPO}/scripts/lib/fs-guards.sh"
+tmp="$(mktemp -d)"
+trap "rm -rf \"$tmp\"" EXIT
+flixbox_probe_hardlink "$tmp"
+[[ "$FLIXBOX_HARDLINK_PROBE" == ok ]] || { echo "hardlink probe want ok got $FLIXBOX_HARDLINK_PROBE"; exit 1; }
+flixbox_fs_is_remote nfs && flixbox_fs_is_remote cifs && flixbox_fs_is_exfat exfat
+flixbox_fs_is_remote ext4 && { echo "ext4 must not be remote"; exit 1; }
+flixbox_guard_data_dir "$tmp"
+[[ "$FLIXBOX_DATA_FS_STATUS" == ok || "$FLIXBOX_DATA_FS_STATUS" == warn ]] || {
+  echo "data guard unexpected fail: $FLIXBOX_DATA_FS_STATUS $FLIXBOX_DATA_FS_DETAIL"; exit 1;
+}
+' || fail C-91 'fs-guards unit checks failed'
+# doctor --json schemaVersion 2 + hardlinkProbe when .env usable
+if [[ -f .env ]] && docker info >/dev/null 2>&1; then
+  dj="$(./bin/flixbox doctor --json 2>/dev/null || true)"
+  echo "$dj" | grep -q '"schemaVersion"[[:space:]]*:[[:space:]]*2' || \
+    fail C-91 'doctor --json missing schemaVersion 2'
+  echo "$dj" | grep -q 'hardlinkProbe' || fail C-91 'doctor --json missing hardlinkProbe'
+fi
 # status glance + quiet omits context keys
 status_out="$(NO_COLOR=1 ./bin/flixbox status -q 2>/dev/null || true)"
 if docker info >/dev/null 2>&1; then

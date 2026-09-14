@@ -97,6 +97,18 @@ cli_info_out() {
   fi
 }
 
+cli_warn_out() {
+  # WARN checklist line on stdout (doctor soft FS findings).
+  local label="$1" detail="${2:-}"
+  local tok
+  tok="$(flixbox_cli_token 1 '\033[33m' 'WARN')"
+  if [[ -n "$detail" ]]; then
+    printf '%s  %-18s %s\n' "$tok" "$label" "$detail"
+  else
+    printf '%s  %s\n' "$tok" "$label"
+  fi
+}
+
 cli_result_ok() {
   local tok
   tok="$(flixbox_cli_token 1 '\033[32m' 'OK')"
