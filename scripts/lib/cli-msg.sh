@@ -125,9 +125,19 @@ cli_outcome() {
   fi
 }
 
-# Configure / mutator report line on stdout (fixed token + verb columns).
+# Mutator report line on stdout (fixed token + scope + verb columns).
+# Usage: cli_configure_line <verb> <detail>
+#    or: cli_configure_line <scope> <verb> <detail>
 cli_configure_line() {
-  local verb="$1" detail="$2"
+  local scope="configure" verb detail
+  if [[ $# -eq 3 ]]; then
+    scope="$1"
+    verb="$2"
+    detail="$3"
+  else
+    verb="$1"
+    detail="$2"
+  fi
   local tok color
   case "$verb" in
     failed)
@@ -143,7 +153,7 @@ cli_configure_line() {
       tok="$(flixbox_cli_token 1 "$color" 'OK')"
       ;;
   esac
-  printf '%s  configure %-10s %s\n' "$tok" "$verb" "$detail"
+  printf '%s  %s %-10s %s\n' "$tok" "$scope" "$verb" "$detail"
 }
 
 cli_summary() {

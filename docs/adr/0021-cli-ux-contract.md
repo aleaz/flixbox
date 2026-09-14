@@ -16,7 +16,7 @@ Honest snapshot against this contract (does **not** reopen decisions):
 | Operator doc | **Landed** as [`docs/user/17-cli.md`](../user/17-cli.md) (not `16-cli.md`) + ES mirror |
 | `logs` / `vpn-test` dispatch | **Landed** (regression from Phase A insert fixed) |
 | Per-command `--help` for **all** shipped commands | **Landed** (A2 help safety — no Compose/env side effects; no false success lines) |
-| Global `-q`/`-v`/`--json`/`--no-color` | **Partial** — command-scoped where documented; `NO_COLOR` honored; see deferral table below |
+| Global `-q`/`-v`/`--json`/`--no-color` | **Partial** — `--no-color` + command-scoped `-q`/`--json` where documented; global `-q`/`-v` deferred (see table) |
 | `--env-file` / `--project-dir` | **Deferred** (explicit) |
 | Phase B lifecycle (`backup`/`restore`/`update`/`recyclarr`/`completion`) | **Not started** |
 | Phase C full `die`→taxonomy + `configure --json` | **Not started** |
@@ -28,7 +28,8 @@ Honest snapshot against this contract (does **not** reopen decisions):
 | `-h` / `--help`, `--version` | MUST keep working (top-level done) |
 | Command `--json` / `-q` / `-v` where documented | MUST (status/doctor today) |
 | `NO_COLOR` + non-TTY plain text | MUST (landed via `cli-msg`) |
-| Global `--no-color`, global `-q`/`-v`, `--env-file`, `--project-dir` | **Deferred** until a dedicated polish slice; MUST NOT be advertised as implemented in `17-cli.md` until shipped |
+| Global `--no-color` | **Landed** (`./bin/flixbox --no-color …`; also honors `NO_COLOR` / non-TTY) |
+| Global `-q`/`-v`, `--env-file`, `--project-dir` | **Deferred** until a dedicated polish slice; MUST NOT be advertised as implemented in `17-cli.md` until shipped |
 
 ### Help safety (normative addition)
 
@@ -339,11 +340,11 @@ ADR 0005 remains Bash-first + MVP command set. This ADR **extends** day-2 UX qua
 - [x] `docs/user/17-cli.md` + REFERENCE link (+ ES mirror)
 - [x] CI Q-01–Q-06 (extended with presentation guards)
 
-### Phase A2 (help + honesty — in progress)
+### Phase A2 (help + honesty — landed)
 
 - [x] Per-command `--help` for **all** shipped commands, exit 0, **no side effects**, no false success lines
 - [x] `init`/`up`/`reload` unknown flags → exit 2 (not opaque `die`/Compose passthrough for profiles)
-- [ ] Global `--no-color` **or** explicit deferral sentence remains accurate in `17-cli.md` (deferral landed; `--no-color` flag still deferred)
+- [x] Global `--no-color` (`FLIXBOX_NO_COLOR` / `NO_COLOR`); remaining globals deferred honestly in `17-cli.md`
 - [x] `--env-file` / `--project-dir` still deferred (listed in `17-cli.md`)
 - [x] CI: every command in top-level help responds to `--help` with exit 0; `down --help` must not print `Stack stopped`
 
@@ -359,8 +360,8 @@ ADR 0005 remains Bash-first + MVP command set. This ADR **extends** day-2 UX qua
 
 - [ ] Remaining `die` paths classified into 2–6 where meaningful
 - [ ] `configure --json` summary (optional) without secrets
-- [ ] `homepage` / `credentials set` emit ADR §6 outcome vocabulary via `cli-msg`
-- [ ] JSON type cleanups (`vpnEnabled` boolean) behind `schemaVersion` bump
+- [x] `homepage` / `credentials set` emit ADR §6 outcome vocabulary via `cli-msg`
+- [x] JSON type cleanups (`vpnEnabled` boolean) behind `schemaVersion` bump (`status` → 2)
 - [ ] Smoke-test doc cross-links CLI doctor path
 
 ## Alternatives considered

@@ -254,14 +254,17 @@ credentials_set() {
       case "$rc" in
         0)
           credentials_persist_qbit_password "$env_file" "$new_pass"
-          log "If *arr download-client Test fails: ./bin/flixbox configure --sync-qbit-auth"
+          cli_configure_line credentials updated "qbit WebUI password"
+          cli_info "If *arr download-client Test fails: ./bin/flixbox configure --sync-qbit-auth"
           ;;
         3)
           warn "qBit accepted the new password but re-auth verify failed — persisting .env so Decluttarr stays aligned"
           credentials_persist_qbit_password "$env_file" "$new_pass"
+          cli_configure_line credentials updated "qbit WebUI password (verify incomplete)"
           warn "Confirm WebUI login with: ./bin/flixbox credentials show qbit"
           ;;
         *)
+          cli_configure_line credentials failed "qbit rotate"
           die "qBit rotate failed — .env left unchanged. Fix WebUI login / temp password, then retry."
           ;;
       esac
@@ -271,7 +274,7 @@ credentials_set() {
         die "arr-ui set requires FLIXBOX_ACCESS_PROFILE=shared (current: $(flixbox_access_profile))"
       fi
       assert_docker_accessible
-      log "Applying Forms via Host Config before writing .env..."
+      cli_info "Applying Forms via Host Config before writing .env..."
       FLIXBOX_ARR_UI_PASSWORD_OVERRIDE="$new_pass" \
         FLIXBOX_ARR_UI_USER="${FLIXBOX_ARR_UI_USER:-admin}" \
         flixbox_apply_arr_ui_credentials || true
@@ -279,16 +282,17 @@ credentials_set() {
         flixbox_env_file_set "$env_file" FLIXBOX_ARR_UI_PASSWORD "$new_pass"
         [[ -n "$(flixbox_env_file_get "$env_file" FLIXBOX_ARR_UI_USER)" ]] || \
           flixbox_env_file_set "$env_file" FLIXBOX_ARR_UI_USER admin
-        ok "Wrote FLIXBOX_ARR_UI_* to .env after successful apply"
+        cli_configure_line credentials updated "arr-ui Forms + .env (3/3)"
         load_env
       elif [[ "$ARR_UI_APPLY_OK" -gt 0 ]]; then
         flixbox_env_file_set "$env_file" FLIXBOX_ARR_UI_PASSWORD "$new_pass"
         [[ -n "$(flixbox_env_file_get "$env_file" FLIXBOX_ARR_UI_USER)" ]] || \
           flixbox_env_file_set "$env_file" FLIXBOX_ARR_UI_USER admin
-        ok "Wrote FLIXBOX_ARR_UI_* to .env (partial apply — SoT for retry)"
+        cli_configure_line credentials updated "arr-ui .env (partial ${ARR_UI_APPLY_OK}/3)"
         load_env
         die "arr-ui: applied on ${ARR_UI_APPLY_OK}/3 apps — retry: ./bin/flixbox configure --sync-arr-ui"
       else
+        cli_configure_line credentials failed "arr-ui Host Config apply"
         die "arr-ui: Host Config apply failed on all apps — .env left unchanged"
       fi
       ;;
@@ -297,14 +301,19 @@ credentials_set() {
       flixbox_env_file_set "$env_file" FLIXBOX_ADMIN_PASSWORD "$new_pass"
       [[ -n "$(flixbox_env_file_get "$env_file" FLIXBOX_ADMIN_USER)" ]] || \
         flixbox_env_file_set "$env_file" FLIXBOX_ADMIN_USER admin
-      ok "Wrote FLIXBOX_ADMIN_PASSWORD to .env"
+      cli_configure_line credentials updated "admin password in .env"
       load_env
       if [[ -n "$old_pass" ]]; then
-        credentials_apply_jellyfin_admin_password "$old_pass" "$new_pass" || true
+        if credentials_apply_jellyfin_admin_password "$old_pass" "$new_pass"; then
+          cli_configure_line credentials updated "Jellyfin admin password"
+        else
+          cli_configure_line credentials failed "Jellyfin admin password API ( .env already written )"
+        fi
       else
+        cli_configure_line credentials skipped "Jellyfin API (no previous password)"
         warn "No previous FLIXBOX_ADMIN_PASSWORD — skipped Jellyfin API change; complete/align in Jellyfin UI"
       fi
-      log "If Seerr Jellyfin login breaks: ./bin/flixbox configure"
+      cli_info "If Seerr Jellyfin login breaks: ./bin/flixbox configure"
       ;;
     api)
       die "credentials set api is not supported — regenerate in the app UI then ./bin/flixbox configure"

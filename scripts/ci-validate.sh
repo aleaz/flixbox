@@ -1205,6 +1205,8 @@ bash -c '
 set -euo pipefail
 ROOT_DIR="$(pwd)"
 # shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/cli-msg.sh"
+# shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/homepage-templates.sh"
 log() { :; }
 ok() { :; }
@@ -1331,7 +1333,9 @@ out="$(./bin/flixbox version 2>/dev/null)" || fail C-91 'version failed'
 # Q-04/Q-05 status --json: schemaVersion present; Docker-down → exit 3 (this environment may lack daemon)
 rc=0
 json="$(./bin/flixbox status --json 2>/dev/null)" || rc=$?
-echo "$json" | grep -q '"schemaVersion"[[:space:]]*:[[:space:]]*1' || fail C-91 'status --json missing schemaVersion 1'
+echo "$json" | grep -q '"schemaVersion"[[:space:]]*:[[:space:]]*2' || fail C-91 'status --json missing schemaVersion 2'
+echo "$json" | grep -qE '"vpnEnabled"[[:space:]]*:[[:space:]]*(true|false)' || \
+  fail C-91 'status --json vpnEnabled must be a JSON boolean (schemaVersion 2)'
 if ! docker info >/dev/null 2>&1; then
   [[ "$rc" -eq 3 ]] || fail C-91 "status --json without Docker want exit 3 got ${rc}"
 fi

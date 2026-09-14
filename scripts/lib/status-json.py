@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Build flixbox status --json payload (schemaVersion 1). No secrets."""
+"""Build flixbox status --json payload (schemaVersion 2). No secrets."""
 from __future__ import annotations
 
 import json
 import os
 import sys
+
+
+def _as_bool(raw: str) -> bool:
+    return raw.strip().lower() in ("true", "1", "yes", "on")
 
 
 def main() -> int:
@@ -16,11 +20,11 @@ def main() -> int:
     err = os.environ.get("ERR") or ""
     docker_ok = os.environ.get("DOCKER_OK") == "true"
     obj = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "ok": docker_ok and not err,
         "cliVersion": os.environ.get("CLI_VER") or "",
         "mode": os.environ.get("FLIXBOX_MODE") or "direct",
-        "vpnEnabled": os.environ.get("VPN_ENABLED") or "false",
+        "vpnEnabled": _as_bool(os.environ.get("VPN_ENABLED") or "false"),
         "modeVpnAligned": os.environ.get("MODE_ALIGNED") == "true",
         "accessProfile": os.environ.get("PROFILE") or "",
         "adminBindIp": os.environ.get("FLIXBOX_ADMIN_BIND_IP") or "",

@@ -656,7 +656,7 @@ Usage: flixbox status [--json] [-q|--quiet] [-v|--verbose]
 Show service health glance and operator context (mode, access profile, paths).
 
 Options:
-  --json          Machine-readable object on stdout (schemaVersion: 1)
+  --json          Machine-readable object on stdout (schemaVersion: 2)
   -q, --quiet     Glance only (skip context key: value block)
   -v, --verbose   Also print full docker compose ps
   -h, --help      Show this help
@@ -1017,6 +1017,7 @@ Config:
 Global:
   -h, --help       Show this help
   --version        Same as version
+  --no-color       Force plain text (also honors NO_COLOR / non-TTY)
 
 PATH (optional):
   ln -sf "$(pwd)/bin/flixbox" ~/.local/bin/flixbox
@@ -1035,6 +1036,25 @@ EOF
 }
 
 main() {
+  # Global flags (ADR 0021) — strip before subcommand dispatch.
+  local filtered=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --no-color)
+        FLIXBOX_NO_COLOR=1
+        export FLIXBOX_NO_COLOR
+        NO_COLOR=1
+        export NO_COLOR
+        shift
+        ;;
+      *)
+        filtered+=("$1")
+        shift
+        ;;
+    esac
+  done
+  set -- "${filtered[@]+"${filtered[@]}"}"
+
   local cmd="${1:-}"
   [[ -n "${cmd}" ]] || { usage; flixbox_exit_usage; }
   shift || true

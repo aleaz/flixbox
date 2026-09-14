@@ -1,10 +1,10 @@
 # CLI reference (ADR 0021)
 
-**Status:** Phase A diagnostics **landed**; Phase **A2** help safety **landed**; remaining A2 = flag deferral honesty (done in docs) / optional `--no-color` flag — see [ADR 0021](../adr/0021-cli-ux-contract.md)
+**Status:** Phase A diagnostics **landed**; Phase **A2** help safety + global `--no-color` **landed**; remaining globals deferred — see [ADR 0021](../adr/0021-cli-ux-contract.md)
 **Audience:** Operators and automation  
 **Related:** [ADR 0021](../adr/0021-cli-ux-contract.md) · [REFERENCE](REFERENCE.md)
 
-`./bin/flixbox` is the single operator entrypoint. Phase A delivered discoverability (`version`, top-level help), diagnostics (`doctor`), scriptable `status --json`, presentation via `cli-msg`, and exit taxonomy on those paths. **Not all** subcommands yet honor `--help` without side effects.
+`./bin/flixbox` is the single operator entrypoint. Phase A delivered discoverability (`version`, top-level help), diagnostics (`doctor`), scriptable `status --json`, presentation via `cli-msg`, and exit taxonomy on those paths. Per-command `--help` is side-effect free for all shipped commands (A2).
 
 ## Install / PATH
 
@@ -34,7 +34,7 @@ Requires **Bash 4+**. Completions land in Phase B.
 | Per-command `-h` / `--help` | Command-specific usage | Landed (lifecycle included; side-effect free) |
 | `--json`, `-q` / `--quiet`, `-v` / `--verbose` | As documented per command (`status`, `doctor`, …) | Landed where documented |
 | `NO_COLOR` / non-TTY | Plain tokens (no ANSI) | Landed |
-| `--no-color`, global `-q`/`-v`, `--env-file`, `--project-dir` | ADR 0021 globals | **Deferred** (ADR 0021 deferral table) |
+| `--no-color`, global `-q`/`-v`, `--env-file`, `--project-dir` | ADR 0021 globals | `--no-color` landed; `--env-file` / `--project-dir` / global `-q`/`-v` still deferred |
 
 ## Streams (stdout vs stderr)
 
@@ -71,7 +71,7 @@ Aggregate readiness: Docker CLI/daemon, Compose plugin, `.env`, `DATA_DIR`/`CONF
 
 Human output uses `PASS` / `FAIL` / `INFO` / `OK` text tokens (color is optional chrome on the token only).
 
-`--json` emits a single object with `schemaVersion: 1`. Never includes key values.
+`--json` emits a single object with `schemaVersion: 2` (`vpnEnabled` is a JSON boolean). Never includes key values.
 
 ### `flixbox status [--json] [-q|--quiet] [-v|--verbose]`
 
@@ -92,7 +92,7 @@ Human default: narrow `SERVICE` / `STATE` / `HEALTH` glance, then `key: value` c
 2. `./bin/flixbox nosuch` → exit 2  
 3. `./bin/flixbox status --help` → exit 0  
 4. `./bin/flixbox doctor` on a configured host → actionable hints; exit 0 when ready  
-5. `./bin/flixbox status --json | jq .schemaVersion` → `1` when Docker works  
+5. `./bin/flixbox status --json | jq .schemaVersion` → `2` when Docker works  
 
 ## Deferred (Phase B+)
 

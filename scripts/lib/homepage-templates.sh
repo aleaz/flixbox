@@ -169,51 +169,46 @@ EOF
 
   if applied="$(flixbox_homepage_applied_rev 2>/dev/null)" && [[ "$applied" == "$tmpl" ]]; then
     if [[ "$dry_run" -eq 1 ]]; then
-      log "dry-run: Homepage applied-rev already ${tmpl} (unchanged)"
+      cli_configure_line homepage dry-run "already at rev ${tmpl}"
       return 0
     fi
-    # Still allow force re-apply? Plan says second refresh is idempotent unchanged.
-    # Re-copy is harmless but backup noise — prefer unchanged when revs match.
-    ok "Homepage templates unchanged (applied-rev=${tmpl})"
+    cli_configure_line homepage unchanged "templates (applied-rev=${tmpl})"
     return 0
   fi
 
   if [[ "$dry_run" -eq 1 ]]; then
-    log "dry-run: would backup ${CONFIG_DIR}/homepage → homepage.bak.<timestamp>"
-    log "dry-run: would overwrite managed Homepage files from templates/homepage (rev ${tmpl})"
-    log "dry-run: would run homepage-sync.py and stamp applied-rev=${tmpl}"
-    log "dry-run: would restart flixbox-homepage if present"
+    cli_configure_line homepage dry-run "backup + template apply to rev ${tmpl}"
     return 0
   fi
 
   [[ -n "${CONFIG_DIR:-}" ]] || {
-    warn "CONFIG_DIR unset — load .env first"
+    cli_configure_line homepage failed "CONFIG_DIR unset"
     return 1
   }
 
   mkdir -p "$(flixbox_homepage_live_dir)/images"
   bak="$(flixbox_homepage_backup_live)" || {
-    warn "Homepage backup failed"
+    cli_configure_line homepage failed "backup"
     return 1
   }
-  [[ -n "$bak" ]] && log "Homepage backup: ${bak}"
+  [[ -n "$bak" ]] && cli_info "Homepage backup: ${bak}"
 
   flixbox_homepage_copy_managed || {
-    warn "Homepage template copy failed"
+    cli_configure_line homepage failed "template copy"
     return 1
   }
 
   if ! flixbox_homepage_run_sync; then
-    warn "homepage-sync.py failed after template copy — live files updated; fix sync then re-run refresh"
+    cli_configure_line homepage failed "sync after template copy"
     return 1
   fi
 
   flixbox_homepage_write_applied_rev "$tmpl"
   flixbox_homepage_restart_container || {
-    warn "Homepage restart failed — templates applied; run: docker restart flixbox-homepage"
+    cli_configure_line homepage failed "restart (templates applied — docker restart flixbox-homepage)"
     return 1
   }
 
-  ok "Homepage templates updated (applied-rev=${tmpl})"
+  cli_configure_line homepage updated "templates (applied-rev=${tmpl})"
   return 0
 }
