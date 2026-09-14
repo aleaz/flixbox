@@ -101,7 +101,8 @@ if [[ "${SYNC_ARR_UI:-false}" == "true" ]]; then
   fi
 fi
 
-printf 'summary: %s updated, %s unchanged, %s failed\n' "${CONFIGURED}" "${SKIPPED}" "${FAILED}"
+printf -v _flixbox_summary '%s updated, %s unchanged, %s failed' "${CONFIGURED}" "${SKIPPED}" "${FAILED}"
+cli_summary "${_flixbox_summary}"
 info "Still manual:"
 info "  Prowlarr: add your indexers (tag cf on Cloudflare indexers)"
 info "  Maintainerr: connect services + enable rules deliberately"

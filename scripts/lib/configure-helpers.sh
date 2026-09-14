@@ -58,23 +58,7 @@ source "${FLIXBOX_LIB}/cli-msg.sh"
 # Configure report lines on stdout (primary result); tips/warnings on stderr via cli_*.
 # Vocab: updated | unchanged | failed | dry-run (ADR 0021). No Unicode status glyphs.
 _configure_line() {
-  local verb="$1" detail="$2"
-  local tok color
-  case "$verb" in
-    failed)
-      color='\033[31m'
-      tok="$(flixbox_cli_paint 1 "$color" 'FAIL')"
-      ;;
-    unchanged|skipped|dry-run)
-      color='\033[36m'
-      tok="$(flixbox_cli_paint 1 "$color" 'INFO')"
-      ;;
-    *)
-      color='\033[32m'
-      tok="$(flixbox_cli_paint 1 "$color" 'OK')"
-      ;;
-  esac
-  printf '%s  configure %-10s %s\n' "$tok" "$verb" "$detail"
+  cli_configure_line "$1" "$2"
 }
 
 log()  { cli_info "$*"; }

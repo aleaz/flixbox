@@ -553,14 +553,35 @@ sed -n '/^fail() {/,/^}/p' scripts/lib/configure-helpers.sh | grep -q 'return 0'
   fail C-69 'configure fail() must return 0 under set -e (PARTIAL wiring; ADR 0016)'
 grep -q '_configure_line' scripts/lib/configure-helpers.sh || \
   fail C-69 'configure helpers must use _configure_line outcome vocabulary'
+grep -q 'flixbox_cli_token' scripts/lib/cli-msg.sh || \
+  fail C-69 'cli-msg must pad level tokens to a fixed width (flixbox_cli_token)'
+grep -q 'cli_summary' scripts/configure-apps.sh || \
+  fail C-69 'configure-apps must print summary via cli_summary (aligned token column)'
 if grep -E '[✓✗]' scripts/lib/configure-helpers.sh scripts/configure-apps.sh 2>/dev/null; then
   fail C-69 'configure must not use Unicode status glyphs (use cli-msg outcomes)'
 fi
 if grep -F '=== Flixbox app configuration ===' scripts/configure-apps.sh 2>/dev/null; then
   fail C-69 'configure-apps must not print === banners'
 fi
-grep -q 'summary:' scripts/configure-apps.sh || \
-  fail C-69 'configure-apps must print summary: updated/unchanged/failed'
+# Visible columns: OK/INFO configure lines share the same "configure" offset under NO_COLOR
+align_out="$(
+  NO_COLOR=1 bash -c '
+    # shellcheck disable=SC1091
+    source scripts/lib/cli-msg.sh
+    cli_configure_line updated "sample-updated"
+    cli_configure_line unchanged "sample-unchanged"
+    cli_summary "0 updated, 1 unchanged, 0 failed"
+  '
+)"
+ok_line="$(printf '%s\n' "$align_out" | grep 'sample-updated' | head -1)"
+info_line="$(printf '%s\n' "$align_out" | grep 'sample-unchanged' | head -1)"
+sum_line="$(printf '%s\n' "$align_out" | grep 'summary:' | head -1)"
+ok_idx="$(printf '%s' "$ok_line" | awk 'BEGIN{s="configure"} {print index($0,s)}')"
+info_idx="$(printf '%s' "$info_line" | awk 'BEGIN{s="configure"} {print index($0,s)}')"
+[[ -n "$ok_idx" && "$ok_idx" -gt 0 && "$ok_idx" == "$info_idx" ]] || \
+  fail C-69 "configure token columns misaligned (OK@${ok_idx:-?} INFO@${info_idx:-?})"
+printf '%s\n' "$sum_line" | grep -qE '^OK[[:space:]]+summary:' || \
+  fail C-69 "summary line missing aligned OK token: [${sum_line}]"
 grep -q 'wait_for_bazarr_api' scripts/configure/bazarr.sh || \
   fail C-69 'Bazarr must re-wait for API after restart'
 grep -B2 -A2 'wait_for_bazarr_api' scripts/configure/bazarr.sh | grep -q 'CONFIGURE_SOFT_WAIT=1' || \
