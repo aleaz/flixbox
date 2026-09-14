@@ -35,6 +35,17 @@ Requires **Bash 4+**. Completions land in Phase B.
 
 `--json`, `-q` / `--quiet` apply to commands that document them (`status`, `doctor`).
 
+## Streams (stdout vs stderr)
+
+| Stream | Content |
+| --- | --- |
+| **stdout** | Primary result: `version` identity, `doctor`/`status` reports, `configure` outcome lines + `summary:`, `credentials show` secrets, `--json` payloads |
+| **stderr** | Progress and tips (`INFO` / `OK` from `init`/`up`/`reload`), `WARN` / `FAIL` diagnostics, `Next:` hints |
+
+Do not rely on color alone — tokens (`PASS` / `FAIL` / `WARN` / `INFO` / `OK`) remain in plain text when `NO_COLOR` is set or stdout is not a TTY.
+
+`configure` outcome vocabulary on stdout: `updated` / `unchanged` / `failed` / `dry-run`, then `summary: N updated, M unchanged, K failed`.
+
 ## Exit codes (touched paths)
 
 | Code | Meaning |

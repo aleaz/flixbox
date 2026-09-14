@@ -67,34 +67,24 @@ if [[ "${FLIXBOX_ACCESS_PROFILE:-trusted}" == "shared" ]]; then
   info "Access profile: shared — admin ports on 127.0.0.1; apply Forms with ./bin/flixbox credentials set arr-ui or configure --sync-arr-ui (ADR 0020)"
 fi
 
-echo "=== Flixbox app configuration ==="
-echo ""
+info "Flixbox app configuration"
 
 configure_preflight
 
 configure_qbittorrent
-echo ""
 configure_arr_service "Sonarr" "$SONARR_PORT" "$SONARR_API_KEY" "/data/media/tv" "tv" \
   "$QBIT_ARR_HOST" "$QBIT_API_KEY" "$QBIT_USERNAME" "$QBIT_PASSWORD"
-echo ""
 configure_arr_service "Radarr" "$RADARR_PORT" "$RADARR_API_KEY" "/data/media/movies" "movies" \
   "$QBIT_ARR_HOST" "$QBIT_API_KEY" "$QBIT_USERNAME" "$QBIT_PASSWORD"
-echo ""
 configure_prowlarr
-echo ""
 configure_bazarr
-echo ""
 patch_recyclarr_keys
-echo ""
 configure_jellyfin
 flixbox_load_configure_env
-echo ""
 configure_seerr
-echo ""
 reload_hygiene_if_needed
 
 if [[ "${SYNC_ARR_UI:-false}" == "true" ]]; then
-  echo ""
   log "Syncing *arr Forms credentials from FLIXBOX_ARR_UI_* (ADR 0020)..."
   # shellcheck disable=SC1091
   source "${ROOT_DIR}/scripts/lib/credentials.sh"
@@ -111,14 +101,12 @@ if [[ "${SYNC_ARR_UI:-false}" == "true" ]]; then
   fi
 fi
 
-echo ""
-log "Done: ${CONFIGURED} configured, ${SKIPPED} skipped, ${FAILED} failed"
-echo ""
-log "Still manual:"
-info "  • Prowlarr: add your indexers (tag cf on Cloudflare indexers)"
-info "  • Maintainerr: connect services + enable rules deliberately"
-info "  • Optional: docker compose --profile recyclarr run --rm recyclarr sync"
-info "  • Guide: docs/user/05-first-run.md"
+printf 'summary: %s updated, %s unchanged, %s failed\n' "${CONFIGURED}" "${SKIPPED}" "${FAILED}"
+info "Still manual:"
+info "  Prowlarr: add your indexers (tag cf on Cloudflare indexers)"
+info "  Maintainerr: connect services + enable rules deliberately"
+info "  Optional: docker compose --profile recyclarr run --rm recyclarr sync"
+info "  Guide: docs/user/05-first-run.md"
 
 if [[ "$FAILED" -gt 0 ]]; then
   exit 1

@@ -551,6 +551,16 @@ grep -q 'FAILED=\$((FAILED + 1))' scripts/lib/configure-helpers.sh || \
   fail C-69 'configure fail() must increment FAILED'
 sed -n '/^fail() {/,/^}/p' scripts/lib/configure-helpers.sh | grep -q 'return 0' || \
   fail C-69 'configure fail() must return 0 under set -e (PARTIAL wiring; ADR 0016)'
+grep -q '_configure_line' scripts/lib/configure-helpers.sh || \
+  fail C-69 'configure helpers must use _configure_line outcome vocabulary'
+if grep -E '[✓✗]' scripts/lib/configure-helpers.sh scripts/configure-apps.sh 2>/dev/null; then
+  fail C-69 'configure must not use Unicode status glyphs (use cli-msg outcomes)'
+fi
+if grep -F '=== Flixbox app configuration ===' scripts/configure-apps.sh 2>/dev/null; then
+  fail C-69 'configure-apps must not print === banners'
+fi
+grep -q 'summary:' scripts/configure-apps.sh || \
+  fail C-69 'configure-apps must print summary: updated/unchanged/failed'
 grep -q 'wait_for_bazarr_api' scripts/configure/bazarr.sh || \
   fail C-69 'Bazarr must re-wait for API after restart'
 grep -B2 -A2 'wait_for_bazarr_api' scripts/configure/bazarr.sh | grep -q 'CONFIGURE_SOFT_WAIT=1' || \
@@ -1307,6 +1317,18 @@ fi
 # Human doctor tokens remain meaningful without color
 doctor_out="$(NO_COLOR=1 ./bin/flixbox doctor 2>/dev/null || true)"
 echo "$doctor_out" | grep -qE '^PASS  ' || fail C-91 'doctor human output missing PASS tokens under NO_COLOR'
+# status glance + quiet omits context keys
+status_out="$(NO_COLOR=1 ./bin/flixbox status -q 2>/dev/null || true)"
+if docker info >/dev/null 2>&1; then
+  echo "$status_out" | grep -qE '^SERVICE[[:space:]]+STATE[[:space:]]+HEALTH' || \
+    fail C-91 'status -q missing SERVICE/STATE/HEALTH glance header'
+  echo "$status_out" | grep -qE '^data_dir:' && \
+    fail C-91 'status -q must omit context key: value block (data_dir)'
+  status_full="$(NO_COLOR=1 ./bin/flixbox status 2>/dev/null || true)"
+  echo "$status_full" | grep -qE '^mode:' || fail C-91 'status human missing mode: context line'
+fi
+./bin/flixbox vpn-test --help >/dev/null || fail C-91 'vpn-test --help failed'
+./bin/flixbox logs --help >/dev/null || fail C-91 'logs --help failed'
 # Q-06 ShellCheck covers bin/flixbox via existing shellcheck block
 pass C-91
 

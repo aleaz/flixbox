@@ -37,6 +37,17 @@ Requiere **Bash 4+**. Las completions llegan en Phase B.
 
 `--json`, `-q` / `--quiet` aplican a los comandos que los documentan (`status`, `doctor`).
 
+## Streams (stdout vs stderr)
+
+| Stream | Contenido |
+| --- | --- |
+| **stdout** | Resultado primario: identidad de `version`, reportes `doctor`/`status`, líneas de outcome de `configure` + `summary:`, secretos de `credentials show`, payloads `--json` |
+| **stderr** | Progreso y tips (`INFO` / `OK` de `init`/`up`/`reload`), diagnósticos `WARN` / `FAIL`, hints `Next:` |
+
+No dependas solo del color: los tokens (`PASS` / `FAIL` / `WARN` / `INFO` / `OK`) siguen en texto plano con `NO_COLOR` o sin TTY.
+
+Vocabulario de outcomes de `configure` en stdout: `updated` / `unchanged` / `failed` / `dry-run`, luego `summary: N updated, M unchanged, K failed`.
+
 ## Códigos de salida (rutas tocadas)
 
 | Código | Significado |

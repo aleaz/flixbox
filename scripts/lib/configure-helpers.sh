@@ -52,18 +52,43 @@ json_query() {
   echo "$json" | JSON_QUERY_PARAMS="$params" python3 "${FLIXBOX_JSON_QUERY}" "$query"
 }
 
-log()  { echo "[configure] $*"; }
-ok()   { echo "  ✓ $*"; CONFIGURED=$((CONFIGURED + 1)); }
-skip() { echo "  - $* (already configured)"; SKIPPED=$((SKIPPED + 1)); }
+# shellcheck disable=SC1091
+source "${FLIXBOX_LIB}/cli-msg.sh"
+
+# Configure report lines on stdout (primary result); tips/warnings on stderr via cli_*.
+# Vocab: updated | unchanged | failed | dry-run (ADR 0021). No Unicode status glyphs.
+_configure_line() {
+  local verb="$1" detail="$2"
+  local tok color
+  case "$verb" in
+    failed)
+      color='\033[31m'
+      tok="$(flixbox_cli_paint 1 "$color" 'FAIL')"
+      ;;
+    unchanged|skipped|dry-run)
+      color='\033[36m'
+      tok="$(flixbox_cli_paint 1 "$color" 'INFO')"
+      ;;
+    *)
+      color='\033[32m'
+      tok="$(flixbox_cli_paint 1 "$color" 'OK')"
+      ;;
+  esac
+  printf '%s  configure %-10s %s\n' "$tok" "$verb" "$detail"
+}
+
+log()  { cli_info "$*"; }
+ok()   { _configure_line updated "$*"; CONFIGURED=$((CONFIGURED + 1)); }
+skip() { _configure_line unchanged "$*"; SKIPPED=$((SKIPPED + 1)); }
 fail() {
-  echo "  ✗ $*"
+  _configure_line failed "$*"
   FAILED=$((FAILED + 1))
   # Return 0 so set -e does not abort wiring; FAILED drives exit 1 at end (ADR 0016 PARTIAL).
   return 0
 }
-warn() { echo "  ! $*"; }
-info() { echo "  $*"; }
-dry()  { echo "  [dry-run] Would: $*"; }
+warn() { cli_warn "$*"; }
+info() { cli_info "$*"; }
+dry()  { _configure_line dry-run "$*"; }
 
 _api_request() {
   local method="$1" url="$2"
