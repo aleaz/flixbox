@@ -9,6 +9,8 @@ Hoja de consulta para operadores. Valores por defecto tras `./bin/flixbox init`.
 
 ## CLI
 
+Contrato completo: [17 — Referencia CLI](17-cli.md) (ADR 0021 Phase A).
+
 | Comando | Para qué |
 | --- | --- |
 | `./bin/flixbox init [--non-interactive]` | Crear `.env`, carpetas, plantillas; generar API keys/passwords. **Linux:** paths escribibles en `.env` antes de `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |

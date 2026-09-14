@@ -15,7 +15,7 @@ Pipeline de medios en casa: pide un título, descárgalo (opcionalmente por VPN)
 | --- | --- |
 | [01 — Overview](01-overview.md) | Qué es Flixbox, para quién, aviso corto |
 | [16 — Aviso legal](16-legal-disclaimer.md) | Uso lícito, responsabilidad del operador ([EN](../../user/16-legal-disclaimer.md)) |
-| [17 — CLI (EN)](../../user/17-cli.md) | Referencia CLI Phase A (inglés canónico) |
+| [17 — CLI](17-cli.md) | version, doctor, status --json, códigos de salida (ADR 0021 Phase A) ([EN](../../user/17-cli.md)) |
 | [02 — Cómo funciona](02-how-it-works.md) | Modelo mental: pipeline, `/data`, VPN vs Direct |
 | [03 — Requisitos](03-requirements.md) | Hardware, Docker, almacenamiento, red |
 | [04 — Instalación](04-install.md) | Clone, `init`, `up` (~15 min) |
