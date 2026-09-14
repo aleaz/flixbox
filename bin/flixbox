@@ -806,6 +806,48 @@ EOF
   return 0
 }
 
+cmd_logs() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -h|--help)
+        cat <<'EOF'
+Usage: flixbox logs [service] [-f]
+
+Tail Compose logs (default: last 100 lines, all services, follow).
+Pass a service name and/or docker compose logs flags (e.g. -f, --tail=50).
+EOF
+        return 0
+        ;;
+      *) break ;;
+    esac
+  done
+  load_env
+  if [[ $# -eq 0 ]]; then
+    compose logs --tail=100 -f
+  else
+    compose logs --tail=100 "$@"
+  fi
+}
+
+cmd_vpn_test() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -h|--help)
+        cat <<'EOF'
+Usage: flixbox vpn-test
+
+Probe public egress IP from the downloader network namespace
+(Gluetun in VPN mode, qBittorrent in Direct). See docs/user/07-vpn-and-direct.md.
+EOF
+        return 0
+        ;;
+      *) die_usage "vpn-test: unknown option: $1 (try --help)" ;;
+    esac
+  done
+  load_env
+  exec "${ROOT_DIR}/scripts/vpn-test.sh"
+}
+
 usage() {
   cat <<EOF
 Flixbox CLI

@@ -1276,6 +1276,8 @@ fi
 # --- C-91: ADR 0021 Phase A CLI contract (Q-01..Q-06) ---
 grep -q 'cmd_version()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_version'
 grep -q 'cmd_doctor()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_doctor'
+grep -q 'cmd_logs()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_logs (must stay wired to usage)'
+grep -q 'cmd_vpn_test()' bin/flixbox || fail C-91 'bin/flixbox missing cmd_vpn_test (must stay wired to usage)'
 grep -q 'die_usage()' bin/flixbox || fail C-91 'bin/flixbox missing die_usage (exit 2)'
 grep -q 'die_docker()' bin/flixbox || fail C-91 'bin/flixbox missing die_docker (exit 3)'
 grep -q 'cli-phase-a.sh' bin/flixbox || fail C-91 'bin/flixbox must source cli-phase-a.sh'
