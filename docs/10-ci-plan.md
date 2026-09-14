@@ -52,6 +52,7 @@ The following was checked against the tree at commit `30a51fc` and local tooling
 | `proxy` | `caddy` |
 | `recyclarr` | `recyclarr` |
 | `notifications` | `apprise-api` |
+| `vpn-heal` | `gluetun-monitor`, `vpn-heal-socket-proxy` |
 
 `docker-socket-proxy` is always in the default service set with Homepage ([ADR 0022](adr/0022-operator-footgun-remediations.md)).
 

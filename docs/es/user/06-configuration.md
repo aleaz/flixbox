@@ -103,7 +103,8 @@ Tras cambiar cualquier `*_PORT` en `.env`:
 
 | Variable | Valores | Efecto |
 | --- | --- | --- |
-| `COMPOSE_PROFILES` | `plex`, `proxy`, `recyclarr`, `notifications` (separados por comas) | Habilita servicios opcionales. `docker-socket-proxy` siempre va con Homepage. |
+| `COMPOSE_PROFILES` | `plex`, `proxy`, `recyclarr`, `notifications`, `vpn-heal` (separados por comas) | Habilita servicios opcionales. `docker-socket-proxy` siempre va con Homepage. |
+
 
 
 Alternativa sin editar `.env`:
@@ -119,6 +120,7 @@ docker compose --profile recyclarr run --rm recyclarr sync
 | `proxy` | Reverse proxy Caddy |
 | `recyclarr` | Sync de TRaSH Guides (one-shot vía `run`) |
 | `notifications` | Hub Apprise API (solo red interna) — [18 — Notificaciones](18-notifications.md) |
+| `vpn-heal` | Watchdog Gluetun (`gluetun-monitor`; solo modo VPN) — [07 — VPN](07-vpn-and-direct.md) |
 
 `docker-socket-proxy` siempre corre con Homepage (no es un perfil — [ADR 0022](../../adr/0022-operator-footgun-remediations.md)).
 

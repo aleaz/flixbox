@@ -35,6 +35,7 @@ Shared vocabulary for Flixbox docs, ADRs, and AI-assisted development.
 | **`flixbox_net`** | Docker bridge with fixed subnet `172.30.42.0/24` (not env-configurable) so qBit can whitelist stack peers — ADR 0008. |
 | **Killswitch** | No independent egress for qBit when Gluetun/tunnel is down (shared netns + firewall). |
 | **VPN heal (Gluetun)** | Upstream restarts the VPN process inside Gluetun when health checks fail; not the same as recreating the container. See ADR 0013. |
+| **vpn-heal (profile)** | Optional gluetun-monitor watchdog that recreates stranded netns dependents after Gluetun container recreate. Off by default. |
 | **Apprise** | Notification gateway (many backends via URL schemes); optional Flixbox profile `notifications` — ADR 0012 (Accepted). |
 | **netns** | Linux network namespace; containers can share one (VPN sidecar pattern). |
 | **Port forwarding (VPN)** | Provider assigns an inbound port; Gluetun can push it into qBittorrent via UP_COMMAND. |

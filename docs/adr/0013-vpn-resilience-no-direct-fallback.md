@@ -1,8 +1,8 @@
 # ADR 0013: VPN resilience — Gluetun heal, optional watchdog, no Direct fallback
 
-- **Status:** Accepted (MVP scope: documentation + CI structural smoke; `vpn-heal` profile post-v0.1)
+- **Status:** Accepted
 - **Date:** 2026-08-29
-- **Updated:** 2026-09-02
+- **Updated:** 2026-09-14 (`vpn-heal` profile + Gluetun `HEALTH_*` knobs)
 - **Related:** [0002](0002-vpn-gluetun-dual-mode.md), [0012](0012-notifications-apprise-hub.md)
 
 ## Context
@@ -40,9 +40,9 @@ Shared netns + Gluetun firewall = **killswitch**: when the tunnel is down, qBitt
    - Widen server filters within one trusted provider (`SERVER_COUNTRIES` / regions) for more reconnect targets.
    - Keep a second provider’s credentials ready; switch via `.env` + `init` + recreate (human-driven).
    - Explicit rollback to Direct only when the operator chooses privacy trade-off (lab / private trackers).
-4. **Future optional profile (working name `vpn-heal`, post-v0.1):** evaluate a single maintained watchdog (prefer projects that recreate dependents with Compose, not only `docker restart`) behind Compose profile + **read/write Docker access minimized** (socket-proxy policy to be designed). Default **off**.
+4. **Optional profile `vpn-heal`:** ships [gluetun-monitor](https://github.com/csmarshall/gluetun-monitor) (pinned) behind a **dedicated** Docker socket-proxy with `CONTAINERS`/`POST`/`EXEC` — not the Homepage read-only proxy. Default **off**. Prefer recreate of stranded dependents over `docker restart` alone.
 5. **Tune, don’t hide:** expose common Gluetun health env knobs in `.env.example` comments when implementing (`HEALTH_RESTART_VPN`, targets) — defaults remain upstream.
-6. **Notify, don’t silently open:** when ADR 0012 lands, optional alert on prolonged Gluetun unhealthy / heal actions via Apprise. Until then, Homepage widgets + `flixbox status` / logs remain the UX.
+6. **Notify, don’t silently open:** optional `VPN_HEAL_APPRISE_URLS` on the heal profile; operators may also use the Apprise hub (`notifications`) for *arr Connect. Homepage widgets + `flixbox status` / logs remain the baseline UX.
 7. **Not in scope:** multi-hop as Flixbox feature; VPNGate as secondary “safe” provider; shipping two Gluetun containers racing for qBit.
 
 ## Consequences
@@ -57,5 +57,7 @@ Shared netns + Gluetun firewall = **killswitch**: when the tunnel is down, qBitt
 - [x] User doc section: “What happens when VPN drops” — [07-vpn-and-direct.md](../user/07-vpn-and-direct.md)
 - [x] Troubleshooting: stranded qBit after Gluetun recreate — [10-troubleshooting.md](../user/10-troubleshooting.md)
 - [x] CI structural smoke: `scripts/ci-smoke-vpn.sh` (compose VPN mode + netns contract)
-- [ ] Optional profile compose + contract checks (post-v0.1)
+- [x] Optional profile compose + contract checks — `compose/vpn-heal.yml` (`gluetun-monitor` + dedicated socket-proxy; off by default)
 - [x] Explicit regression: no path auto-sets `FLIXBOX_MODE=direct` on health failure (CI + code review)
+- [x] Expose Gluetun `HEALTH_*` knobs in Compose / `.env.example` (upstream defaults)
+- [x] Optional heal alerts via `VPN_HEAL_APPRISE_URLS` (Apprise URL schemes; works with or without `notifications` hub)

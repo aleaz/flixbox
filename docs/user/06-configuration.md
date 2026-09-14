@@ -94,7 +94,8 @@ After changing any `*_PORT` in `.env`:
 
 | Variable | Values | Effect |
 | --- | --- | --- |
-| `COMPOSE_PROFILES` | `plex`, `proxy`, `recyclarr`, `notifications` (comma-separated) | Enables optional services. `docker-socket-proxy` is always on with Homepage. |
+| `COMPOSE_PROFILES` | `plex`, `proxy`, `recyclarr`, `notifications`, `vpn-heal` (comma-separated) | Enables optional services. `docker-socket-proxy` is always on with Homepage. |
+
 
 
 Alternative without editing `.env`:
@@ -110,6 +111,7 @@ docker compose --profile recyclarr run --rm recyclarr sync
 | `proxy` | Caddy reverse proxy |
 | `recyclarr` | TRaSH Guides sync (one-shot via `run`) |
 | `notifications` | Apprise API hub (internal-only) — [18 — Notifications](18-notifications.md) |
+| `vpn-heal` | Gluetun watchdog (`gluetun-monitor`; VPN mode only) — [07 — VPN](07-vpn-and-direct.md#optional-vpn-heal-profile) |
 
 `docker-socket-proxy` always runs with Homepage (not a profile — [ADR 0022](../adr/0022-operator-footgun-remediations.md)).
 

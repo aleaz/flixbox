@@ -137,6 +137,7 @@ Reference: [Credentials and API keys](06-configuration.md#credentials-and-api-ke
 | E4 | Maintainerr rules | Rules disabled or preview first | No surprise deletes |
 | E5 | Recyclarr | `docker compose --profile recyclarr run --rm recyclarr sync` | Sync completes (after keys in recyclarr.yml) |
 | E6 | Apprise (optional) | `./bin/flixbox up notifications` then `docker compose --profile notifications ps apprise-api` | Running; no host port published; *arr can reach `http://apprise-api:8000` |
+| E7 | vpn-heal (optional, VPN mode) | With `FLIXBOX_MODE=vpn`, `./bin/flixbox up vpn-heal` then `docker compose --profile vpn-heal ps gluetun-monitor` | Running; profile off by default; never auto Direct |
 
 <a id="phase-f--end-to-end-request-flow-manual"></a>
 ## Phase F — End-to-end request flow (manual)

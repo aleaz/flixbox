@@ -1,7 +1,7 @@
 # Future: notifications and VPN resilience
 
-**Status:** Apprise hub **shipped** (optional profile `notifications` — see [18-notifications.md](user/18-notifications.md)). VPN heal / `vpn-heal` still planning.  
-**ADRs:** [0012](adr/0012-notifications-apprise-hub.md) (**Accepted**; profile landed), [0013](adr/0013-vpn-resilience-no-direct-fallback.md) (**Accepted**; optional `vpn-heal` still future).  
+**Status:** Apprise hub **shipped** (`notifications`). VPN heal profile **shipped** (`vpn-heal`, off by default).  
+**ADRs:** [0012](adr/0012-notifications-apprise-hub.md) (**Accepted**), [0013](adr/0013-vpn-resilience-no-direct-fallback.md) (**Accepted**; profile landed).  
 **Roadmap:** [08-roadmap.md](08-roadmap.md).
 
 This note captures industry patterns (2025–2026) and Flixbox fit so we do not re-debate from scratch when implementing.
@@ -57,7 +57,7 @@ Gluetun does **not** need Flixbox to “restart the container” on every blip; 
 | --- | --- |
 | Document Gluetun heal + killswitch as the safe default | Auto-switch to Direct on VPN failure |
 | Document manual provider/server switch | Dual Gluetun racing for one qBit |
-| Later optional `vpn-heal` watchdog profile (off by default) | Promise zero-downtime VPN without a trusted commercial provider |
+| Optional `vpn-heal` watchdog profile (off by default) — **shipped** | Promise zero-downtime VPN without a trusted commercial provider |
 | Wider `SERVER_*` filters for reconnect diversity | Treat VPNGate free relays as a “safe secondary” |
 
 **Sums:** honest fail-closed privacy; optional heal for edge cases (host sleep, recreate).  
@@ -67,8 +67,8 @@ Gluetun does **not** need Flixbox to “restart the container” on every blip; 
 
 1. [x] Native Connect + Apprise cookbook — [18-notifications.md](user/18-notifications.md).
 2. [x] Apprise profile (ADR 0012).
-3. Wire optional heal alerts → Apprise (when ADR 0013 lands).
-4. Evaluate one watchdog image for `vpn-heal` profile; socket threat model + CI.
+3. [x] Optional heal alerts → Apprise (`VPN_HEAL_APPRISE_URLS` on `vpn-heal`).
+4. [x] Watchdog profile `vpn-heal` (`gluetun-monitor` + dedicated socket-proxy); CI gated off by default.
 
 ## 4. Operator workarounds today (no code)
 

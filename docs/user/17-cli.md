@@ -116,4 +116,4 @@ Human default: narrow `SERVICE` / `STATE` / `HEALTH` glance, then `key: value` c
 
 ## Deferred (later)
 
-Global `-q`/`-v`, `--env-file`, `--project-dir`; full `die`→taxonomy (Phase C); fish completions; optional VPN-heal profile — see [08-roadmap.md](../08-roadmap.md).
+Global `-q`/`-v`, `--env-file`, `--project-dir`; full `die`→taxonomy (Phase C); fish completions; digest pins — see [08-roadmap.md](../08-roadmap.md).

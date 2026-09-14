@@ -21,7 +21,7 @@ Accepted residuals (not changed here): VPN fail-closed ([ADR 0013](0013-vpn-resi
 2. **`docker-socket-proxy` is always on** with Homepage (no Compose profile). Homepage does **not** mount `/var/run/docker.sock`; it reaches Docker via `docker-socket-proxy:2375` (`templates/homepage/docker.yaml`). Proxy policy stays read-limited (`POST`/`DELETE`/`EXEC` denied). Proxy has a healthcheck; Homepage waits `service_healthy`. Live `docker.yaml` that still uses a `socket:` mount or lacks `host: docker-socket-proxy` is rewritten on template copy (logged).
 3. **`up` / `reload` / `init` fail closed** if `${CONFIG_DIR}/seerr` cannot be owned as `1000:1000`. Write verification uses host UID when it reports `1000`, or a **cached** `alpine:3.20` probe with `--pull=never` — never pull an image solely to verify ownership.
 
-Optional Compose profiles remain: `plex`, `proxy`, `recyclarr`, `notifications`. Legacy `socket-proxy` in `COMPOSE_PROFILES` is ignored (warn once; whitespace-tolerant).
+Optional Compose profiles remain: `plex`, `proxy`, `recyclarr`, `notifications`, `vpn-heal`. Legacy `socket-proxy` in `COMPOSE_PROFILES` is ignored (warn once; whitespace-tolerant).
 
 ## Consequences
 

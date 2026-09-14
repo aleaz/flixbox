@@ -49,6 +49,10 @@ Recyclarr (perfil `recyclarr`) puede apuntar al mismo hub si configuras sus opci
 
 Seerr, Maintainerr, Unpackerr: canales nativos, o un webhook hacia Apprise si lo configuras tú. No esperes cableado zero-config.
 
+### Alertas VPN heal
+
+Con el perfil `vpn-heal`, define `VPN_HEAL_APPRISE_URLS` en `.env` (esquemas URL de Apprise). Es independiente de este hub; el hub sigue sirviendo Connect de *arr.
+
 ### Secretos
 
 Tokens y URLs de destino solo en `${CONFIG_DIR}/apprise` (u otro almacén del operador). Nunca en git.

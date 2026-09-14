@@ -1,0 +1,56 @@
+# Optional Gluetun watchdog (profile: vpn-heal). ADR 0013.
+# Off by default. Meaningful only when FLIXBOX_MODE=vpn.
+# Uses a dedicated socket-proxy with POST/EXEC (not Homepage's read-only proxy).
+
+services:
+  vpn-heal-socket-proxy:
+    image: tecnativa/docker-socket-proxy:v0.5.0
+    container_name: flixbox-vpn-heal-socket-proxy
+    profiles: ["vpn-heal"]
+    environment:
+      CONTAINERS: 1
+      POST: 1
+      EXEC: 1
+      INFO: 0
+      NETWORKS: 0
+      SERVICES: 0
+      TASKS: 0
+      IMAGES: 0
+      VOLUMES: 0
+      DELETE: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    stop_grace_period: 10s
+    networks:
+      - flixbox_net
+
+  gluetun-monitor:
+    image: ghcr.io/csmarshall/gluetun-monitor:2.6.7
+    container_name: flixbox-gluetun-monitor
+    profiles: ["vpn-heal"]
+    depends_on:
+      - vpn-heal-socket-proxy
+    environment:
+      TZ: ${TZ:-UTC}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      DOCKER_HOST: tcp://vpn-heal-socket-proxy:2375
+      GLUETUN_CONTAINER: flixbox-gluetun
+      DEPENDENT_CONTAINERS: ${VPN_HEAL_DEPENDENTS:-auto}
+      CHECK_INTERVAL: ${VPN_HEAL_CHECK_INTERVAL:-30}
+      TIMEOUT: ${VPN_HEAL_TIMEOUT:-10}
+      FAIL_THRESHOLD: ${VPN_HEAL_FAIL_THRESHOLD:-2}
+      HEALTHY_WAIT_TIMEOUT: ${VPN_HEAL_HEALTHY_WAIT:-120}
+      AUTO_RECREATE: ${VPN_HEAL_AUTO_RECREATE:-1}
+      SITES: ${VPN_HEAL_SITES:-https://cloudflare.com,https://1.1.1.1}
+      APPRISE_URLS: ${VPN_HEAL_APPRISE_URLS:-}
+      NOTIFY_LEVEL: ${VPN_HEAL_NOTIFY_LEVEL:-attention}
+      LOG_LEVEL: ${VPN_HEAL_LOG_LEVEL:-INFO}
+    volumes:
+      - ${CONFIG_DIR}/gluetun-monitor/config:/config:ro
+      - ${CONFIG_DIR}/gluetun-monitor/logs:/logs
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      - flixbox_net

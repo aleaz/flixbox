@@ -1,0 +1,6 @@
+# Optional connectivity probe sites for gluetun-monitor (profile vpn-heal).
+# Mounted as ${CONFIG_DIR}/gluetun-monitor/ — directory mount so edits reload live.
+# SITES env (VPN_HEAL_SITES) is unioned with this file; at least one site is required.
+#
+# https://cloudflare.com
+# https://1.1.1.1

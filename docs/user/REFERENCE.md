@@ -12,7 +12,7 @@ Full contract: [17 — CLI reference](17-cli.md) (ADR 0021).
 | Command | Purpose |
 | --- | --- |
 | `./bin/flixbox init [--non-interactive]` | Create `.env`, dirs, templates; generate API keys/passwords. **Linux:** set writable `DATA_DIR`/`CONFIG_DIR` in `.env` before `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
-| `./bin/flixbox up [profiles...]` | Start stack (`plex`, `proxy`, `recyclarr`, `notifications`; removes orphans on mode switch) |
+| `./bin/flixbox up [profiles...]` | Start stack (`plex`, `proxy`, `recyclarr`, `notifications`, `vpn-heal`; removes orphans on mode switch) |
 | `./bin/flixbox reload [--reset-homepage] [profiles...]` | Recreate containers after `.env` / compose changes. `--reset-homepage` also overwrites managed Homepage templates (with backup) |
 | `./bin/flixbox update [--dry-run] [profiles...]` | Pull **pinned** images + reconcile (`up -d --remove-orphans`); never rewrites pins to `:latest` — [14 — Image pins](14-image-pins.md) |
 | `./bin/flixbox backup [--include-env] [--stop] [DEST]` | Archive `${CONFIG_DIR}` only (not `${DATA_DIR}` media) |
@@ -75,7 +75,7 @@ Use **Compose service names** on `flixbox_net` — not `container_name` (`flixbo
 
 **When to use network aliases:** only when topology breaks DNS (today: qBit in Gluetun netns). Do not alias every service — service names are already stable.
 
-**Profiles:** `recyclarr`, `caddy`/`proxy`, `plex`, `notifications` exist only when their profile is enabled — no alias substitutes an offline service. `docker-socket-proxy` always runs with Homepage.
+**Profiles:** `recyclarr`, `caddy`/`proxy`, `plex`, `notifications`, `vpn-heal` exist only when their profile is enabled — no alias substitutes an offline service. `docker-socket-proxy` always runs with Homepage.
 
 ## Internal URLs (*arr UI wiring)
 

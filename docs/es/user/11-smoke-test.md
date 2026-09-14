@@ -148,6 +148,7 @@ Referencia: [Credenciales y API keys](06-configuration.md#credentials-and-api-ke
 | E4 | Reglas Maintainerr | Reglas deshabilitadas o preview primero | Sin deletes sorpresa |
 | E5 | Recyclarr | `docker compose --profile recyclarr run --rm recyclarr sync` | Sync completa (tras keys en recyclarr.yml) |
 | E6 | Apprise (opcional) | `./bin/flixbox up notifications` y luego health del contenedor / curl interno a `:8000` | Hub en `flixbox_net` solo; sin puerto en host |
+| E7 | vpn-heal (opcional, modo VPN) | Con `FLIXBOX_MODE=vpn`, `./bin/flixbox up vpn-heal` y `ps` de `gluetun-monitor` | Corriendo; perfil off por defecto; nunca auto-Direct |
 
 <a id="phase-f-end-to-end-request-flow-manual"></a>
 <a id="phase-f--end-to-end-request-flow-manual"></a>

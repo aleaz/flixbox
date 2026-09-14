@@ -11,6 +11,8 @@
 | `requests.yml` | active | Seerr |
 | `dashboard.yml` | active | Homepage + always-on `docker-socket-proxy` |
 | `proxy.yml` | active | Caddy (`proxy` profile) |
+| `notifications.yml` | active | Apprise API (`notifications` profile) |
+| `vpn-heal.yml` | active | gluetun-monitor + heal socket-proxy (`vpn-heal` profile) |
 
 Root: [`../compose.yaml`](../compose.yaml).
 
@@ -28,5 +30,8 @@ Never put *arr / Seerr / Jellyfin on Gluetun’s netns.
 ```bash
 docker compose --profile plex --profile proxy up -d
 docker compose --profile recyclarr run --rm recyclarr sync
-# or: ./bin/flixbox up plex proxy
+docker compose --profile notifications up -d
+# VPN mode only:
+docker compose --profile vpn-heal up -d
+# or: ./bin/flixbox up plex proxy notifications vpn-heal
 ```

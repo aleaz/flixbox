@@ -56,8 +56,8 @@ Use this as an implementation checklist. Mitigations marked **enforce** should b
 ### 2.6 VPN tunnel drop vs container recreate
 
 - **Risk:** Operators expect Flixbox to “fail over to Direct” or always recreate containers; or assume Gluetun container restart alone always heals qBit.
-- **Mitigation (document):** Gluetun **internally** restarts the VPN on failed health checks; killswitch keeps fail-closed (no ISP torrent egress). After Gluetun **container** recreate, qBit may need recreate (`compose up -d qbittorrent`). Never auto-switch to Direct — [ADR 0013](adr/0013-vpn-resilience-no-direct-fallback.md), [planning note](11-future-notifications-and-vpn-resilience.md).
-- **Future:** optional `vpn-heal` profile (Proposed) for stranded netns dependents.
+- **Mitigation (document):** Gluetun **internally** restarts the VPN on failed health checks; killswitch keeps fail-closed (no ISP torrent egress). After Gluetun **container** recreate, qBit may need recreate (`compose up -d qbittorrent`). Never auto-switch to Direct — [ADR 0013](adr/0013-vpn-resilience-no-direct-fallback.md). Optional profile `vpn-heal` (`gluetun-monitor`) automates stranded-netns recovery when enabled.
+- **Optional:** `vpn-heal` profile (off by default) — dedicated socket-proxy with POST/EXEC; see [07-vpn-and-direct.md](user/07-vpn-and-direct.md).
 
 ---
 

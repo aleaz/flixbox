@@ -49,6 +49,10 @@ Recyclarr (profile `recyclarr`) can target the same hub when its Apprise options
 
 Seerr, Maintainerr, Unpackerr: use native channels, or a webhook that posts to Apprise when you configure one yourself. Do not expect zero-config wiring.
 
+### VPN heal alerts
+
+With profile `vpn-heal`, set `VPN_HEAL_APPRISE_URLS` in `.env` (Apprise URL schemes). That path is independent of this hub; you may still use the hub for *arr Connect.
+
 ### Secrets
 
 Bot tokens and Apprise destination URLs belong only under `${CONFIG_DIR}/apprise` (or operator secret stores). Never commit them to git.

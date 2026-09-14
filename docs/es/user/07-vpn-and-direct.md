@@ -83,6 +83,34 @@ Gluetun se reconecta **dentro del mismo contenedor** (default upstream). Mientra
 
 Flixbox **nunca** cambiará solo `FLIXBOX_MODE` a Direct ante un fallo de VPN ([ADR 0013](../../adr/0013-vpn-resilience-no-direct-fallback.md)).
 
+### Perfil opcional `vpn-heal`
+
+Tras sleep del host / recrear el **contenedor** Gluetun, qBit puede quedar varado en el netns viejo. Arreglo manual:
+
+```bash
+docker compose up -d qbittorrent
+# o: ./bin/flixbox reload
+```
+
+Automatización opcional (por defecto **apagada**): el perfil Compose **`vpn-heal`** ejecuta [gluetun-monitor](https://github.com/csmarshall/gluetun-monitor) detrás de un socket-proxy Docker **dedicado** con `POST`/`EXEC` (aparte del proxy de solo lectura de Homepage — [ADR 0022](../../adr/0022-operator-footgun-remediations.md)).
+
+```bash
+# Solo con FLIXBOX_MODE=vpn
+./bin/flixbox up vpn-heal
+```
+
+Alertas opcionales: `VPN_HEAL_APPRISE_URLS` en `.env`. Ver [18 — Notificaciones](18-notifications.md) y `${CONFIG_DIR}/gluetun-monitor/README.md`.
+
+### Caminos secundarios manuales (nunca automáticos)
+
+| Objetivo | Qué hacer |
+| --- | --- |
+| Más destinos de reconnect (mismo proveedor) | Amplía `SERVER_COUNTRIES` / `SERVER_REGIONS` en `.env`, recrea Gluetun |
+| Otro proveedor comercial | Cambia credenciales + `VPN_SERVICE_PROVIDER`, `init`/`up` — decisión humana |
+| Aceptar Direct (trade-off de privacidad) | Pon `FLIXBOX_MODE=direct` tú mismo — Flixbox no lo hará por health failure |
+
+Knobs de health de Gluetun (`HEALTH_RESTART_VPN`, …) en [`.env.example`](../../../.env.example); defaults = upstream.
+
 <a id="vpn-provider-examples"></a>
 ## Ejemplos de proveedor VPN
 

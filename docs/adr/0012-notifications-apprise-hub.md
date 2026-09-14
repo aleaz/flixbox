@@ -62,4 +62,4 @@ Goals unchanged: one endpoint config, no library-mutating bot, secrets out of gi
 - [x] Stateful config volume `${CONFIG_DIR}/apprise` + templates
 - [x] Operator cookbook — [18-notifications.md](../user/18-notifications.md) (Day-0 native Connect + Apprise)
 - [x] Image pin + CI: profile absent from default `compose config --services`
-- [ ] Optional VPN heal alerts via Apprise (depends on ADR 0013 `vpn-heal`)
+- [x] Optional VPN heal alerts via Apprise (`VPN_HEAL_APPRISE_URLS` on profile `vpn-heal`)

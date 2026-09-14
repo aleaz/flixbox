@@ -49,9 +49,10 @@ pass "direct"
 FLIXBOX_MODE=vpn "${COMPOSE[@]}" config --quiet || fail "vpn mode config failed"
 pass "vpn"
 
-"${COMPOSE[@]}" --profile plex --profile proxy --profile recyclarr --profile notifications \
+"${COMPOSE[@]}" --profile plex --profile proxy --profile recyclarr \
+  --profile notifications --profile vpn-heal \
   config --quiet || fail "optional profiles config failed"
-pass "profiles (plex, proxy, recyclarr, notifications)"
+pass "profiles (plex, proxy, recyclarr, notifications, vpn-heal)"
 
 # ADR 0012: apprise-api must not appear in default services (profile off).
 _default_svcs="$("${COMPOSE[@]}" config --services)"
@@ -62,6 +63,20 @@ echo "${_with_notif}" | grep -qx apprise-api || \
   fail "apprise-api must appear with --profile notifications"
 unset _default_svcs _with_notif
 pass "notifications profile gated"
+
+# ADR 0013: vpn-heal services must not appear by default.
+_default_svcs="$("${COMPOSE[@]}" config --services)"
+echo "${_default_svcs}" | grep -qx gluetun-monitor && \
+  fail "gluetun-monitor must not be in default compose services"
+echo "${_default_svcs}" | grep -qx vpn-heal-socket-proxy && \
+  fail "vpn-heal-socket-proxy must not be in default compose services"
+_with_heal="$("${COMPOSE[@]}" --profile vpn-heal config --services)"
+echo "${_with_heal}" | grep -qx gluetun-monitor || \
+  fail "gluetun-monitor must appear with --profile vpn-heal"
+echo "${_with_heal}" | grep -qx vpn-heal-socket-proxy || \
+  fail "vpn-heal-socket-proxy must appear with --profile vpn-heal"
+unset _default_svcs _with_heal
+pass "vpn-heal profile gated"
 
 # ADR 0022: socket-proxy is always on with Homepage (no profile).
 # Capture services first — do not `grep -q` a live compose pipe (SIGPIPE + pipefail).

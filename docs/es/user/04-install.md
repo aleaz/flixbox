@@ -12,7 +12,7 @@ Arranca Flixbox con cuatro comandos: clone → `init` → `up` → `configure`. 
 - **Antes de empezar:** Docker Compose v2, `DATA_DIR` / `CONFIG_DIR` escribibles, [piso 4 GB RAM / 8 GB cómodo](03-requirements.md)
 - **Tiempo:** ~15 minutos hasta el primer `status` sano
 
-> **Estado de implementación:** El stack Compose completo + la CLI `bin/flixbox` están **Implemented**. Perfiles opcionales: `plex`, `proxy`, `recyclarr`, `notifications`. `docker-socket-proxy` siempre corre con Homepage.
+> **Estado de implementación:** El stack Compose completo + la CLI `bin/flixbox` están **Implemented**. Perfiles opcionales: `plex`, `proxy`, `recyclarr`, `notifications`, `vpn-heal`. `docker-socket-proxy` siempre corre con Homepage.
 
 ## Bootstrap
 

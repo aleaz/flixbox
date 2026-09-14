@@ -33,6 +33,10 @@ services:
       # Include flixbox_net so *arr/Decluttarr can reach qBit WebUI (ADR 0002).
       # Append LAN CIDR in .env if needed: 172.30.42.0/24,192.168.1.0/24
       FIREWALL_OUTBOUND_SUBNETS: ${FIREWALL_OUTBOUND_SUBNETS:-172.30.42.0/24}
+      # Internal VPN heal (ADR 0013) — upstream defaults; override only if needed.
+      HEALTH_RESTART_VPN: ${HEALTH_RESTART_VPN:-yes}
+      HEALTH_TARGET_ADDRESSES: ${HEALTH_TARGET_ADDRESSES:-cloudflare.com:443,github.com:443}
+      HEALTH_SMALL_CHECK_TYPE: ${HEALTH_SMALL_CHECK_TYPE:-icmp}
       # Update qBittorrent listen port when the provider assigns a forwarded port
       VPN_PORT_FORWARDING_UP_COMMAND: >-
         /bin/sh -c 'wget -O- -nv --retry-connrefused --post-data
