@@ -1,10 +1,10 @@
-# CLI reference (Phase A)
+# CLI reference (ADR 0021)
 
-**Status:** Implemented (ADR 0021 Phase A)  
+**Status:** Phase A diagnostics **landed**; Phase **A2** help safety **landed**; remaining A2 = flag deferral honesty (done in docs) / optional `--no-color` flag — see [ADR 0021](../adr/0021-cli-ux-contract.md)
 **Audience:** Operators and automation  
 **Related:** [ADR 0021](../adr/0021-cli-ux-contract.md) · [REFERENCE](REFERENCE.md)
 
-`./bin/flixbox` is the single operator entrypoint. Phase A adds discoverability (`version`, per-command `--help`), diagnostics (`doctor`), and scriptable `status --json`, plus a stable exit-code taxonomy on those paths.
+`./bin/flixbox` is the single operator entrypoint. Phase A delivered discoverability (`version`, top-level help), diagnostics (`doctor`), scriptable `status --json`, presentation via `cli-msg`, and exit taxonomy on those paths. **Not all** subcommands yet honor `--help` without side effects.
 
 ## Install / PATH
 
@@ -27,13 +27,14 @@ Requires **Bash 4+**. Completions land in Phase B.
 
 ## Global flags
 
-| Flag | Behavior |
-| --- | --- |
-| `-h` / `--help` | Top-level command list |
-| `--version` | Same as `version` |
-| Per-command `-h` / `--help` | Command-specific usage (`status`, `doctor`, `version`, …) |
-
-`--json`, `-q` / `--quiet` apply to commands that document them (`status`, `doctor`).
+| Flag | Behavior | Status |
+| --- | --- | --- |
+| `-h` / `--help` | Top-level command list | Landed |
+| `--version` | Same as `version` | Landed |
+| Per-command `-h` / `--help` | Command-specific usage | Landed (lifecycle included; side-effect free) |
+| `--json`, `-q` / `--quiet`, `-v` / `--verbose` | As documented per command (`status`, `doctor`, …) | Landed where documented |
+| `NO_COLOR` / non-TTY | Plain tokens (no ANSI) | Landed |
+| `--no-color`, global `-q`/`-v`, `--env-file`, `--project-dir` | ADR 0021 globals | **Deferred** (ADR 0021 deferral table) |
 
 ## Streams (stdout vs stderr)
 

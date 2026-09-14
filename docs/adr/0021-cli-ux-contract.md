@@ -2,8 +2,44 @@
 
 - **Status:** Accepted (post-MVP — target ~v0.2; Phase A slices MAY land before public v0.1 if low risk)
 - **Date:** 2026-09-06
-- **Updated:** 2026-09-06 — expanded to full UX/QA/security contract after multi-role review; Accepted as contract (implementation phased)
+- **Updated:** 2026-09-14 — implementation progress vs contract; doc path `17-cli.md`; help MUST be side-effect free; globals deferral table; JSON type-change rule
 - **Related:** [0005](0005-cli-bash-first.md), [0007](0007-platform-support-tiers.md), [0010](0010-mit-and-image-tags.md), [0011](0011-documentation-i18n.md), [0015](0015-access-profiles.md), [0016](0016-configure-state-machine.md), [0018](0018-runtime-secrets-and-lan-trust.md), [0020](0020-operator-credentials-cli.md)
+
+## Implementation progress (2026-09-14)
+
+Honest snapshot against this contract (does **not** reopen decisions):
+
+| Area | State |
+| --- | --- |
+| `version` / `--version`, `doctor`, `status --json`/`-q`/`-v`, exit 2/3 on touched paths | **Landed** |
+| Human presentation (`cli-msg`: PASS/FAIL/INFO/OK, fixed-width tokens, `configure` outcomes + `summary:`) | **Landed** (extends §6) |
+| Operator doc | **Landed** as [`docs/user/17-cli.md`](../user/17-cli.md) (not `16-cli.md`) + ES mirror |
+| `logs` / `vpn-test` dispatch | **Landed** (regression from Phase A insert fixed) |
+| Per-command `--help` for **all** shipped commands | **Landed** (A2 help safety — no Compose/env side effects; no false success lines) |
+| Global `-q`/`-v`/`--json`/`--no-color` | **Partial** — command-scoped where documented; `NO_COLOR` honored; see deferral table below |
+| `--env-file` / `--project-dir` | **Deferred** (explicit) |
+| Phase B lifecycle (`backup`/`restore`/`update`/`recyclarr`/`completion`) | **Not started** |
+| Phase C full `die`→taxonomy + `configure --json` | **Not started** |
+
+### Global flags — implement vs defer
+
+| Flag | Requirement |
+| --- | --- |
+| `-h` / `--help`, `--version` | MUST keep working (top-level done) |
+| Command `--json` / `-q` / `-v` where documented | MUST (status/doctor today) |
+| `NO_COLOR` + non-TTY plain text | MUST (landed via `cli-msg`) |
+| Global `--no-color`, global `-q`/`-v`, `--env-file`, `--project-dir` | **Deferred** until a dedicated polish slice; MUST NOT be advertised as implemented in `17-cli.md` until shipped |
+
+### Help safety (normative addition)
+
+`flixbox <cmd> --help` / `-h` MUST:
+
+1. Exit **0**
+2. Print synopsis to stdout (or stderr only if that command’s contract says so — prefer stdout for help text)
+3. **Not** mutate host state (no Compose up/down/restart, no `.env` writes, no template copies, no `ensure_access_profile` side effects)
+4. **Not** print success/outcome lines that imply work ran (e.g. must not print `Stack stopped` after forwarding `--help` to `docker compose down`)
+
+Unknown flags on mutating commands MUST exit **2** via usage taxonomy once those paths are migrated (today some still `die` → 1).
 
 ## Context
 
@@ -161,10 +197,11 @@ Long-running or mutating commands SHOULD emit outcome lines using a stable vocab
 #### `--json`
 
 - Single JSON **object** on stdout (default). NDJSON only if a command documents streaming events.
-- Top-level `"schemaVersion": 1` required.
-- Breaking key removals/renames require schemaVersion bump + release note.
+- Top-level `"schemaVersion": 1` required for current payloads.
+- Breaking key removals/renames **or JSON type changes** (e.g. string → boolean for `vpnEnabled`) require `schemaVersion` bump + release note.
 - On `--json`, do not print human banners to stdout.
 - `doctor` / `status` JSON includes booleans like `apiKeysPresent` — **never** key values.
+- Prefer native JSON booleans for flag-like fields in new schema versions (today `status.vpnEnabled` may still be a string until bumped).
 
 #### Idempotence
 
@@ -184,8 +221,9 @@ Re-running `configure`, `credentials set` with same desired state, `doctor`, `st
 - `flixbox` / `flixbox help` → command list + one-line purpose (grouped: lifecycle / config / diagnostics).
 - `flixbox <cmd> --help` → synopsis, flags, examples, related doc path, exit codes that command commonly returns.
 - Usage errors suggest `flixbox <cmd> --help`.
-- Ship **`docs/user/16-cli.md`** when Phase A lands: install/PATH, global flags, exit taxonomy, JSON notes, security warnings, command catalog.
-- Update REFERENCE cheat sheet to point at `16-cli.md`.
+- **Help safety:** see Implementation progress — help MUST be side-effect free and MUST NOT lie about work completed.
+- Ship **`docs/user/17-cli.md`** (canonical CLI reference; historically sketched as `16-cli.md` in early drafts of this ADR): install/PATH, flags (implemented vs deferred), exit taxonomy, streams, JSON notes, security warnings, command catalog.
+- Update REFERENCE cheat sheet to point at `17-cli.md`.
 - CLI **user-visible** strings remain English (ADR 0011).
 
 ### 9. Packaging and completions
@@ -242,7 +280,7 @@ Phase B adds:
 | Q-12 | `update` dry-run does not recreate |
 | Q-13 | completion scripts are valid bash/zsh syntax smoke |
 
-Manual QA (operator checklist in smoke test or `16-cli.md`):
+Manual QA (operator checklist in smoke test or `17-cli.md`):
 
 - First-run path: `init` → `up` → `doctor` → `configure` → `status`
 - VPN path: `doctor` + `vpn-test` exit codes
@@ -253,9 +291,12 @@ Manual QA (operator checklist in smoke test or `16-cli.md`):
 
 | Phase | Goal | Blocks public v0.1? |
 | --- | --- | --- |
-| **A — UX contract** | version, help, exit taxonomy on touched paths, doctor, status --json/-q, `--env-file`/`--project-dir` stubs or full, docs `16-cli.md`, Q-01–Q-06 | No (MAY ship earlier as polish) |
+| **A — UX contract** | version, help on diagnostics, exit taxonomy on touched paths, doctor, status --json/-q, docs `17-cli.md`, Q-01–Q-06 | No (MAY ship earlier as polish) |
+| **A2 — Help + globals polish** | Per-command `--help` for **all** shipped commands (side-effect free); command-scoped completeness; optional global `--no-color`; document remaining deferrals | No — finish before claiming “Phase A done” in operator docs |
 | **B — Lifecycle** | backup/restore, update, recyclarr sync, completions, PATH docs | No — v0.2 |
-| **C — Hardening** | Finish die→taxonomy migration; expand JSON for configure summary; optional man page; fish completions | No — ongoing |
+| **C — Hardening** | Finish die→taxonomy migration; expand JSON for configure summary; `status` JSON schemaVersion bump if types change; optional man page; fish completions | No — ongoing |
+
+Phase A (core diagnostics) is largely landed as of 2026-09-14. **Do not** mark operator docs “Phase A complete” until **A2** help parity + honest flag deferrals are done.
 
 ### 14. Relationship to ADR 0005
 
@@ -289,16 +330,22 @@ ADR 0005 remains Bash-first + MVP command set. This ADR **extends** day-2 UX qua
 
 ## Acceptance sketch
 
-### Phase A
+### Phase A (diagnostics core — largely landed 2026-09-14)
 
-- [ ] `flixbox version` / `--version`
-- [ ] Per-command `--help` for all shipped commands
-- [ ] Usage → exit 2; Docker unreachable on compose wrappers → exit 3
-- [ ] `flixbox doctor` (+ optional `--json`)
-- [ ] `status --json` / `-q` with health glance + `schemaVersion`
-- [ ] Global `--no-color`, `-q`, `-v`; `--env-file` / `--project-dir` implemented or explicitly deferred with issue/note in `16-cli.md`
-- [ ] `docs/user/16-cli.md` + REFERENCE link
-- [ ] CI Q-01–Q-06
+- [x] `flixbox version` / `--version`
+- [x] `flixbox doctor` (+ optional `--json`)
+- [x] `status --json` / `-q` with health glance + `schemaVersion`
+- [x] Usage → exit 2 on unknown top-level command; Docker → exit 3 on touched compose/status paths
+- [x] `docs/user/17-cli.md` + REFERENCE link (+ ES mirror)
+- [x] CI Q-01–Q-06 (extended with presentation guards)
+
+### Phase A2 (help + honesty — in progress)
+
+- [x] Per-command `--help` for **all** shipped commands, exit 0, **no side effects**, no false success lines
+- [x] `init`/`up`/`reload` unknown flags → exit 2 (not opaque `die`/Compose passthrough for profiles)
+- [ ] Global `--no-color` **or** explicit deferral sentence remains accurate in `17-cli.md` (deferral landed; `--no-color` flag still deferred)
+- [x] `--env-file` / `--project-dir` still deferred (listed in `17-cli.md`)
+- [x] CI: every command in top-level help responds to `--help` with exit 0; `down --help` must not print `Stack stopped`
 
 ### Phase B
 
@@ -312,6 +359,8 @@ ADR 0005 remains Bash-first + MVP command set. This ADR **extends** day-2 UX qua
 
 - [ ] Remaining `die` paths classified into 2–6 where meaningful
 - [ ] `configure --json` summary (optional) without secrets
+- [ ] `homepage` / `credentials set` emit ADR §6 outcome vocabulary via `cli-msg`
+- [ ] JSON type cleanups (`vpnEnabled` boolean) behind `schemaVersion` bump
 - [ ] Smoke-test doc cross-links CLI doctor path
 
 ## Alternatives considered
@@ -337,6 +386,6 @@ Recorded at expansion (2026-09-06); **Accepted** same day as contract (implement
 | Bash/Linux CLI expert | `set -euo`, streams, flags, Bash 4+ | Pass — §11 normative |
 | Security | Secret I/O, argv, completions, backup --include-env | Pass — §10; Accept only if §10 stays MUST |
 | Automation / CI | `--json`, taxonomy, non-interactive | Pass |
-| Support / docs | version + 16-cli.md + help examples | Pass |
+| Support / docs | version + 17-cli.md + help examples | Pass |
 | Accessibility / terminal | NO_COLOR, stderr/stdout, quiet | Pass |
 | Release manager | v0.1 not blocked by Phase B | Pass |

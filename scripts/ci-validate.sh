@@ -1350,6 +1350,17 @@ if docker info >/dev/null 2>&1; then
 fi
 ./bin/flixbox vpn-test --help >/dev/null || fail C-91 'vpn-test --help failed'
 ./bin/flixbox logs --help >/dev/null || fail C-91 'logs --help failed'
+# A2 help safety: every shipped command accepts --help with exit 0 and no false success
+for _cmd in version doctor status logs vpn-test init up down restart reload homepage configure credentials; do
+  _rc=0
+  ./bin/flixbox "${_cmd}" --help >/dev/null 2>&1 || _rc=$?
+  [[ "${_rc}" -eq 0 ]] || fail C-91 "${_cmd} --help want exit 0 got ${_rc}"
+done
+_down_help="$(./bin/flixbox down --help 2>&1)" || true
+printf '%s\n' "$_down_help" | grep -qi 'Stack stopped' && \
+  fail C-91 'down --help must not print Stack stopped (ADR 0021 help safety)'
+printf '%s\n' "$_down_help" | grep -qi 'Usage: flixbox down' || \
+  fail C-91 'down --help must print Flixbox synopsis'
 # Q-06 ShellCheck covers bin/flixbox via existing shellcheck block
 pass C-91
 

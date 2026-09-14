@@ -264,14 +264,42 @@ copy_templates() {
   rmdir "${CONFIG_DIR}/qbittorrent/custom-cont-init.d" 2>/dev/null || true
 }
 
+# Return 0 if argv asks for help only (ADR 0021 help safety).
+flixbox_wants_help() {
+  local a
+  for a in "$@"; do
+    case "$a" in
+      -h|--help|help) return 0 ;;
+    esac
+  done
+  return 1
+}
+
 cmd_init() {
+  if flixbox_wants_help "$@"; then
+    cat <<'EOF'
+Usage: flixbox init [--force] [--non-interactive]
+
+Create .env (from .env.example), data/config dirs, templates, and first-run secrets.
+Does not start containers — run ./bin/flixbox up after reviewing .env.
+
+Options:
+  --force             Overwrite .env from .env.example
+  --non-interactive   Skip the “press Enter” pause
+  -h, --help          Show this help
+
+Exit codes: 0 ok; 1 unexpected; 2 usage; 4 config/path errors
+Docs: docs/user/04-install.md · docs/user/05-first-run.md
+EOF
+    return 0
+  fi
   load_env
   local force=0 non_interactive=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --force) force=1; shift ;;
       --non-interactive) non_interactive=1; shift ;;
-      *) die "Unknown init option: $1" ;;
+      *) die_usage "init: unknown option: $1 (try --help)" ;;
     esac
   done
 
@@ -349,6 +377,21 @@ ensure_access_profile() {
 }
 
 cmd_up() {
+  if flixbox_wants_help "$@"; then
+    cat <<'EOF'
+Usage: flixbox up [plex|proxy|recyclarr]...
+
+Start the Flixbox Compose stack (Direct or VPN per FLIXBOX_MODE).
+Optional profiles: plex, proxy, recyclarr (also --profile NAME).
+
+Options:
+  -h, --help   Show this help
+
+Exit codes: 0 ok; 1 unexpected; 2 usage; 3 Docker; 4 missing dirs/config
+Docs: docs/user/05-first-run.md · docs/user/07-vpn-and-direct.md
+EOF
+    return 0
+  fi
   assert_docker_accessible
   load_env
   ensure_access_profile
@@ -420,7 +463,7 @@ parse_profiles() {
         shift
         ;;
       *)
-        die "Unknown profile argument: $1 (try plex|proxy|recyclarr or --profile NAME)"
+        die_usage "Unknown profile argument: $1 (try plex|proxy|recyclarr, --profile NAME, or --help)"
         ;;
     esac
   done
@@ -438,19 +481,64 @@ warn_legacy_socket_proxy_profile() {
 }
 
 cmd_down() {
+  if flixbox_wants_help "$@"; then
+    cat <<'EOF'
+Usage: flixbox down [--volumes]
+
+Stop the Flixbox Compose stack. Extra args are passed to docker compose down
+only after this help path (never on --help).
+
+Options:
+  --volumes    Pass --volumes to Compose (destructive for named volumes)
+  -h, --help   Show this help
+
+Exit codes: 0 ok; 3 Docker
+Docs: docs/user/REFERENCE.md
+EOF
+    return 0
+  fi
   load_env
   compose down "$@"
   ok "Stack stopped."
 }
 
 cmd_restart() {
+  if flixbox_wants_help "$@"; then
+    cat <<'EOF'
+Usage: flixbox restart <service>
+
+Restart one Compose service (e.g. radarr, qbittorrent).
+
+Options:
+  -h, --help   Show this help
+
+Exit codes: 0 ok; 1 unexpected; 2 usage; 3 Docker
+EOF
+    return 0
+  fi
   load_env
   local svc="${1:-}"
-  [[ -n "${svc}" ]] || die "Usage: flixbox restart <service>"
+  [[ -n "${svc}" ]] || die_usage "Usage: flixbox restart <service> (try --help)"
   compose restart "${svc}"
 }
 
 cmd_reload() {
+  if flixbox_wants_help "$@"; then
+    cat <<'EOF'
+Usage: flixbox reload [--reset-homepage] [plex|proxy|recyclarr]...
+
+Recreate containers so .env / compose changes apply (prefer over down when
+only config changed).
+
+Options:
+  --reset-homepage   Overwrite managed Homepage files from templates (with backup)
+  -h, --help         Show this help
+
+Exit codes: 0 ok; 1 unexpected; 2 usage; 3 Docker; 4 missing dirs/config
+Docs: docs/user/REFERENCE.md
+EOF
+    return 0
+  fi
   assert_docker_accessible
   load_env
   ensure_access_profile
@@ -501,9 +589,20 @@ cmd_reload() {
 }
 
 cmd_homepage() {
+  if flixbox_wants_help "$@" || [[ "${1:-}" == "-h" || "${1:-}" == "--help" || "${1:-}" == "help" ]]; then
+    cat <<'EOF'
+Usage:
+  flixbox homepage refresh [--dry-run]
+
+Overwrite managed Homepage config from templates/homepage (with backup),
+sync ports/creds/chips, stamp applied revision, restart Homepage.
+See docs/user/REFERENCE.md and docs/plans/homepage-template-refresh.md.
+EOF
+    return 0
+  fi
   load_env
   local sub="${1:-}"
-  [[ -n "$sub" ]] || die "Usage: flixbox homepage refresh [--dry-run]"
+  [[ -n "$sub" ]] || die_usage "Usage: flixbox homepage refresh [--dry-run]"
   shift || true
   case "$sub" in
     refresh)
@@ -512,23 +611,32 @@ cmd_homepage() {
       flixbox_prepare_config_for_host_write || true
       flixbox_homepage_refresh "$@" || die "Homepage refresh failed"
       ;;
-    -h|--help|help)
-      cat <<'EOF'
-Usage:
-  flixbox homepage refresh [--dry-run]
-
-Overwrite managed Homepage config from templates/homepage (with backup),
-sync ports/creds/chips, stamp applied revision, restart Homepage.
-See docs/user/REFERENCE.md and docs/plans/homepage-template-refresh.md.
-EOF
-      ;;
     *)
-      die "Unknown homepage subcommand: ${sub} (try: refresh)"
+      die_usage "Unknown homepage subcommand: ${sub} (try: refresh or --help)"
       ;;
   esac
 }
 
 cmd_configure() {
+  if flixbox_wants_help "$@"; then
+    cat <<'EOF'
+Usage: flixbox configure [--dry-run] [--verbose] [--sync-qbit-auth] [--sync-arr-ui]
+
+Idempotent API wiring after the stack is up (download clients, root folders,
+Jellyfin/Seerr, hygiene). Indexers and Maintainerr rules stay manual.
+
+Options:
+  --dry-run           Preview without writing .env or calling mutating APIs
+  --verbose, -v       Extra HTTP diagnostics on stderr
+  --sync-qbit-auth    Force-align qBit WebUI password from .env
+  --sync-arr-ui       Apply Forms credentials under shared (ADR 0020)
+  -h, --help          Show this help
+
+Exit codes: 0 ok; 1 partial wiring failures; 3 Docker; 5 deps not ready
+Docs: docs/user/05-first-run.md · ADR 0016 / 0020
+EOF
+    return 0
+  fi
   assert_docker_accessible
   load_env
   exec "${ROOT_DIR}/scripts/configure-apps.sh" "$@"

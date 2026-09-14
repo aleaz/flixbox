@@ -1,12 +1,12 @@
-# Referencia CLI (Phase A)
+# Referencia CLI (ADR 0021)
 
 **Idiomas:** [English](../../user/17-cli.md) · Español (esta página)
 
-**Estado:** Implementado (ADR 0021 Phase A)  
+**Estado:** Phase A diagnósticos **listo**; Phase **A2** help safety **listo**; resta deferral honesto de globals (documentado) / flag `--no-color` opcional — ver [ADR 0021](../../adr/0021-cli-ux-contract.md)
 **Audiencia:** Operadores y automatización  
 **Relacionado:** [ADR 0021](../../adr/0021-cli-ux-contract.md) · [REFERENCE](REFERENCE.md)
 
-`./bin/flixbox` es el único entrypoint de operador. Phase A agrega descubribilidad (`version`, `--help` por comando), diagnóstico (`doctor`) y `status --json` para scripts, más una taxonomía estable de códigos de salida en esas rutas.
+`./bin/flixbox` es el único entrypoint de operador. Phase A entregó descubribilidad (`version`, help de nivel superior), diagnóstico (`doctor`), `status --json`, presentación vía `cli-msg` y taxonomía de salidas en esas rutas. **No todos** los subcomandos respetan aún `--help` sin efectos secundarios.
 
 ## Instalación / PATH
 
@@ -29,13 +29,14 @@ Requiere **Bash 4+**. Las completions llegan en Phase B.
 
 ## Flags globales
 
-| Flag | Comportamiento |
-| --- | --- |
-| `-h` / `--help` | Lista de comandos de nivel superior |
-| `--version` | Igual que `version` |
-| `-h` / `--help` por comando | Uso específico del comando (`status`, `doctor`, `version`, …) |
-
-`--json`, `-q` / `--quiet` aplican a los comandos que los documentan (`status`, `doctor`).
+| Flag | Comportamiento | Estado |
+| --- | --- | --- |
+| `-h` / `--help` | Lista de comandos de nivel superior | Listo |
+| `--version` | Igual que `version` | Listo |
+| `-h` / `--help` por comando | Uso específico | Listo (incluye lifecycle; sin side effects) |
+| `--json`, `-q` / `--quiet`, `-v` / `--verbose` | Según el comando que los documente | Listo donde está documentado |
+| `NO_COLOR` / non-TTY | Tokens sin ANSI | Listo |
+| `--no-color`, `-q`/`-v` globales, `--env-file`, `--project-dir` | Globals ADR 0021 | **Diferido** (tabla ADR 0021) |
 
 ## Streams (stdout vs stderr)
 
