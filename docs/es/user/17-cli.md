@@ -117,4 +117,4 @@ Humano por defecto: glance `SERVICE` / `STATE` / `HEALTH`, luego contexto `key: 
 
 ## Diferido (después)
 
-`-q`/`-v` globales, `--env-file`, `--project-dir`; migración completa `die`→taxonomía (Phase C); completions fish; perfiles opcionales Apprise / VPN-heal — ver [08-roadmap.md](../../08-roadmap.md).
+`-q`/`-v` globales, `--env-file`, `--project-dir`; migración completa `die`→taxonomía (Phase C); completions fish; perfil opcional VPN-heal — ver [08-roadmap.md](../../08-roadmap.md).

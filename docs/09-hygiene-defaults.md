@@ -85,7 +85,7 @@ Operators who want aggressive reclaim enable delete on Rule C themselves.
 
 - Prefer Seerr / Maintainerr built-in notifications (Discord, ntfy, etc.) when configured.
 - Day-0: Radarr/Sonarr native Connect (including Telegram) needs no extra Flixbox service.
-- Post-MVP: optional Apprise hub for multi-channel fan-out — [ADR 0012](adr/0012-notifications-apprise-hub.md) (Accepted), [planning note](11-future-notifications-and-vpn-resilience.md).
+- Optional Apprise hub (`notifications` profile) for multi-channel fan-out — [18-notifications.md](user/18-notifications.md), [ADR 0012](adr/0012-notifications-apprise-hub.md).
 - Document that cleanup actions are irreversible for files (hardlinks: deleting library path may leave torrent path until client removes it — coordinate with seeding policy).
 
 ---

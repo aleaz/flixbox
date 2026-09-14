@@ -89,7 +89,7 @@ EOF
 cmd_update() {
   if flixbox_wants_help "$@"; then
     cat <<'EOF'
-Usage: flixbox update [--dry-run] [plex|proxy|recyclarr]...
+Usage: flixbox update [--dry-run] [plex|proxy|recyclarr|notifications]...
 
 Pull pinned image tags (ADR 0010) and reconcile containers with
 `compose up -d --remove-orphans`. Never rewrites compose pins to :latest —

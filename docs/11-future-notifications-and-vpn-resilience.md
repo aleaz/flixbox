@@ -1,7 +1,7 @@
 # Future: notifications and VPN resilience
 
-**Status:** Planning only — **no Compose implementation yet.**  
-**ADRs:** [0012](adr/0012-notifications-apprise-hub.md) (**Accepted**), [0013](adr/0013-vpn-resilience-no-direct-fallback.md) (**Accepted**; optional `vpn-heal` profile still post-v0.1).  
+**Status:** Apprise hub **shipped** (optional profile `notifications` — see [18-notifications.md](user/18-notifications.md)). VPN heal / `vpn-heal` still planning.  
+**ADRs:** [0012](adr/0012-notifications-apprise-hub.md) (**Accepted**; profile landed), [0013](adr/0013-vpn-resilience-no-direct-fallback.md) (**Accepted**; optional `vpn-heal` still future).  
 **Roadmap:** [08-roadmap.md](08-roadmap.md).
 
 This note captures industry patterns (2025–2026) and Flixbox fit so we do not re-debate from scratch when implementing.
@@ -20,7 +20,7 @@ This note captures industry patterns (2025–2026) and Flixbox fit so we do not 
 | Do | Don’t |
 | --- | --- |
 | Document native Connect for Day-0 Telegram | Ship a Flixbox Telegram bot in MVP |
-| Later: optional `notifications` profile → Apprise API (LinuxServer) | Lock product to Telegram-only |
+| Optional `notifications` profile → Apprise API (LinuxServer) — **shipped** | Lock product to Telegram-only |
 | Stateful Apprise config key; *arr Connect → hub | Interactive bots that mutate *arr |
 | Fan-out VPN heal alerts through Apprise when both exist | Publish Apprise UI to WAN by default |
 
@@ -65,9 +65,9 @@ Gluetun does **not** need Flixbox to “restart the container” on every blip; 
 
 ## 3. Suggested implementation order (future)
 
-1. Docs-only: “VPN drops” + native Connect Telegram cookbook (cheap, unblocks operators now conceptually).
-2. Apprise profile (ADR 0012) after v0.1 polish.
-3. Wire optional heal alerts → Apprise.
+1. [x] Native Connect + Apprise cookbook — [18-notifications.md](user/18-notifications.md).
+2. [x] Apprise profile (ADR 0012).
+3. Wire optional heal alerts → Apprise (when ADR 0013 lands).
 4. Evaluate one watchdog image for `vpn-heal` profile; socket threat model + CI.
 
 ## 4. Operator workarounds today (no code)

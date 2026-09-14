@@ -1,0 +1,19 @@
+# Optional Apprise notification hub (profile: notifications). ADR 0012.
+# Internal-only on flixbox_net — no host port publish by default.
+
+services:
+  apprise-api:
+    image: lscr.io/linuxserver/apprise-api:1.5.4
+    container_name: flixbox-apprise-api
+    profiles: ["notifications"]
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      UMASK: ${UMASK:-002}
+    volumes:
+      - ${CONFIG_DIR}/apprise:/config
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      - flixbox_net

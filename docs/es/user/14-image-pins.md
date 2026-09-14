@@ -26,6 +26,7 @@ Los módulos Compose de Flixbox fijan las imágenes Docker a **tags de versión 
 | Homepage | `ghcr.io/gethomepage/homepage` | `v2.3.0` |
 | Caddy (profile) | `caddy` | `2.11.4` |
 | docker-socket-proxy | `tecnativa/docker-socket-proxy` | `v0.5.0` |
+| Apprise API (perfil `notifications`) | `lscr.io/linuxserver/apprise-api` | `1.5.4` |
 
 <a id="updating-pins"></a>
 ## Actualizar pins

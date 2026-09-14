@@ -31,6 +31,7 @@ Pipeline de medios en casa: pide un título, descárgalo (opcionalmente por VPN)
 | [13 — Perfiles de acceso](13-access-profiles.md) | Perfiles LAN (`trusted` / `shared`) |
 | [14 — Image pins](14-image-pins.md) | Tags de imagen Compose (ADR 0010) |
 | [15 — Rotación de credenciales](15-credential-rotation.md) | Recuperación tras cambio de password o API key |
+| [18 — Notificaciones](18-notifications.md) | Connect nativo Day-0 + Apprise opcional (`notifications`) |
 
 <a id="screenshots-and-demos"></a>
 ## Capturas y demos

@@ -30,6 +30,7 @@ Writers: tone and visuals follow the [documentation style guide](../00-doc-style
 | [13 — Access profiles](13-access-profiles.md) | LAN profiles (`trusted` / `shared`) |
 | [14 — Image pins](14-image-pins.md) | Pinned Compose image tags (ADR 0010) |
 | [15 — Credential rotation](15-credential-rotation.md) | Step-by-step recovery after password or API key changes |
+| [18 — Notifications](18-notifications.md) | Native Connect Day-0 + optional Apprise (`notifications`) |
 
 ## Screenshots and demos
 

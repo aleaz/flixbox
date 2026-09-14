@@ -1,0 +1,6 @@
+# Example Apprise URL list (NOT used until you copy/rename per Apprise stateful docs).
+# Replace placeholders. Never commit real tokens.
+#
+# tgram://YOUR_BOT_TOKEN/YOUR_CHAT_ID
+# discord://WebhookID/WebhookToken
+# ntfys://ntfy.sh/your-topic

@@ -197,7 +197,13 @@ copy_templates() {
     "${CONFIG_DIR}/bazarr" \
     "${CONFIG_DIR}/jellyfin" \
     "${CONFIG_DIR}/seerr" \
-    "${CONFIG_DIR}/unpackerr"
+    "${CONFIG_DIR}/unpackerr" \
+    "${CONFIG_DIR}/apprise"
+
+  [[ -f "${CONFIG_DIR}/apprise/README.md" ]] || \
+    cp "${ROOT_DIR}/templates/apprise/README.md" "${CONFIG_DIR}/apprise/README.md"
+  [[ -f "${CONFIG_DIR}/apprise/urls.conf.example" ]] || \
+    cp "${ROOT_DIR}/templates/apprise/urls.conf.example" "${CONFIG_DIR}/apprise/urls.conf.example"
 
   [[ -f "${CONFIG_DIR}/recyclarr/recyclarr.yml" ]] || \
     cp "${ROOT_DIR}/templates/recyclarr/recyclarr.yml" "${CONFIG_DIR}/recyclarr/recyclarr.yml"
@@ -398,7 +404,7 @@ ensure_access_profile() {
 cmd_up() {
   if flixbox_wants_help "$@"; then
     cat <<'EOF'
-Usage: flixbox up [plex|proxy|recyclarr]...
+Usage: flixbox up [plex|proxy|recyclarr|notifications]...
 
 Start the Flixbox Compose stack (Direct or VPN per FLIXBOX_MODE).
 Optional profiles: plex, proxy, recyclarr (also --profile NAME).
@@ -473,7 +479,7 @@ parse_profiles() {
           shift 2
         fi
         ;;
-      plex|proxy|recyclarr)
+      plex|proxy|recyclarr|notifications)
         _out+=(--profile "$1")
         shift
         ;;
@@ -482,7 +488,7 @@ parse_profiles() {
         shift
         ;;
       *)
-        die_usage "Unknown profile argument: $1 (try plex|proxy|recyclarr, --profile NAME, or --help)"
+        die_usage "Unknown profile argument: $1 (try plex|proxy|recyclarr|notifications, --profile NAME, or --help)"
         ;;
     esac
   done
@@ -544,7 +550,7 @@ EOF
 cmd_reload() {
   if flixbox_wants_help "$@"; then
     cat <<'EOF'
-Usage: flixbox reload [--reset-homepage] [plex|proxy|recyclarr]...
+Usage: flixbox reload [--reset-homepage] [plex|proxy|recyclarr|notifications]...
 
 Recreate containers so .env / compose changes apply (prefer over down when
 only config changed).
@@ -1063,13 +1069,13 @@ Diagnostics:
 
 Lifecycle:
   flixbox init [--force] [--non-interactive]
-  flixbox up [plex|proxy|recyclarr]...
+  flixbox up [plex|proxy|recyclarr|notifications]...
   flixbox down [--volumes]
   flixbox restart <service>
-  flixbox reload [--reset-homepage] [plex|proxy|recyclarr]...
+  flixbox reload [--reset-homepage] [plex|proxy|recyclarr|notifications]...
   flixbox backup [--include-env] [--stop] [DEST_DIR]
   flixbox restore <archive.tar.gz> [--force]
-  flixbox update [--dry-run] [plex|proxy|recyclarr]...
+  flixbox update [--dry-run] [plex|proxy|recyclarr|notifications]...
   flixbox recyclarr sync [--dry-run]
   flixbox sync-profiles [--dry-run]
   flixbox completion bash|zsh

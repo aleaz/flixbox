@@ -136,6 +136,7 @@ Reference: [Credentials and API keys](06-configuration.md#credentials-and-api-ke
 | E3b | Seerr | UI → Jellyfin + Radarr + Sonarr (each **API key**) | Connection test OK |
 | E4 | Maintainerr rules | Rules disabled or preview first | No surprise deletes |
 | E5 | Recyclarr | `docker compose --profile recyclarr run --rm recyclarr sync` | Sync completes (after keys in recyclarr.yml) |
+| E6 | Apprise (optional) | `./bin/flixbox up notifications` then `docker compose --profile notifications ps apprise-api` | Running; no host port published; *arr can reach `http://apprise-api:8000` |
 
 <a id="phase-f--end-to-end-request-flow-manual"></a>
 ## Phase F — End-to-end request flow (manual)

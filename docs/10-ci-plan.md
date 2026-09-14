@@ -51,6 +51,7 @@ The following was checked against the tree at commit `30a51fc` and local tooling
 | `plex` | `plex` |
 | `proxy` | `caddy` |
 | `recyclarr` | `recyclarr` |
+| `notifications` | `apprise-api` |
 
 `docker-socket-proxy` is always in the default service set with Homepage ([ADR 0022](adr/0022-operator-footgun-remediations.md)).
 

@@ -23,6 +23,7 @@ Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010
 | Homepage | `ghcr.io/gethomepage/homepage` | `v2.3.0` |
 | Caddy (profile) | `caddy` | `2.11.4` |
 | docker-socket-proxy | `tecnativa/docker-socket-proxy` | `v0.5.0` |
+| Apprise API (profile `notifications`) | `lscr.io/linuxserver/apprise-api` | `1.5.4` |
 
 ## Updating pins
 

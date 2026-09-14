@@ -1,8 +1,8 @@
 # ADR 0012: Notifications via Apprise hub (not a first-class Telegram bot)
 
-- **Status:** Accepted (post-MVP — implement after v0.1 polish; target ~v0.2)
+- **Status:** Accepted
 - **Date:** 2026-08-29
-- **Updated:** 2026-08-29 (revalidated; maintainer preference for Apprise hub)
+- **Updated:** 2026-09-14 (`notifications` profile shipped — `compose/notifications.yml`)
 - **Related:** [0003](0003-compose-modularity.md), [0006](0006-mvp-service-inventory.md), [0008](0008-maintenance-decluttarr-maintainerr.md), [0013](0013-vpn-resilience-no-direct-fallback.md)
 
 ## Context
@@ -55,3 +55,11 @@ Goals unchanged: one endpoint config, no library-mutating bot, secrets out of gi
 - SMS / PagerDuty as defaults.
 - Publishing Apprise UI to the public internet without the existing Caddy/auth roadmap.
 - Shipping ntfy server inside Flixbox by default (operators may point Apprise at external/public ntfy).
+
+## Progress
+
+- [x] Optional Compose profile `notifications` → `apprise-api` on `flixbox_net` (no host port by default)
+- [x] Stateful config volume `${CONFIG_DIR}/apprise` + templates
+- [x] Operator cookbook — [18-notifications.md](../user/18-notifications.md) (Day-0 native Connect + Apprise)
+- [x] Image pin + CI: profile absent from default `compose config --services`
+- [ ] Optional VPN heal alerts via Apprise (depends on ADR 0013 `vpn-heal`)

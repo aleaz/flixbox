@@ -9,7 +9,7 @@ _flixbox_completions() {
   local cur="${COMP_WORDS[COMP_CWORD]}"
   local cmd="${COMP_WORDS[1]:-}"
   local cmds="version doctor status logs vpn-test init up down restart reload homepage configure credentials backup restore update recyclarr sync-profiles completion help"
-  local profiles="plex proxy recyclarr"
+  local profiles="plex proxy recyclarr notifications"
 
   if [[ ${COMP_CWORD} -eq 1 ]]; then
     COMPREPLY=( $(compgen -W "${cmds}" -- "${cur}") )
@@ -103,7 +103,7 @@ _flixbox() {
     'completion:Print shell completion script'
     'help:Show help'
   )
-  profiles=(plex proxy recyclarr)
+  profiles=(plex proxy recyclarr notifications)
 
   _arguments -C \
     '1:command:->cmds' \
@@ -128,7 +128,7 @@ _flixbox() {
           _arguments '--force' '-h' '--help' '*:archive:_files'
           ;;
         update|up|reload)
-          _arguments '--dry-run' '-h' '--help' '--profile:profile:(plex proxy recyclarr)' '*:profile:(plex proxy recyclarr)'
+          _arguments '--dry-run' '-h' '--help' '--profile:profile:(plex proxy recyclarr notifications)' '*:profile:(plex proxy recyclarr notifications)'
           ;;
         configure)
           _arguments '--dry-run' '--verbose' '--sync-qbit-auth' '--sync-arr-ui' '-h' '--help'

@@ -14,7 +14,7 @@ Contrato completo: [17 — Referencia CLI](17-cli.md) (ADR 0021).
 | Comando | Para qué |
 | --- | --- |
 | `./bin/flixbox init [--non-interactive]` | Crear `.env`, carpetas, plantillas; generar API keys/passwords. **Linux:** paths escribibles en `.env` antes de `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
-| `./bin/flixbox up [perfiles...]` | Levantar stack (`plex`, `proxy`, `recyclarr`; elimina huérfanos al cambiar de modo) |
+| `./bin/flixbox up [perfiles...]` | Levantar stack (`plex`, `proxy`, `recyclarr`, `notifications`; elimina huérfanos al cambiar de modo) |
 | `./bin/flixbox reload [--reset-homepage] [perfiles...]` | Recrear contenedores tras cambios en `.env` o compose. `--reset-homepage` también pisa plantillas Homepage gestionadas (con backup) |
 | `./bin/flixbox update [--dry-run] [perfiles...]` | Pull de imágenes **pineadas** + reconciliar (`up -d --remove-orphans`); no reescribe a `:latest` — [14 — Image pins](14-image-pins.md) |
 | `./bin/flixbox backup [--include-env] [--stop] [DEST]` | Archivar solo `${CONFIG_DIR}` (no media de `${DATA_DIR}`) |
