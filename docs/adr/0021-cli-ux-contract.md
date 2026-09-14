@@ -18,7 +18,7 @@ Honest snapshot against this contract (does **not** reopen decisions):
 | Per-command `--help` for **all** shipped commands | **Landed** (A2 help safety — no Compose/env side effects; no false success lines) |
 | Global `-q`/`-v`/`--json`/`--no-color` | **Partial** — `--no-color` + command-scoped `-q`/`--json` where documented; global `-q`/`-v` deferred (see table) |
 | `--env-file` / `--project-dir` | **Deferred** (explicit) |
-| Phase B lifecycle (`backup`/`restore`/`update`/`recyclarr`/`completion`) | **Help stubs landed** — flags + CONFIG-only / DATA_DIR operator-owned freeze; mutating bodies next |
+| Phase B lifecycle (`backup`/`restore`/`update`/`recyclarr`/`completion`) | **Partial** — `backup`/`restore` landed (CONFIG-only; DATA_DIR operator-owned); `update`/`recyclarr`/`completion` help stubs |
 | Phase C full `die`→taxonomy + `configure --json` | **Not started** |
 
 ### Global flags — implement vs defer
@@ -351,11 +351,11 @@ ADR 0005 remains Bash-first + MVP command set. This ADR **extends** day-2 UX qua
 ### Phase B
 
 - [x] Help stubs + flag parse for `backup`/`restore`/`update`/`recyclarr sync`/`sync-profiles`/`completion`; CONFIG-only scope + DATA_DIR operator-owned documented; `scripts/backup.sh` → thin CLI wrapper (decision locked)
-- [ ] `backup` / `restore` bodies with documented scope + `--include-env` / `--force`
+- [x] `backup` / `restore` bodies with documented scope + `--include-env` / `--force`
 - [ ] `update` respects ADR 0010 pins; `--dry-run`
 - [ ] `recyclarr sync` (alias `sync-profiles`)
 - [ ] bash/zsh completions + install notes
-- [ ] QA Q-10–Q-13 + manual checklist items (progressive; help portions landed)
+- [ ] QA Q-10–Q-13 + manual checklist items (Q-10/Q-11 landed; Q-12/Q-13 with remaining verbs)
 
 ### Phase C
 

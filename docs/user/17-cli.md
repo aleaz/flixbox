@@ -1,6 +1,6 @@
 # CLI reference (ADR 0021)
 
-**Status:** Phase A diagnostics **landed**; Phase **A2** help safety + global `--no-color` **landed**; lifecycle command **help stubs** landed (CONFIG-only scope freeze) — mutating bodies next — see [ADR 0021](../adr/0021-cli-ux-contract.md)
+**Status:** Phase A diagnostics **landed**; Phase **A2** help safety + global `--no-color` **landed**; `backup`/`restore` **landed** (CONFIG-only); remaining lifecycle stubs next — see [ADR 0021](../adr/0021-cli-ux-contract.md)
 **Audience:** Operators and automation  
 **Related:** [ADR 0021](../adr/0021-cli-ux-contract.md) · [REFERENCE](REFERENCE.md)
 
@@ -98,12 +98,12 @@ Human default: narrow `SERVICE` / `STATE` / `HEALTH` glance, then `key: value` c
 
 | Command | Status | Notes |
 | --- | --- | --- |
-| `backup` / `restore` | Help + flags landed; archive bodies next | Archives **`${CONFIG_DIR}`** only. **`${DATA_DIR}`** (media/torrents) is **operator-owned** — back it up yourself. Optional `.env` via `--include-env`. |
+| `backup` / `restore` | Landed | Archives **`${CONFIG_DIR}`** only. **`${DATA_DIR}`** (media/torrents) is **operator-owned** — back it up yourself. Optional `.env` via `--include-env`. Restore refuses overwrite without `--force`. |
 | `update` | Help stub | Pulls pinned tags (ADR 0010); never rewrites to `:latest` |
 | `recyclarr sync` / `sync-profiles` | Help stub | Will replace raw Compose as the primary operator path |
 | `completion bash\|zsh` | Help stub | Fish deferred |
 
-Until `backup` archives, `scripts/backup.sh` remains usable and will become a **thin wrapper** around `flixbox backup` (same CONFIG-only scope).
+`scripts/backup.sh` is a thin wrapper around `./bin/flixbox backup` (same CONFIG-only scope).
 
 ## Deferred (later)
 

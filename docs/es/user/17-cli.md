@@ -2,7 +2,7 @@
 
 **Idiomas:** [English](../../user/17-cli.md) · Español (esta página)
 
-**Estado:** Phase A diagnósticos **listo**; Phase **A2** help safety + `--no-color` global **listo**; stubs de help de lifecycle **listos** (alcance CONFIG-only) — cuerpos mutadores después — ver [ADR 0021](../../adr/0021-cli-ux-contract.md)
+**Estado:** Phase A diagnósticos **listo**; Phase **A2** help safety + `--no-color` global **listo**; `backup`/`restore` **listos** (CONFIG-only); resto de lifecycle en stubs — ver [ADR 0021](../../adr/0021-cli-ux-contract.md)
 **Audiencia:** Operadores y automatización  
 **Relacionado:** [ADR 0021](../../adr/0021-cli-ux-contract.md) · [REFERENCE](REFERENCE.md)
 
@@ -100,12 +100,12 @@ Humano por defecto: glance `SERVICE` / `STATE` / `HEALTH`, luego contexto `key: 
 
 | Comando | Estado | Notas |
 | --- | --- | --- |
-| `backup` / `restore` | Help + flags listos; cuerpos de archivo después | Solo **`${CONFIG_DIR}`**. **`${DATA_DIR}`** (media/torrents) es **del operador** — respaldalo vos. `.env` opcional con `--include-env`. |
+| `backup` / `restore` | Listo | Solo **`${CONFIG_DIR}`**. **`${DATA_DIR}`** (media/torrents) es **del operador** — respaldalo vos. `.env` opcional con `--include-env`. Restore exige `--force` para sobrescribir. |
 | `update` | Help stub | Pull de tags pineados (ADR 0010); nunca reescribe a `:latest` |
 | `recyclarr sync` / `sync-profiles` | Help stub | Reemplazará Compose crudo como path primario de operador |
 | `completion bash\|zsh` | Help stub | Fish diferido |
 
-Mientras no existan archivos de `backup`, `scripts/backup.sh` sigue sirviendo y pasará a ser un **wrapper fino** de `flixbox backup` (mismo alcance CONFIG-only).
+`scripts/backup.sh` es un wrapper fino de `./bin/flixbox backup` (mismo alcance CONFIG-only).
 
 ## Diferido (después)
 

@@ -26,6 +26,8 @@ source "${ROOT_DIR}/scripts/lib/cli-phase-a.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/cli-phase-b.sh"
 # shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/backup-restore.sh"
+# shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/cli-msg.sh"
 
 # Thin wrappers — progress on stderr with text tokens (ADR 0021 / cli-msg).
@@ -1037,7 +1039,7 @@ Homepage: after git pull, up/reload/status warn if templates are newer than live
   Apply with: ./bin/flixbox homepage refresh  (or reload --reset-homepage)
 
 Backup scope: CONFIG_DIR only (+ optional --include-env). DATA_DIR media is operator-owned.
-  Until archive bodies land, use: scripts/backup.sh  (will become a thin CLI wrapper)
+  scripts/backup.sh is a thin wrapper around: ./bin/flixbox backup
 
 Docs: docs/user/17-cli.md · ADR 0021
 EOF

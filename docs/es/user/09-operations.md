@@ -36,9 +36,19 @@ Hasta que el cuerpo exista: pull de imágenes pineadas y recreate con cuidado; v
 
 ## Backups
 
-**Config** bajo `${CONFIG_DIR}`. Usa `./bin/flixbox backup --help` (cuerpo de archivo después) o, mientras tanto, `scripts/backup.sh` (pasará a ser wrapper fino del CLI). Prefiere `--stop` / herramientas live-safe antes de copiar SQLite a ciegas.
+**Config** bajo `${CONFIG_DIR}`:
 
-**Media (`${DATA_DIR}`)** **no** entra en los backups de config de Flixbox. Respaldá bibliotecas/torrents vos (rsync, snapshots, NAS). Restaurar config no restaura media.
+```bash
+./bin/flixbox backup                  # CONFIG_DIR → backups/flixbox-config-*.tar.gz
+./bin/flixbox backup --stop           # detiene el stack durante el tar (SQLite más limpio)
+./bin/flixbox backup --include-env    # también empaqueta .env (sensible — guardalo como secreto)
+./bin/flixbox restore ARCHIVE.tar.gz  # rechaza CONFIG no vacío sin --force
+./bin/flixbox restore ARCHIVE.tar.gz --force
+```
+
+`scripts/backup.sh` es un wrapper fino de `./bin/flixbox backup`. Prefiere `--stop` para consistencia SQLite.
+
+**Media (`${DATA_DIR}`)** **no** entra. Respaldá bibliotecas/torrents vos (rsync, snapshots, NAS). Restaurar config no restaura media.
 
 <a id="hardlink-health-check"></a>
 ## Comprobación de salud de hardlinks

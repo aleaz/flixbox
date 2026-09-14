@@ -24,11 +24,11 @@ Options:
   -h, --help      Show this help
 
 Exit codes: 0 success · 2 usage · 3 Docker · 4 config
-Docs: docs/user/17-cli.md · ADR 0021 Phase B
+Docs: docs/user/17-cli.md · ADR 0021
 EOF
     return 0
   fi
-  local include_env=0 stop=0 dest=""
+  local include_env=0 stop=0 dest="" out rc=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --include-env) include_env=1; shift ;;
@@ -42,9 +42,14 @@ EOF
         ;;
     esac
   done
-  # Keep parsed flags for the upcoming archive implementation (nounset-safe).
-  : "${include_env}" "${stop}" "${dest}"
-  flixbox_phase_b_nyi "flixbox backup"
+
+  load_env
+  out="$(flixbox_backup_create "${dest:-${ROOT_DIR}/backups}" "$include_env" "$stop")" || rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    exit "$rc"
+  fi
+  cli_configure_line backup updated "archive ${out}"
+  cli_info "DATA_DIR was not included — back up media separately if needed"
 }
 
 cmd_restore() {
@@ -56,15 +61,15 @@ Restore a Flixbox CONFIG archive into ${CONFIG_DIR}. Refuses to overwrite an
 existing config tree without --force. Does NOT restore ${DATA_DIR} media.
 
 Options:
-  --force       Overwrite existing ${CONFIG_DIR} contents
+  --force       Overwrite existing ${CONFIG_DIR} contents (and .env if present in archive)
   -h, --help    Show this help
 
 Exit codes: 0 success · 2 usage (including missing --force) · 3 Docker · 4 config
-Docs: docs/user/17-cli.md · ADR 0021 Phase B
+Docs: docs/user/17-cli.md · ADR 0021
 EOF
     return 0
   fi
-  local force=0 archive=""
+  local force=0 archive="" rc=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --force) force=1; shift ;;
@@ -78,8 +83,14 @@ EOF
     esac
   done
   [[ -n "$archive" ]] || die_usage "restore: missing archive path (try --help)"
-  : "${force}"
-  flixbox_phase_b_nyi "flixbox restore"
+
+  load_env
+  flixbox_restore_apply "$archive" "$force" || rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    exit "$rc"
+  fi
+  cli_configure_line restore updated "CONFIG_DIR ${CONFIG_DIR}"
+  cli_info "DATA_DIR was not restored — media remains operator-owned"
 }
 
 cmd_update() {

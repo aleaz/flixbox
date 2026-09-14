@@ -1369,10 +1369,14 @@ printf '%s\n' "$_down_help" | grep -qi 'Usage: flixbox down' || \
 # Q-06 ShellCheck covers bin/flixbox via existing shellcheck block
 pass C-91
 
-# --- C-92: ADR 0021 Phase B progressive (Q-10 help portions; bodies later) ---
+# --- C-92: ADR 0021 lifecycle backup/restore (Q-10/Q-11) ---
 [[ -f scripts/lib/cli-phase-b.sh ]] || fail C-92 'missing scripts/lib/cli-phase-b.sh'
+[[ -f scripts/lib/backup-restore.sh ]] || fail C-92 'missing scripts/lib/backup-restore.sh'
 grep -q 'cli-phase-b.sh' bin/flixbox || fail C-92 'bin/flixbox must source cli-phase-b.sh'
+grep -q 'backup-restore.sh' bin/flixbox || fail C-92 'bin/flixbox must source backup-restore.sh'
 grep -q 'cmd_backup()' scripts/lib/cli-phase-b.sh || fail C-92 'missing cmd_backup'
+grep -q 'flixbox" backup' scripts/backup.sh || \
+  fail C-92 'scripts/backup.sh must wrap bin/flixbox backup'
 # Q-10: backup --help documents include/exclude (DATA_DIR operator-owned)
 _bak_help="$(./bin/flixbox backup --help 2>&1)" || true
 printf '%s\n' "$_bak_help" | grep -qi 'include-env' || \
@@ -1385,11 +1389,43 @@ printf '%s\n' "$_rest_help" | grep -qi 'force' || \
 _upd_help="$(./bin/flixbox update --help 2>&1)" || true
 printf '%s\n' "$_upd_help" | grep -qi 'dry-run' || \
   fail C-92 'update --help must document --dry-run'
-# NYI bodies must not pretend success
-_rc=0
-./bin/flixbox backup >/dev/null 2>&1 || _rc=$?
-[[ "${_rc}" -ne 0 ]] || fail C-92 'backup body stub must not exit 0 until implemented'
-# Q-11/Q-12/Q-13 full checks land with backup/restore/update/completion bodies
+# Unit: CONFIG-only archive + restore --force gate (Q-11)
+bash -c '
+set -euo pipefail
+REPO="'"$(pwd)"'"
+ROOT_DIR="$(mktemp -d)"
+trap "rm -rf \"$ROOT_DIR\"" EXIT
+CONFIG_DIR="${ROOT_DIR}/config"
+mkdir -p "${CONFIG_DIR}/radarr"
+printf "cfg\n" >"${CONFIG_DIR}/radarr/app.conf"
+printf "SECRET=unit\n" >"${ROOT_DIR}/.env"
+DEST="${ROOT_DIR}/backups"
+export ROOT_DIR CONFIG_DIR
+# shellcheck disable=SC1091
+source "${REPO}/scripts/lib/cli-msg.sh"
+# shellcheck disable=SC1091
+source "${REPO}/scripts/lib/backup-restore.sh"
+assert_docker_accessible() { :; }
+die_usage() { printf "%s\n" "$*" >&2; exit 2; }
+flixbox_backup_stack_running() { return 1; }
+out="$(flixbox_backup_create "$DEST" 0 0)"
+[[ -f "$out" ]] || { echo "missing archive"; exit 1; }
+tar -tzf "$out" | grep -q "radarr/app.conf" || { echo "config missing in tar"; exit 1; }
+if tar -tzf "$out" | grep -qx ".env"; then echo "DATA/.env leaked without --include-env"; exit 1; fi
+out2="$(flixbox_backup_create "$DEST" 1 0)"
+tar -tzf "$out2" | grep -qx ".env" || { echo "expected .env with --include-env"; exit 1; }
+CONFIG_DIR="${ROOT_DIR}/restore-target"
+mkdir -p "${CONFIG_DIR}"
+printf "keep\n" >"${CONFIG_DIR}/marker"
+rc=0
+( flixbox_restore_apply "$out" 0 ) || rc=$?
+[[ "$rc" -eq 2 ]] || { echo "Q-11 want exit 2 without --force got $rc"; exit 1; }
+[[ -f "${CONFIG_DIR}/marker" ]] || { echo "refused restore must not wipe"; exit 1; }
+flixbox_restore_apply "$out" 1
+[[ -f "${CONFIG_DIR}/radarr/app.conf" ]] || { echo "restore missing file"; exit 1; }
+[[ ! -f "${CONFIG_DIR}/marker" ]] || { echo "restore --force should replace tree"; exit 1; }
+' || fail C-92 'backup/restore unit test failed (Q-11)'
+# Q-12/Q-13 land with update/completion bodies
 pass C-92
 
 printf 'All contract checks passed.\n'

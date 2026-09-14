@@ -30,9 +30,19 @@ Until the body ships: pull pinned images and recreate carefully; see [14-image-p
 
 ## Backups
 
-**Config** lives under `${CONFIG_DIR}`. Use `./bin/flixbox backup --help` (archive body next) or, until then, `scripts/backup.sh` (will become a thin wrapper around the CLI). Prefer `--stop` / live-safe tools before copying SQLite blindly.
+**Config** lives under `${CONFIG_DIR}`:
 
-**Media (`${DATA_DIR}`)** is **not** included in Flixbox config backups. Back up libraries/torrents yourself (rsync, snapshots, NAS). Restoring config does not restore media.
+```bash
+./bin/flixbox backup                  # CONFIG_DIR → backups/flixbox-config-*.tar.gz
+./bin/flixbox backup --stop           # stop stack during tar (cleaner SQLite)
+./bin/flixbox backup --include-env    # also pack .env (sensitive — store like a secret)
+./bin/flixbox restore ARCHIVE.tar.gz  # refuses non-empty CONFIG without --force
+./bin/flixbox restore ARCHIVE.tar.gz --force
+```
+
+`scripts/backup.sh` is a thin wrapper around `./bin/flixbox backup`. Prefer `--stop` for cleaner SQLite consistency.
+
+**Media (`${DATA_DIR}`)** is **not** included. Back up libraries/torrents yourself (rsync, snapshots, NAS). Restoring config does not restore media.
 
 ## Hardlink health check
 
