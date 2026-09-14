@@ -6,7 +6,7 @@ Cheat sheet for operators. Defaults assume a local install with `./bin/flixbox i
 
 ## CLI
 
-Full contract: [17 — CLI reference](17-cli.md) (ADR 0021 Phase A).
+Full contract: [17 — CLI reference](17-cli.md) (ADR 0021).
 
 
 | Command | Purpose |
@@ -14,6 +14,9 @@ Full contract: [17 — CLI reference](17-cli.md) (ADR 0021 Phase A).
 | `./bin/flixbox init [--non-interactive]` | Create `.env`, dirs, templates; generate API keys/passwords. **Linux:** set writable `DATA_DIR`/`CONFIG_DIR` in `.env` before `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
 | `./bin/flixbox up [profiles...]` | Start stack (`plex`, `proxy`, `recyclarr`; removes orphans on mode switch) |
 | `./bin/flixbox reload [--reset-homepage] [profiles...]` | Recreate containers after `.env` / compose changes. `--reset-homepage` also overwrites managed Homepage templates (with backup) |
+| `./bin/flixbox update [--dry-run] [profiles...]` | Pull **pinned** images + reconcile (`up -d --remove-orphans`); never rewrites pins to `:latest` — [14 — Image pins](14-image-pins.md) |
+| `./bin/flixbox backup [--include-env] [--stop] [DEST]` | Archive `${CONFIG_DIR}` only (not `${DATA_DIR}` media) |
+| `./bin/flixbox restore ARCHIVE [--force]` | Restore CONFIG archive; `--force` required to overwrite |
 | `./bin/flixbox homepage refresh [--dry-run]` | Apply repo Homepage templates to live `${CONFIG_DIR}/homepage` (backup → overwrite managed files → sync → stamp → restart). Use after `git pull` when `up`/`reload` warn that templates are newer |
 | `./bin/flixbox configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]` | Idempotent wiring; heals drifted API keys. `--dry-run` previews only (no `.env`/API changes). `--sync-qbit-auth` forces qBit WebUI password from `.env` into qBit + *arr + Decluttarr. `--sync-arr-ui` applies `FLIXBOX_ARR_UI_*` Forms under `shared` (ADR 0020) |
 | `./bin/flixbox credentials show <target>` | Print operator secret (`qbit`, `arr-ui`, `admin`, or `api radarr\|sonarr\|prowlarr`) — stdout only; keep private |
@@ -23,12 +26,15 @@ Full contract: [17 — CLI reference](17-cli.md) (ADR 0021 Phase A).
 | `./bin/flixbox doctor [--json]` | Readiness checks (Docker, .env, paths, VPN align) |
 | `./bin/flixbox logs [service]` | Tail logs |
 | `./bin/flixbox vpn-test` | VPN egress check (VPN mode only) |
+| `./bin/flixbox recyclarr sync [--dry-run]` | Recyclarr one-shot (alias: `sync-profiles`) |
+| `./bin/flixbox completion bash\|zsh` | Print completion script to stdout |
 | `./bin/flixbox down` | Stop stack (config volumes kept) |
 
 **Recyclarr sync (optional profile):**
 
 ```bash
-docker compose --profile recyclarr run --rm recyclarr sync
+./bin/flixbox recyclarr sync [--dry-run]
+./bin/flixbox sync-profiles             # alias
 ```
 
 ## Web UI (host)

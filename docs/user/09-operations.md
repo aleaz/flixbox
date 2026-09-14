@@ -23,10 +23,12 @@
 ## Updates
 
 ```bash
-./bin/flixbox update [--dry-run]   # help landed; body next
+./bin/flixbox update --dry-run          # list pinned images; no pull/recreate
+./bin/flixbox update                    # pull pinned tags + reconcile stack
+./bin/flixbox update plex proxy         # same profile args as up (optional)
 ```
 
-Until the body ships: pull pinned images and recreate carefully; see [14-image-pins.md](14-image-pins.md).
+`update` pulls **pinned** tags from `compose/*.yml` and runs `up -d --remove-orphans`. It does **not** rewrite pins to `:latest`. To bump versions, edit compose + [14-image-pins.md](14-image-pins.md), then run `update`.
 
 ## Backups
 
@@ -129,8 +131,10 @@ See [11 — Smoke test](11-smoke-test.md).
 ## Quality profiles
 
 ```bash
-./bin/flixbox sync-profiles --dry-run   # planned
-./bin/flixbox sync-profiles             # planned
+./bin/flixbox sync-profiles --dry-run
+./bin/flixbox sync-profiles
+# same as:
+./bin/flixbox recyclarr sync [--dry-run]
 ```
 
 ## Next

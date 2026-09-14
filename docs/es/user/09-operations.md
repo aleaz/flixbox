@@ -29,10 +29,12 @@
 ## Updates
 
 ```bash
-./bin/flixbox update [--dry-run]   # help listo; cuerpo después
+./bin/flixbox update --dry-run          # lista imágenes pineadas; sin pull/recreate
+./bin/flixbox update                    # pull de tags pineados + reconcilia el stack
+./bin/flixbox update plex proxy         # mismos perfiles opcionales que up
 ```
 
-Hasta que el cuerpo exista: pull de imágenes pineadas y recreate con cuidado; ver [14-image-pins.md](../../user/14-image-pins.md).
+`update` hace pull de tags **pineados** en `compose/*.yml` y corre `up -d --remove-orphans`. **No** reescribe pines a `:latest`. Para subir versiones, editá compose + [14-image-pins.md](../../user/14-image-pins.md) y después `update`.
 
 ## Backups
 
@@ -142,8 +144,10 @@ Ver [11 — Smoke test](11-smoke-test.md).
 ## Quality profiles
 
 ```bash
-./bin/flixbox sync-profiles --dry-run   # planned
-./bin/flixbox sync-profiles             # planned
+./bin/flixbox sync-profiles --dry-run
+./bin/flixbox sync-profiles
+# igual que:
+./bin/flixbox recyclarr sync [--dry-run]
 ```
 
 <a id="next"></a>

@@ -2,7 +2,7 @@
 
 **Idiomas:** [English](../../user/17-cli.md) · Español (esta página)
 
-**Estado:** Phase A diagnósticos **listo**; Phase **A2** help safety + `--no-color` global **listo**; `backup`/`restore` **listos** (CONFIG-only); resto de lifecycle en stubs — ver [ADR 0021](../../adr/0021-cli-ux-contract.md)
+**Estado:** Phase A diagnósticos **listo**; Phase **A2** help safety + `--no-color` global **listo**; lifecycle `backup`/`restore`/`update`/`recyclarr`/`completion` **listos** — ver [ADR 0021](../../adr/0021-cli-ux-contract.md)
 **Audiencia:** Operadores y automatización  
 **Relacionado:** [ADR 0021](../../adr/0021-cli-ux-contract.md) · [REFERENCE](REFERENCE.md)
 
@@ -25,7 +25,12 @@ ln -sf "$(pwd)/bin/flixbox" ~/.local/bin/flixbox
 flixbox version
 ```
 
-Requiere **Bash 4+**. Completions: `flixbox completion bash|zsh` (help disponible ahora; scripts con el trabajo de completions).
+Requiere **Bash 4+**. Completions:
+
+```bash
+./bin/flixbox completion bash  # → source desde bash-completion o eval
+./bin/flixbox completion zsh   # → poner en fpath como _flixbox, luego compinit
+```
 
 ## Flags globales
 
@@ -101,9 +106,9 @@ Humano por defecto: glance `SERVICE` / `STATE` / `HEALTH`, luego contexto `key: 
 | Comando | Estado | Notas |
 | --- | --- | --- |
 | `backup` / `restore` | Listo | Solo **`${CONFIG_DIR}`**. **`${DATA_DIR}`** (media/torrents) es **del operador** — respaldalo vos. `.env` opcional con `--include-env`. Restore exige `--force` para sobrescribir. |
-| `update` | Help stub | Pull de tags pineados (ADR 0010); nunca reescribe a `:latest` |
-| `recyclarr sync` / `sync-profiles` | Help stub | Reemplazará Compose crudo como path primario de operador |
-| `completion bash\|zsh` | Help stub | Fish diferido |
+| `update` | Listo | Pull de tags **pineados** (ADR 0010) + `up -d --remove-orphans`; `--dry-run` solo lista imágenes (sin recreate). Nunca reescribe a `:latest`. |
+| `recyclarr sync` / `sync-profiles` | Listo | One-shot del perfil Compose `recyclarr`; `--dry-run` se pasa a Recyclarr |
+| `completion bash\|zsh` | Listo | Imprime script a stdout; fish diferido |
 
 `scripts/backup.sh` es un wrapper fino de `./bin/flixbox backup` (mismo alcance CONFIG-only).
 

@@ -35,6 +35,7 @@ Los módulos Compose de Flixbox fijan las imágenes Docker a **tags de versión 
 3. Edita `compose/*.yml`, actualiza esta tabla (y las notas de release cuando cortes un release).
 4. Ejecuta `./scripts/ci-validate.sh` (falla si queda algún `image: …:latest`).
 5. Smoke: [11 — Smoke test](11-smoke-test.md).
+6. Operadores: `./bin/flixbox update` (o `--dry-run` primero) después de `git pull` con pines nuevos.
 
 Los digests (`@sha256:…`) son opcionales para un pin más estricto de supply-chain; los tags de versión son la línea base de v0.1.
 

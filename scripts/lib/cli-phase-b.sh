@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
 # CLI lifecycle helpers (ADR 0021 Phase B). Sourced from bin/flixbox — do not execute directly.
-# Help + flag parsing landed; mutating archive/update bodies follow.
-
-flixbox_phase_b_nyi() {
-  local cmd="$1"
-  cli_die 1 \
-    "${cmd} is not implemented yet (ADR 0021 Phase B). See docs/user/17-cli.md — CONFIG-only when shipped; DATA_DIR remains operator-owned."
-}
 
 cmd_backup() {
   if flixbox_wants_help "$@"; then
@@ -96,31 +89,46 @@ EOF
 cmd_update() {
   if flixbox_wants_help "$@"; then
     cat <<'EOF'
-Usage: flixbox update [--dry-run]
+Usage: flixbox update [--dry-run] [plex|proxy|recyclarr]...
 
-Pull pinned image tags (ADR 0010) and recreate containers. Never rewrites
-compose pins to :latest — bump tags via docs/user/14-image-pins.md.
+Pull pinned image tags (ADR 0010) and reconcile containers with
+`compose up -d --remove-orphans`. Never rewrites compose pins to :latest —
+bump tags via docs/user/14-image-pins.md, then run update.
+
+Optional profiles match `flixbox up` (also --profile NAME). Sticky
+COMPOSE_PROFILES in .env are honored by Compose automatically.
 
 Options:
-  --dry-run     Show what would be pulled/recreated; do not recreate
+  --dry-run     List pinned images only; do not pull or recreate
   -h, --help    Show this help
 
 Exit codes: 0 success · 2 usage · 3 Docker · 4 config
-Docs: docs/user/17-cli.md · docs/user/14-image-pins.md · ADR 0021 Phase B
+Docs: docs/user/17-cli.md · docs/user/14-image-pins.md · ADR 0021
 EOF
     return 0
   fi
   local dry_run=0
+  local -a rest=()
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --dry-run) dry_run=1; shift ;;
       -h|--help) die_usage "update: use flixbox update --help" ;;
-      -*) die_usage "update: unknown option: $1 (try --help)" ;;
-      *) die_usage "update: unexpected argument: $1 (try --help)" ;;
+      *)
+        rest+=("$1")
+        shift
+        ;;
     esac
   done
-  : "${dry_run}"
-  flixbox_phase_b_nyi "flixbox update"
+
+  assert_docker_accessible
+  load_env
+  local profiles=()
+  parse_profiles profiles "${rest[@]+"${rest[@]}"}"
+  warn_legacy_socket_proxy_profile || true
+
+  local rc=0
+  flixbox_update_run "$dry_run" "${profiles[@]+"${profiles[@]}"}" || rc=$?
+  [[ "$rc" -eq 0 ]] || exit "$rc"
 }
 
 cmd_recyclarr() {
@@ -130,13 +138,14 @@ Usage: flixbox recyclarr sync [--dry-run]
        flixbox sync-profiles [--dry-run]    # alias
 
 Run Recyclarr against the stack (Compose profile recyclarr). Explicit sync only.
+Requires ${CONFIG_DIR}/recyclarr/recyclarr.yml (from init/templates).
 
 Options:
-  --dry-run     Preview when supported by Recyclarr wrapper
+  --dry-run     Pass --dry-run to Recyclarr (preview; no profile writes)
   -h, --help    Show this help
 
 Exit codes: 0 success · 2 usage · 3 Docker · 4 config · 5 dependency
-Docs: docs/user/17-cli.md · ADR 0021 Phase B
+Docs: docs/user/17-cli.md · ADR 0021
 EOF
     return 0
   fi
@@ -154,8 +163,11 @@ EOF
           *) die_usage "recyclarr sync: unexpected argument: $1" ;;
         esac
       done
-      : "${dry_run}"
-      flixbox_phase_b_nyi "flixbox recyclarr sync"
+      assert_docker_accessible
+      load_env
+      local rc=0
+      flixbox_recyclarr_sync "$dry_run" || rc=$?
+      [[ "$rc" -eq 0 ]] || exit "$rc"
       ;;
     *) die_usage "Unknown recyclarr subcommand: ${sub} (try: sync or --help)" ;;
   esac
@@ -174,18 +186,28 @@ Usage: flixbox completion bash|zsh
 Print a shell completion script to stdout (source it from your rc file).
 Completions MUST NOT reveal secrets (never shell out to credentials show).
 
+Examples:
+  # bash
+  ./bin/flixbox completion bash > ~/.local/share/bash-completion/completions/flixbox
+  # or: eval "$(./bin/flixbox completion bash)"
+
+  # zsh
+  ./bin/flixbox completion zsh > "${fpath[1]}/_flixbox"
+  # then: compinit
+
 Options:
   -h, --help    Show this help
 
-Docs: docs/user/17-cli.md · ADR 0021 Phase B
+Docs: docs/user/17-cli.md · ADR 0021
 EOF
     return 0
   fi
   local shell="${1:-}"
   [[ -n "$shell" ]] || die_usage "completion: missing shell (bash|zsh) — try --help"
   case "$shell" in
-    bash|zsh) flixbox_phase_b_nyi "flixbox completion ${shell}" ;;
-    fish) die_usage "completion: fish is deferred (Phase C); use bash or zsh" ;;
+    bash) flixbox_completion_bash ;;
+    zsh) flixbox_completion_zsh ;;
+    fish) die_usage "completion: fish is deferred; use bash or zsh" ;;
     -*) die_usage "completion: unknown option: $shell (try --help)" ;;
     *) die_usage "completion: unsupported shell: ${shell} (bash|zsh)" ;;
   esac

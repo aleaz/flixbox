@@ -31,6 +31,7 @@ Flixbox Compose modules pin Docker images to **explicit version tags** (ADR 0010
 3. Edit `compose/*.yml`, update this table (and release notes when you cut a release).
 4. Run `./scripts/ci-validate.sh` (fails if any `image: …:latest` remains).
 5. Smoke: [11 — Smoke test](11-smoke-test.md).
+6. Operators: `./bin/flixbox update` (or `--dry-run` first) after pulling the repo with new pins.
 
 Digests (`@sha256:…`) are optional for stricter supply-chain pinning; version tags are the v0.1 baseline.
 

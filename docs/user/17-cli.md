@@ -1,6 +1,6 @@
 # CLI reference (ADR 0021)
 
-**Status:** Phase A diagnostics **landed**; Phase **A2** help safety + global `--no-color` **landed**; `backup`/`restore` **landed** (CONFIG-only); remaining lifecycle stubs next — see [ADR 0021](../adr/0021-cli-ux-contract.md)
+**Status:** Phase A diagnostics **landed**; Phase **A2** help safety + global `--no-color` **landed**; lifecycle verbs `backup`/`restore`/`update`/`recyclarr`/`completion` **landed** — see [ADR 0021](../adr/0021-cli-ux-contract.md)
 **Audience:** Operators and automation  
 **Related:** [ADR 0021](../adr/0021-cli-ux-contract.md) · [REFERENCE](REFERENCE.md)
 
@@ -23,7 +23,12 @@ ln -sf "$(pwd)/bin/flixbox" ~/.local/bin/flixbox
 flixbox version
 ```
 
-Requires **Bash 4+**. Completions: `flixbox completion bash|zsh` (help available now; scripts land with completions work).
+Requires **Bash 4+**. Completions:
+
+```bash
+./bin/flixbox completion bash  # → source from bash-completion dir or eval
+./bin/flixbox completion zsh   # → place on fpath as _flixbox, then compinit
+```
 
 ## Global flags
 
@@ -99,9 +104,9 @@ Human default: narrow `SERVICE` / `STATE` / `HEALTH` glance, then `key: value` c
 | Command | Status | Notes |
 | --- | --- | --- |
 | `backup` / `restore` | Landed | Archives **`${CONFIG_DIR}`** only. **`${DATA_DIR}`** (media/torrents) is **operator-owned** — back it up yourself. Optional `.env` via `--include-env`. Restore refuses overwrite without `--force`. |
-| `update` | Help stub | Pulls pinned tags (ADR 0010); never rewrites to `:latest` |
-| `recyclarr sync` / `sync-profiles` | Help stub | Will replace raw Compose as the primary operator path |
-| `completion bash\|zsh` | Help stub | Fish deferred |
+| `update` | Landed | Pulls **pinned** tags (ADR 0010) + `up -d --remove-orphans`; `--dry-run` lists images only (no recreate). Never rewrites pins to `:latest`. |
+| `recyclarr sync` / `sync-profiles` | Landed | Compose profile `recyclarr` one-shot; `--dry-run` passed through |
+| `completion bash\|zsh` | Landed | Print script to stdout; fish deferred |
 
 `scripts/backup.sh` is a thin wrapper around `./bin/flixbox backup` (same CONFIG-only scope).
 

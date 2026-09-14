@@ -1425,7 +1425,75 @@ flixbox_restore_apply "$out" 1
 [[ -f "${CONFIG_DIR}/radarr/app.conf" ]] || { echo "restore missing file"; exit 1; }
 [[ ! -f "${CONFIG_DIR}/marker" ]] || { echo "restore --force should replace tree"; exit 1; }
 ' || fail C-92 'backup/restore unit test failed (Q-11)'
-# Q-12/Q-13 land with update/completion bodies
+grep -q 'update.sh' bin/flixbox || fail C-92 'bin/flixbox must source update.sh'
+[[ -f scripts/lib/update.sh ]] || fail C-92 'missing scripts/lib/update.sh'
+# Q-12: update --dry-run must not recreate (no compose up)
+bash -c '
+set -euo pipefail
+REPO="'"$(pwd)"'"
+LOG="$(mktemp)"
+trap "rm -f \"$LOG\"" EXIT
+# shellcheck disable=SC1091
+source "${REPO}/scripts/lib/cli-msg.sh"
+# shellcheck disable=SC1091
+source "${REPO}/scripts/lib/update.sh"
+compose() {
+  printf "%s\n" "$*" >>"$LOG"
+  case "$*" in
+    *\ up\ *|up\ *|*\ up) echo "Q-12 FAIL: up invoked during dry-run: $*" >&2; exit 99 ;;
+  esac
+  if [[ "$*" == *config* ]]; then
+    printf "%s\n" "example/image:1.2.3"
+    return 0
+  fi
+  return 0
+}
+flixbox_homepage_warn_if_stale() { return 0; }
+flixbox_update_run 1
+grep -q "config --images" "$LOG" || { echo "dry-run should call config --images"; exit 1; }
+if grep -qE "(^| )up( |$)" "$LOG"; then echo "Q-12 up found in compose log"; exit 1; fi
+if grep -qE "(^| )pull( |$)" "$LOG"; then echo "Q-12 dry-run must not pull"; exit 1; fi
+' || fail C-92 'Q-12 update --dry-run must not pull or recreate'
+[[ -f scripts/lib/recyclarr.sh ]] || fail C-92 'missing scripts/lib/recyclarr.sh'
+grep -q 'recyclarr.sh' bin/flixbox || fail C-92 'bin/flixbox must source recyclarr.sh'
+[[ -f scripts/lib/completion.sh ]] || fail C-92 'missing scripts/lib/completion.sh'
+grep -q 'completion.sh' bin/flixbox || fail C-92 'bin/flixbox must source completion.sh'
+# Recyclarr missing config → exit 4 (no compose run)
+bash -c '
+set -euo pipefail
+REPO="'"$(pwd)"'"
+# shellcheck disable=SC1091
+source "${REPO}/scripts/lib/cli-msg.sh"
+# shellcheck disable=SC1091
+source "${REPO}/scripts/lib/recyclarr.sh"
+LOG="$(mktemp)"
+CONFIG_DIR="$(mktemp -d)"
+trap "rm -rf \"$CONFIG_DIR\"; rm -f \"$LOG\"" EXIT
+compose() { printf "%s\n" "$*" >>"$LOG"; return 0; }
+ROOT_DIR="$REPO"
+export ROOT_DIR CONFIG_DIR
+rc=0
+flixbox_recyclarr_sync 0 || rc=$?
+[[ "$rc" -eq 4 ]] || { echo "want config exit 4 got $rc"; exit 1; }
+[[ ! -s "$LOG" ]] || { echo "compose must not run when config missing"; cat "$LOG"; exit 1; }
+mkdir -p "${CONFIG_DIR}/recyclarr"
+printf "version: 1\n" >"${CONFIG_DIR}/recyclarr/recyclarr.yml"
+: >"$LOG"
+flixbox_recyclarr_sync 1
+grep -q "recyclarr sync" "$LOG" || { echo "expected recyclarr sync"; cat "$LOG"; exit 1; }
+grep -q "dry-run" "$LOG" || { echo "expected --dry-run passthrough"; cat "$LOG"; exit 1; }
+' || fail C-92 'recyclarr sync wrapper checks failed'
+# Q-13: completion scripts are valid bash/zsh syntax; no credentials show
+_bash_comp="$(./bin/flixbox completion bash)"
+_zsh_comp="$(./bin/flixbox completion zsh)"
+printf '%s\n' "$_bash_comp" | grep -qi 'credentials show' && \
+  fail C-92 'completions must not reference credentials show'
+printf '%s\n' "$_zsh_comp" | grep -qi 'credentials show' && \
+  fail C-92 'zsh completions must not reference credentials show'
+bash -n <<<"$_bash_comp" || fail C-92 'Q-13 bash completion syntax failed'
+if command -v zsh >/dev/null 2>&1; then
+  zsh -n <<<"$_zsh_comp" || fail C-92 'Q-13 zsh completion syntax failed'
+fi
 pass C-92
 
 printf 'All contract checks passed.\n'

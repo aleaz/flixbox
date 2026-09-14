@@ -9,13 +9,16 @@ Hoja de consulta para operadores. Valores por defecto tras `./bin/flixbox init`.
 
 ## CLI
 
-Contrato completo: [17 — Referencia CLI](17-cli.md) (ADR 0021 Phase A).
+Contrato completo: [17 — Referencia CLI](17-cli.md) (ADR 0021).
 
 | Comando | Para qué |
 | --- | --- |
 | `./bin/flixbox init [--non-interactive]` | Crear `.env`, carpetas, plantillas; generar API keys/passwords. **Linux:** paths escribibles en `.env` antes de `--non-interactive` — [Install § paths](04-install.md#storage-paths-and-permissions) |
 | `./bin/flixbox up [perfiles...]` | Levantar stack (`plex`, `proxy`, `recyclarr`; elimina huérfanos al cambiar de modo) |
 | `./bin/flixbox reload [--reset-homepage] [perfiles...]` | Recrear contenedores tras cambios en `.env` o compose. `--reset-homepage` también pisa plantillas Homepage gestionadas (con backup) |
+| `./bin/flixbox update [--dry-run] [perfiles...]` | Pull de imágenes **pineadas** + reconciliar (`up -d --remove-orphans`); no reescribe a `:latest` — [14 — Image pins](14-image-pins.md) |
+| `./bin/flixbox backup [--include-env] [--stop] [DEST]` | Archivar solo `${CONFIG_DIR}` (no media de `${DATA_DIR}`) |
+| `./bin/flixbox restore ARCHIVE [--force]` | Restaurar archivo de CONFIG; `--force` para sobrescribir |
 | `./bin/flixbox homepage refresh [--dry-run]` | Aplicar plantillas Homepage del repo a `${CONFIG_DIR}/homepage`. Usar tras `git pull` si `up`/`reload` avisan que hay templates más nuevos |
 | `./bin/flixbox configure [--dry-run] [--sync-qbit-auth] [--sync-arr-ui]` | Cableado idempotente; sana API keys. `--dry-run` solo preview. `--sync-qbit-auth` fuerza password qBit desde `.env`. `--sync-arr-ui` aplica Forms en `shared` (ADR 0020) |
 | `./bin/flixbox credentials show <target>` | Imprimir secreto (`qbit`, `arr-ui`, `admin`, o `api radarr\|sonarr\|prowlarr`) — solo stdout; no pegar en issues |
@@ -23,12 +26,15 @@ Contrato completo: [17 — Referencia CLI](17-cli.md) (ADR 0021 Phase A).
 | `./bin/flixbox status [--json] [-q] [-v]` | Glance de salud + modo/paths; `-v` = compose ps completo |
 | `./bin/flixbox logs [servicio]` | Ver logs |
 | `./bin/flixbox vpn-test` | Comprobar VPN (solo modo VPN) |
+| `./bin/flixbox recyclarr sync [--dry-run]` | Recyclarr one-shot (alias: `sync-profiles`) |
+| `./bin/flixbox completion bash\|zsh` | Imprimir script de completion a stdout |
 | `./bin/flixbox down` | Parar stack (volúmenes de config se conservan) |
 
 **Sync Recyclarr (perfil opcional):**
 
 ```bash
-docker compose --profile recyclarr run --rm recyclarr sync
+./bin/flixbox recyclarr sync [--dry-run]
+./bin/flixbox sync-profiles             # alias
 ```
 
 ## Web UI (host)

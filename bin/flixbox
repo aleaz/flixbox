@@ -28,6 +28,12 @@ source "${ROOT_DIR}/scripts/lib/cli-phase-b.sh"
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/backup-restore.sh"
 # shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/update.sh"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/recyclarr.sh"
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/lib/completion.sh"
+# shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/lib/cli-msg.sh"
 
 # Thin wrappers — progress on stderr with text tokens (ADR 0021 / cli-msg).
@@ -1013,7 +1019,7 @@ Lifecycle:
   flixbox reload [--reset-homepage] [plex|proxy|recyclarr]...
   flixbox backup [--include-env] [--stop] [DEST_DIR]
   flixbox restore <archive.tar.gz> [--force]
-  flixbox update [--dry-run]
+  flixbox update [--dry-run] [plex|proxy|recyclarr]...
   flixbox recyclarr sync [--dry-run]
   flixbox sync-profiles [--dry-run]
   flixbox completion bash|zsh
