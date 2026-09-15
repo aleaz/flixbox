@@ -1,6 +1,6 @@
 # ADR 0021: CLI UX contract (professional Bash surface)
 
-- **Status:** Accepted (post-MVP — target ~v0.2; Phase A slices MAY land before public v0.1 if low risk)
+- **Status:** Accepted (post-v0.1 — target ~v0.2; Phase A slices MAY land before public v0.1 if low risk)
 - **Date:** 2026-09-06
 - **Updated:** 2026-09-14 — implementation progress vs contract; doc path `17-cli.md`; help MUST be side-effect free; globals deferral table; JSON type-change rule; lifecycle help stubs + DATA_DIR operator-owned
 - **Related:** [0005](0005-cli-bash-first.md), [0007](0007-platform-support-tiers.md), [0010](0010-mit-and-image-tags.md), [0011](0011-documentation-i18n.md), [0015](0015-access-profiles.md), [0016](0016-configure-state-machine.md), [0018](0018-runtime-secrets-and-lan-trust.md), [0020](0020-operator-credentials-cli.md)
@@ -301,7 +301,7 @@ Phase A (core diagnostics) is largely landed as of 2026-09-14. **Do not** mark o
 
 ### 14. Relationship to ADR 0005
 
-ADR 0005 remains Bash-first + MVP command set. This ADR **extends** day-2 UX quality and locks roadmap command names. It does not reopen PowerShell, inventory, or zero-touch claims.
+ADR 0005 remains Bash-first + the v0.1 command set. This ADR **extends** day-2 UX quality and locks roadmap command names. It does not reopen PowerShell, inventory, or zero-touch claims.
 
 ## Consequences
 

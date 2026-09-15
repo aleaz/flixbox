@@ -1,6 +1,6 @@
 # Hygiene defaults (Decluttarr + Maintainerr)
 
-**Status:** Accepted defaults for MVP templates  
+**Status:** Accepted defaults for v0.1 hygiene templates  
 **Related:** [ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md)
 
 These are the Flixbox-recommended starting rules. Templates shipped with the project MUST match this document. Operators can tighten or loosen after first boot.
@@ -77,7 +77,7 @@ Download client **name** in Decluttarr must match the name configured in Radarr/
 
 | Condition | Action |
 | --- | --- |
-| Movie **fully watched**, last play **&gt; 365 days**, not in Keep list | Add to Leaving Soon only — **no auto-delete in MVP default** |
+| Movie **fully watched**, last play **&gt; 365 days**, not in Keep list | Add to Leaving Soon only — **no auto-delete in the default pack** |
 
 Operators who want aggressive reclaim enable delete on Rule C themselves.
 

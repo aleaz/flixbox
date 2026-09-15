@@ -667,7 +667,7 @@ grep -q 'TRIVY_BLOCK' .github/workflows/release.yml || \
 [[ -f scripts/ci-pin-digests.sh ]] || fail C-75 'missing scripts/ci-pin-digests.sh'
 pass C-75
 
-# --- C-76: core MVP HTTP healthchecks ---
+# --- C-76: core HTTP healthchecks ---
 for _svc in prowlarr radarr sonarr bazarr; do
   grep -A25 "  ${_svc}:" compose/servarr.yml | grep -q 'healthcheck:' || \
     fail C-76 "compose/servarr.yml ${_svc} must define healthcheck"

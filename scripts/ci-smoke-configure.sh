@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Ephemeral-stack configure smoke (D5 / C-70 / C-73).
-# Brings up MVP core in direct mode (random free QBITTORRENT_PORT),
+# Brings up core stack in direct mode (random free QBITTORRENT_PORT),
 # runs configure twice (idempotency), tears down.
 #
 # Modes:

@@ -3,7 +3,7 @@
 **Status:** Working Draft — first public release **[`v0.1.1`](https://github.com/aleaz/flixbox/releases/tag/v0.1.1)** shipped (2026-09-12).  
 Versions below are planning labels; `v0.1.1` is the first public semver tag.
 
-## Shipped — v0.1 baseline (closed MVP)
+## Shipped — v0.1 baseline
 
 - [x] Formal docs, ADRs, AGENTS.md, Cursor rules
 - [x] Audit corrections: Seerr, Byparr, port-forward contract, permissions model, Decluttarr + Maintainerr in core inventory

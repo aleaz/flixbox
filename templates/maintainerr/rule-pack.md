@@ -1,6 +1,6 @@
 # Maintainerr rule pack (Flixbox standard)
 
-Operator guide for the thresholds in [docs/09-hygiene-defaults.md](../../docs/09-hygiene-defaults.md). Maintainerr has no importable JSON in MVP — configure these rules in the UI at `http://127.0.0.1:6246` (or your host bind).
+Operator guide for the thresholds in [docs/09-hygiene-defaults.md](../../docs/09-hygiene-defaults.md). Maintainerr has no importable JSON in the default pack — configure these rules in the UI at `http://127.0.0.1:6246` (or your host bind).
 
 **Before any delete rule:** connect Jellyfin, Radarr, and Sonarr with each service **API key** (from `.env` after `./bin/flixbox configure`). Test connections in Maintainerr Settings.
 

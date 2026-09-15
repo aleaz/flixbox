@@ -71,7 +71,7 @@ Document clearly; do not silently switch to per-app UIDs without an ADR.
 - Prefer coreutils; optional `jq` enhancements must degrade gracefully.
 - Respect `NO_COLOR` and non-TTY stdout.
 - Force LF endings (`.gitattributes` / `.editorconfig`).
-- No PowerShell in MVP.
+- No PowerShell CLI in the v0.1 baseline (roadmap v0.4).
 
 ## 7. Naming
 

@@ -12,7 +12,7 @@ Split mounts (`/downloads` vs `/movies`) cause cross-device copies, double disk 
 
 All containers that read/write downloads or libraries MUST mount the same host parent as `${DATA_DIR}:/data`.
 
-MVP layout:
+v0.1 baseline layout:
 
 ```
 /data/torrents/incomplete

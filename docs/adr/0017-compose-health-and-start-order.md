@@ -6,11 +6,11 @@
 
 ## Context
 
-MVP Compose started *arr and Bazarr without HTTP healthchecks. Operators saw transient “connection refused” health tasks in *arr while peers were still booting SQLite. Bazarr had no `depends_on` link to Sonarr/Radarr despite configure wiring requiring both APIs.
+Early Compose started *arr and Bazarr without HTTP healthchecks. Operators saw transient “connection refused” health tasks in *arr while peers were still booting SQLite. Bazarr had no `depends_on` link to Sonarr/Radarr despite configure wiring requiring both APIs.
 
 ## Decision
 
-1. **HTTP healthchecks** on MVP core services that `configure` preflight probes:
+1. **HTTP healthchecks** on core services that `configure` preflight probes:
    - Prowlarr, Radarr, Sonarr → `/ping` on container port
    - Bazarr → `/` on 6767
    - Jellyfin → `/System/Info/Public` on 8096

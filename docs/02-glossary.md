@@ -20,7 +20,7 @@ Shared vocabulary for Flixbox docs, ADRs, and AI-assisted development.
 | **FlareSolverr** | Original CF bypass project / API name; Flixbox default image is Byparr. |
 | **Unpackerr** | Extracts RAR/ZIP from downloads without stopping seeding. |
 | **Recyclarr** | CLI sync of TRaSH Guides quality profiles and custom formats into *arr. |
-| **Profilarr** | GUI alternative to Recyclarr (out of MVP). |
+| **Profilarr** | GUI alternative to Recyclarr (out of v0.1 baseline; optional later). |
 | **Decluttarr** | Removes stalled/failed/orphan downloads and can trigger *arr re-search. |
 | **Maintainerr** | Rule-based library cleanup using media-server watch state + *arr. |
 | **TRaSH Guides** | Community best practices for *arr quality and storage layout. |
@@ -45,8 +45,9 @@ Shared vocabulary for Flixbox docs, ADRs, and AI-assisted development.
 | **UMASK** | File creation mask (Flixbox: `002` with single shared UID). |
 | **SGID bit** | Directory mode so new files inherit the parent group. |
 | **DoT** | DNS over TLS (used inside Gluetun to reduce DNS leaks). |
-| **MVP** | Minimum viable product inventory frozen in [01-scope.md](01-scope.md). |
+| **v0.1 baseline** | Closed core service inventory in [01-scope.md](01-scope.md) / [ADR 0006](adr/0006-mvp-service-inventory.md). Historically called “MVP”. |
+| **MVP** | Historical label for the v0.1 baseline (shipped). Prefer “v0.1 baseline” or “core inventory” in new docs. |
 | **ADR** | Architecture Decision Record under `docs/adr/`. |
-| **Working Draft** | Current doc status until MVP implementation lands. |
+| **Working Draft** | Doc status while content is still evolving (not a release gate). |
 | **First-class platform** | Fully supported and tested (Linux). |
 | **Best-effort platform** | Documented and allowed; limitations accepted (WSL2, macOS). |

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# MVP smoke test helper — see docs/user/11-smoke-test.md
+# Operator smoke helper — see docs/user/11-smoke-test.md
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

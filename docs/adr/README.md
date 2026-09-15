@@ -20,7 +20,7 @@ Each ADR uses:
 | [0003](0003-compose-modularity.md) | Compose modularity | Accepted |
 | [0004](0004-jellyfin-first.md) | Jellyfin-first + Seerr | Accepted |
 | [0005](0005-cli-bash-first.md) | Bash CLI first | Accepted |
-| [0006](0006-mvp-service-inventory.md) | MVP service inventory | Accepted |
+| [0006](0006-mvp-service-inventory.md) | Core service inventory (historical “MVP” title) | Accepted |
 | [0007](0007-platform-support-tiers.md) | Platform support tiers | Accepted |
 | [0008](0008-maintenance-decluttarr-maintainerr.md) | Decluttarr + Maintainerr | Accepted |
 | [0009](0009-byparr-default-cf-bypass.md) | Byparr default CF bypass | Accepted |

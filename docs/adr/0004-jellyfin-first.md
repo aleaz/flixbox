@@ -24,6 +24,6 @@ Jellyfin and Seerr first-run wizards are the largest remaining UI steps after *a
 ## Consequences
 
 - Docs, dashboard widgets, Maintainerr, and init defaults target Jellyfin + Seerr.
-- Plex-specific quirks are not MVP blockers.
+- Plex-specific quirks are not v0.1 blockers.
 - Seerr can still talk to Plex if the optional profile is enabled later.
 - `.env` may hold `JELLYFIN_API_KEY` and optional admin user/password used only for first-run automation — never commit `.env`.

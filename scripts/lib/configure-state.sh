@@ -43,7 +43,7 @@ configure_assert_tools() {
   fi
 }
 
-# MVP core stack required before configure (includes Jellyfin — wired in preflight).
+# Core stack required before configure (includes Jellyfin — wired in preflight).
 configure_core_container_names() {
   printf '%s\n' \
     flixbox-qbittorrent \

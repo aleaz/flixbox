@@ -299,7 +299,7 @@ scripts/ci-trivy.sh               # Trivy config + image scan (warn-only)
 **Exit criteria:**
 
 - [x] Trivy config scan runs without error (warn-only on findings)
-- [x] Image scan lists all MVP images from `docker compose config --images`
+- [x] Image scan lists all core images from `docker compose config --images`
 - [x] Policy documented: warn-only until pins (`TRIVY_BLOCK=1` to fail locally)
 - [x] C-50–52 init smoke (in validate job)
 - [x] Shared compose render includes `shared` access profile (C-64)

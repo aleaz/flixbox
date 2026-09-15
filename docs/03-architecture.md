@@ -1,6 +1,6 @@
 # Architecture
 
-**Status:** Implemented (MVP Compose + CLI)  
+**Status:** Implemented (v0.1.1 Compose + CLI; v0.2 features landing)  
 **Audience:** Contributors and AI agents implementing Flixbox  
 **Related:** [01-scope.md](01-scope.md), [adr/](adr/)
 
@@ -55,7 +55,7 @@ flowchart TB
 
 ## 3. Layered topology
 
-| Layer | Components (MVP) |
+| Layer | Components (v0.1 baseline) |
 | --- | --- |
 | Ingress | Caddy |
 | UX | Homepage, Seerr, Jellyfin (+ optional Plex) |
@@ -149,9 +149,9 @@ compose/
 
 See [ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md).
 
-## 8. CLI (MVP)
+## 8. CLI
 
-`bin/flixbox` (Bash): `init`, `up`, `down`, `reload`, `restart`, `configure`, `credentials`, `homepage`, `status`, `logs`, `vpn-test`.
+`bin/flixbox` (Bash): `init`, `up`, `down`, `reload`, `restart`, `configure`, `credentials`, `homepage`, `status`, `logs`, `vpn-test`, plus v0.2 lifecycle commands (`doctor`, `backup`, `restore`, `update`, `recyclarr`, … — [ADR 0021](adr/0021-cli-ux-contract.md)).
 
 - **`init`** — create `.env`, dirs, templates; generate API keys and passwords.
 - **`up [profiles…]`** — start stack; sync access profile.
@@ -165,7 +165,7 @@ See [ADR 0008](adr/0008-maintenance-decluttarr-maintainerr.md).
 - No credentials in git.
 - Non-root app containers via PUID/PGID where applicable; Seerr runs as UID 1000 with `init: true`.
 - Always-on docker-socket-proxy for Homepage Docker widgets ([ADR 0022](adr/0022-operator-footgun-remediations.md)).
-- Caddy for TLS; SSO/Authelia is post-MVP.
+- Caddy for TLS; SSO/Authelia is out of the v0.1 baseline (see roadmap).
 - CI: gitleaks (secret scan) + ShellCheck + contract validation + Trivy (CVE) — see `docs/10-ci-plan.md`.
 
 ## 10. Resilience baseline

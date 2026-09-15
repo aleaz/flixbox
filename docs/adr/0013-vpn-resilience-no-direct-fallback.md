@@ -26,7 +26,7 @@ Shared netns + Gluetun firewall = **killswitch**: when the tunnel is down, qBitt
 3. **Server lists** (`SERVER_COUNTRIES=A,B,C`) are a **pool** (typically random), not ordered primary→secondary failover ([feature request](https://github.com/qdm12/gluetun/issues/3401)).
 4. **“Fallback to Direct”** when VPN dies would expose the home IP on BitTorrent — contradicts Flixbox privacy contract.
 
-### Flixbox today (MVP)
+### Flixbox baseline (v0.1)
 
 - Healthcheck gate Gluetun → qBit; peers wait on qBit healthy.
 - `restart: unless-stopped` on Gluetun/qBit.
@@ -52,7 +52,7 @@ Shared netns + Gluetun firewall = **killswitch**: when the tunnel is down, qBitt
 - Watchdog profile increases blast radius (Docker socket); requires threat-model note and CI “profile off by default”.
 - ADR 0002 dual-mode remains exclusive; this ADR does not reopen “Direct + VPN side by side.”
 
-## Acceptance (MVP v0.1)
+## Acceptance (v0.1)
 
 - [x] User doc section: “What happens when VPN drops” — [07-vpn-and-direct.md](../user/07-vpn-and-direct.md)
 - [x] Troubleshooting: stranded qBit after Gluetun recreate — [10-troubleshooting.md](../user/10-troubleshooting.md)

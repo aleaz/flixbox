@@ -9,7 +9,7 @@ Prowlarr expects a FlareSolverr-compatible proxy API for Cloudflare-protected in
 
 ## Decision
 
-- Default MVP image/service: **Byparr**, configured in Prowlarr as an indexer proxy of type “FlareSolverr” (protocol name).
+- Default core image/service: **Byparr**, configured in Prowlarr as an indexer proxy of type “FlareSolverr” (protocol name).
 - Document FlareSolverr (or Trawl) as optional drop-in replacements speaking the same API.
 - Do not treat “FlareSolverr” the product as a forever-pinned default.
 

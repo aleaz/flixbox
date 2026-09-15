@@ -227,7 +227,7 @@ Ship **Phase A** as the usable product. Phase B is hardening, not a substitute f
 
 | Question | Verdict |
 | --- | --- |
-| In MVP inventory? | Yes — Homepage is MVP; this is ops around an existing service |
+| In v0.1 core inventory? | Yes — Homepage is baseline; this is ops around an existing service |
 | Scope creep? | Avoid YAML merge, Authelia, Homepage auth — out of scope |
 
 ---

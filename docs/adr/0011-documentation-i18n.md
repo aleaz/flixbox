@@ -80,7 +80,7 @@ See also [`docs/es/README.md`](../es/README.md).
 | Engineering docs | `docs/00–09`, `docs/10-ci-plan.md`, `docs/08-roadmap.md` | Low ROI for operators; EN canonical |
 | ADRs | `docs/adr/` | Decision record, not operator-facing |
 | Agent / contributor | `AGENTS.md`, `.cursor/rules/` | Tooling and contributor contracts |
-| In-container templates | `templates/maintainerr/rule-pack.md`, etc. | Copied to `${CONFIG_DIR}`; EN only in MVP |
+| In-container templates | `templates/maintainerr/rule-pack.md`, etc. | Copied to `${CONFIG_DIR}`; English only in the default pack |
 
 **Process boundary:** Spanish mirrors **user guide pages** under `docs/es/user/` only. Do not create `docs/es/adr/` or duplicate engineering trees. If EN and ES diverge, **EN wins** until ES is updated.
 

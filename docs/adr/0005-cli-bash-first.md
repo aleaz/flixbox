@@ -6,16 +6,16 @@
 
 ## Context
 
-A dual Bash + PowerShell CLI from day one delays the Compose MVP. Linux is the reference platform.
+A dual Bash + PowerShell CLI from day one delayed the Compose baseline. Linux is the reference platform.
 
-After Compose MVP landed, the remaining operator pain is deterministic UI wiring (root folders, download clients, Byparr, Bazarr, secret copy-paste into `.env` / Recyclarr / Homepage, Jellyfin libraries, Seerr). Indexer credentials stay user-specific and cannot be invented by Flixbox.
+After Compose for the core inventory landed, the remaining operator pain is deterministic UI wiring (root folders, download clients, Byparr, Bazarr, secret copy-paste into `.env` / Recyclarr / Homepage, Jellyfin libraries, Seerr). Indexer credentials stay user-specific and cannot be invented by Flixbox.
 
 Servarr v4+ requires authentication; there is no stable public “create first admin” API. For a LAN Docker stack the practical automation path is **pre-seeded API keys** plus profile-driven UI auth ([ADR 0015](0015-access-profiles.md)). Profile **`trusted`** uses **`AuthenticationMethod=External`** and **`DisabledForLocalAddresses`** so `configure` avoids browser wizards on a trusted LAN. Profile **`shared`** uses **`Forms` + `Enabled`** so roommates on the same network cannot open *arr UIs without credentials; **`configure` still uses API keys only**.
 
 ## Decision
 
-- MVP ships only **`bin/flixbox`** (Bash) with: `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`, **`configure`**, **`reload`**, **`credentials`** (ADR 0020).
-- PowerShell CLI is **post-MVP**.
+- The v0.1 baseline ships **`bin/flixbox`** (Bash) with: `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`, **`configure`**, **`reload`**, **`credentials`** (ADR 0020).
+- PowerShell CLI is **out of the v0.1 baseline** (roadmap ~v0.4).
 - Extra commands (`sync-profiles`, `backup`, `restore`, `update`) and professional UX contract (`version`, `doctor`, exit codes, `--json`, completions) are roadmap — see [ADR 0021](0021-cli-ux-contract.md) (Accepted).
 - **`configure`** is the idempotent first-run wirer (GET → skip if already correct → POST/PUT). It MUST:
   - Wire qBittorrent categories/prefs (VPN: bind BitTorrent to `tun0`), Radarr/Sonarr root folders + qBit client, Prowlarr Byparr + app sync, Bazarr connections.
@@ -28,6 +28,6 @@ Servarr v4+ requires authentication; there is no stable public “create first a
 ## Consequences
 
 - Windows users use WSL2 Bash or raw Compose until v0.4-ish.
-- AI agents must not scaffold `bin/flixbox.ps1` during MVP work unless explicitly requested.
+- AI agents must not scaffold `bin/flixbox.ps1` unless explicitly requested.
 - Operators must not publish Radarr/Sonarr/Prowlarr/Bazarr ports to the WAN without a reverse-proxy auth layer (future). Profile **`trusted`** on a shared LAN is insecure — use **`shared`**. Gluetun is torrent egress only (ADR 0002), not remote UI access.
 - Docs (`05-first-run.md`, REFERENCE) must list remaining manual steps honestly and keep `configure --dry-run`.

@@ -16,7 +16,7 @@ Operators want phone alerts for grabs, imports, health issues, and hygiene actio
 | **Notifiarr** | Hosted + client; Discord-first ecosystem | Strong if Discord is primary; heavier product coupling |
 | **Interactive Telegram bots** | Search/add/delete media from chat | High UX surface + ACL risk; not “stack status” only |
 
-MVP deferred “Telegram or other bots as first-class features” and pointed operators at Seerr/Maintainerr built-ins ([01-scope.md](../01-scope.md), [09-hygiene-defaults.md](../09-hygiene-defaults.md)).
+The v0.1 baseline deferred “Telegram or other bots as first-class features” and pointed operators at Seerr/Maintainerr built-ins ([01-scope.md](../01-scope.md), [09-hygiene-defaults.md](../09-hygiene-defaults.md)).
 
 ### Revalidation (2026-08-29)
 
@@ -33,7 +33,7 @@ Goals unchanged: one endpoint config, no library-mutating bot, secrets out of gi
 
 ## Decision
 
-1. **Do not** add a Flixbox-owned Telegram bot service (ADR 0006 stands for MVP and beyond as a first-class product feature).
+1. **Do not** add a Flixbox-owned Telegram bot service (ADR 0006 stands for the core inventory and beyond as a first-class product feature).
 2. **Canonical future path:** optional Compose profile **`notifications`** shipping **Apprise API** (`lscr.io/linuxserver/apprise-api` preferred for PUID/PGID/TZ consistency) on `flixbox_net`.
 3. Destinations use Apprise URL schemes (Telegram = `tgram://…`; ntfy, Discord, Gotify, etc.). Wire *arr (and Recyclarr when used) via Apprise Connect; other apps use native Connect or webhook → Apprise **where supported**.
 4. **Day-0 (no profile):** document native Radarr/Sonarr Telegram (and Seerr/Maintainerr channels) as the supported zero-extra-container path.

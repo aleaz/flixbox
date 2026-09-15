@@ -6,7 +6,7 @@
 
 ## Context
 
-`./bin/flixbox configure` wires MVP services after first container start (ADR 0005). First-run races (SQLite init, temp qBit passwords, Gluetun health) and duplicate waits between preflight and wiring modules caused flaky exits and confusing operator UX.
+`./bin/flixbox configure` wires core services after first container start (ADR 0005). First-run races (SQLite init, temp qBit passwords, Gluetun health) and duplicate waits between preflight and wiring modules caused flaky exits and confusing operator UX.
 
 Access profile drift (ADR 0015) must sync before wiring whether the operator uses `bin/flixbox configure` or `./scripts/configure-apps.sh` directly.
 

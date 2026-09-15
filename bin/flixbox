@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Flixbox CLI — day-0 / day-2 operations (MVP).
+# Flixbox CLI — day-0 / day-2 operations.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

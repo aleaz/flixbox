@@ -19,7 +19,7 @@ This note captures industry patterns (2025–2026) and Flixbox fit so we do not 
 
 | Do | Don’t |
 | --- | --- |
-| Document native Connect for Day-0 Telegram | Ship a Flixbox Telegram bot in MVP |
+| Document native Connect for Day-0 Telegram | Ship a Flixbox Telegram bot in the core product |
 | Optional `notifications` profile → Apprise API (LinuxServer) — **shipped** | Lock product to Telegram-only |
 | Stateful Apprise config key; *arr Connect → hub | Interactive bots that mutate *arr |
 | Fan-out VPN heal alerts through Apprise when both exist | Publish Apprise UI to WAN by default |

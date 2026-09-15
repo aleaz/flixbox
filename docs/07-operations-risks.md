@@ -75,7 +75,7 @@ Operator guide: [Torrent privacy and security](user/12-torrent-privacy-and-secur
 
 ### 3.3 LAN plaintext / internet exposure
 
-- **Mitigation (document):** Prefer Caddy HTTPS; Authelia/Authentik are post-MVP — warn that raw port publish to WAN is unsafe.
+- **Mitigation (document):** Prefer Caddy HTTPS; Authelia/Authentik are out of the v0.1 baseline — warn that raw port publish to WAN is unsafe.
 
 ### 3.4 Killswitch expectation
 

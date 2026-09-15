@@ -1,7 +1,7 @@
-# Requirements (MVP)
+# Requirements (v0.1 baseline)
 
 **Status:** Working Draft  
-**Scope:** Only MVP capabilities from [01-scope.md](01-scope.md).
+**Scope:** Core inventory capabilities from [01-scope.md](01-scope.md).
 
 ## 1. Functional requirements
 
@@ -16,7 +16,7 @@
 ### FR-2 Indexing
 
 - **FR-2.1** MUST centralize indexers in Prowlarr.
-- **FR-2.2** MUST sync indexers to Radarr and Sonarr (MVP apps only).
+- **FR-2.2** MUST sync indexers to Radarr and Sonarr (core *arr apps only).
 - **FR-2.3** MUST include **Byparr** (FlareSolverr-compatible) for Cloudflare-protected indexers.
 - **FR-2.4** Docs MAY document FlareSolverr as an alternate image speaking the same API.
 
@@ -56,7 +56,7 @@
 - **FR-8.1** MUST provide Homepage as the central dashboard.
 - **FR-8.2** SHOULD expose widgets for downloads, *arr, Jellyfin, VPN/IP status, and host metrics where APIs allow.
 
-### FR-9 CLI (Bash MVP)
+### FR-9 CLI (Bash)
 
 - **FR-9.1** MUST ship `bin/flixbox` with `set -euo pipefail`, signal traps, and TTY-aware output (`NO_COLOR` respected).
 - **FR-9.2** MUST implement `init`, `up`, `down`, `restart`, `status`, `logs`, `vpn-test`, `configure`, `reload`.
@@ -77,7 +77,7 @@
 - **FR-11.4** MUST implement the standard rule pack in [09-hygiene-defaults.md](09-hygiene-defaults.md) (unwatched movies 90/14, unwatched TV 180/21, skip &lt;30d, Keep exclusions).
 - **FR-11.5** Watched-movie reclaim (Rule C) MUST remain **off** unless the operator enables it.
 
-### Deferred (not MVP MUSTs)
+### Deferred (not v0.1 baseline MUSTs)
 
 - Usenet/SABnzbd, Lidarr/Readarr, Whisper, PowerShell CLI, Authelia, Autobrr/cross-seed, Profilarr, Streamystats, full `backup`/`restore`/`update`/`sync-profiles` CLI surface.
 
@@ -92,7 +92,7 @@
 | **NFR-5** | Maintainability | Compose MUST use `include:` modules; no single compose YAML > 150 lines. |
 | **NFR-6** | Usability | `flixbox init` + `configure` MUST minimize UI steps; remaining manual steps (indexers, Maintainerr rules) MUST be documented honestly. |
 
-## 3. Compose module contract (MVP)
+## 3. Compose module contract (v0.1 baseline)
 
 ```
 compose/

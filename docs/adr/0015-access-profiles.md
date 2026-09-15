@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-31
-- **Updated:** 2026-09-04 (`FLIXBOX_ARR_UI_*` SoT + Host Config apply — ADR 0020); 2026-08-31 (phase 2 localhost bind; rename file; remote access out of MVP)
+- **Updated:** 2026-09-04 (`FLIXBOX_ARR_UI_*` SoT + Host Config apply — ADR 0020); 2026-08-31 (phase 2 localhost bind; rename file; remote access out of v0.1 baseline)
 
 ## Context
 
@@ -10,7 +10,7 @@ Flixbox targets home LAN Docker installs. ADR 0005 defaulted *arr to `Authentica
 
 **Gluetun (`FLIXBOX_MODE=vpn`) is torrent egress only** — not remote UI access (ADR 0002).
 
-**Remote access** (phone on cellular, stack from outside the home) is **not in MVP scope** and has **no `.env` switch** until a design is accepted (operator VPN, Caddy hardening, etc.).
+**Remote access** (phone on cellular, stack from outside the home) is **not in the v0.1 baseline** and has **no `.env` switch** until a design is accepted (operator VPN, Caddy hardening, etc.).
 
 ## Decision
 
@@ -40,7 +40,7 @@ Flixbox targets home LAN Docker installs. ADR 0005 defaulted *arr to `Authentica
 | qBittorrent WebUI | No | Yes | `QBITTORRENT_*` in `.env`; VPN mode publishes on **Gluetun** |
 | Jellyfin | No | No | Household consumer; own user accounts |
 | Seerr | No | No | Household consumer |
-| Homepage | No | No | Dashboard; no auth in MVP |
+| Homepage | No | No | Dashboard; no auth in the default pack |
 
 **Consumer apps:** Jellyfin and Seerr keep their own user accounts (ADR 0004). Use separate Jellyfin users for household members; do not share admin passwords.
 
