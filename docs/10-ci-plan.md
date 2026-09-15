@@ -225,7 +225,7 @@ Must exit non-zero on violation. Designed to run locally and in CI.
 | C-67 | Configure first-start wait order | `configure_wait_for_first_start` before API key discovery in preflight |
 | C-68 | Configure readiness state machine | `configure-state.sh` + `configure-entry.sh`; Jellyfin in core assert; soft VPN retry; wiring skips duplicate waits after preflight |
 | C-69 | Configure pre-release hardening | `--dry-run` entry guard; parallel preflight waits; `fail()` returns 0 under `set -e` (PARTIAL wiring; ADR 0016); Bazarr post-restart wait |
-| C-70 | Configure follow-ups | `json-query.py` param-safe queries; `configure-context.sh`; `ci-smoke-configure.sh` (Seerr, Byparr, remapped qBit port) |
+| C-70 | Configure follow-ups | `json-query.py`; `configure-context.sh`; `ci-smoke-configure.sh` asserts ADR 0021 `summary: N updated` (not legacy `Done:`) |
 | C-71 | Configure audit guards | `json_query` pipe/params; host probe vs canonical container ports; qBit API key prefs fallback |
 | C-72 | Host port preflight | `preflight-host.sh`; `up`/`reload` call before compose; first-run doc |
 | C-73 | Configure smoke on PR | `configure-smoke-pr` job; `CI_CONFIGURE_SMOKE_PR` subset |

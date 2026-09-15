@@ -159,8 +159,11 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
     fail "configure failed (rc=${rc})"
   fi
 
-  echo "$out" | grep -qE 'Done: [0-9]+ configured,' || \
-    fail "configure missing Done summary"
+  # ADR 0021: summary: N updated, M unchanged, K failed
+  if ! echo "$out" | grep -qE 'summary: [0-9]+ updated, [0-9]+ unchanged, [0-9]+ failed'; then
+    printf '%s\n' "$out" | tail -n 80 >&2
+    fail "configure missing summary: updated/unchanged/failed line"
+  fi
   if [[ "$SMOKE_PR" -eq 0 ]]; then
     echo "$out" | grep -q 'Configuring Seerr' || \
       fail "configure did not run Seerr wiring"
@@ -179,9 +182,14 @@ mkdir -p "${SMOKE_DATA}" "${SMOKE_CONFIG}"
   out2="$(CONFIGURE_PREFLIGHT_TIMEOUT=600 ./bin/flixbox configure 2>&1)"
   rc2=$?
   set -e
-  [[ "$rc2" -eq 0 ]] || fail "configure idempotent re-run failed (rc=${rc2})"
-  echo "$out2" | grep -qE 'Done: [0-9]+ configured,' || \
-    fail "idempotent re-run missing Done summary"
+  if [[ "$rc2" -ne 0 ]]; then
+    printf '%s\n' "$out2" | tail -n 80 >&2
+    fail "configure idempotent re-run failed (rc=${rc2})"
+  fi
+  if ! echo "$out2" | grep -qE 'summary: [0-9]+ updated, [0-9]+ unchanged, [0-9]+ failed'; then
+    printf '%s\n' "$out2" | tail -n 80 >&2
+    fail "idempotent re-run missing summary: updated/unchanged/failed line"
+  fi
   pass "configure idempotent re-run on ephemeral stack"
 )
 

@@ -606,6 +606,11 @@ grep -q 'json_query bazarr-conn-diff' scripts/configure/bazarr.sh || \
 if grep -E 'json_extract.*\$\{' scripts/configure/arr-common.sh scripts/configure/bazarr.sh 2>/dev/null; then
   fail C-70 'arr/bazarr must not shell-interpolate into json_extract'
 fi
+grep -qE "summary: \[0-9\]\+ updated" scripts/ci-smoke-configure.sh || \
+  fail C-70 'ci-smoke-configure must assert ADR 0021 summary: N updated (not legacy Done:)'
+if grep -qE 'Done: \[0-9\]\+ configured' scripts/ci-smoke-configure.sh scripts/ci-smoke-init.sh 2>/dev/null; then
+  fail C-70 'CI smoke must not expect legacy Done: configured summary'
+fi
 pass C-70
 
 # --- C-71: configure JSON/env footgun guards (post-audit) ---

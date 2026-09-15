@@ -193,9 +193,12 @@ if docker ps --format '{{.Names}}' 2>/dev/null | grep -qE '^flixbox-qbittorrent$
   rc=$?
   set -e
   [[ "$rc" -eq 0 ]] || fail "configure failed during idempotency check (rc=${rc})"
-  echo "$out" | grep -qE 'Done: 0 configured,' || \
-    fail "configure should report 0 configured on idempotent re-run (got: $(echo "$out" | grep Done:))"
-  pass "configure idempotency (live stack, 0 configured)"
+  # ADR 0021: idempotent re-run should report 0 updated
+  if ! echo "$out" | grep -qE 'summary: 0 updated, [0-9]+ unchanged, [0-9]+ failed'; then
+    printf '%s\n' "$out" | grep -E 'summary:|Done:' | tail -n 5 >&2 || true
+    fail "configure should report summary: 0 updated on idempotent re-run"
+  fi
+  pass "configure idempotency (live stack, 0 updated)"
 fi
 
 printf '\nAll CI smoke checks passed.\n'
